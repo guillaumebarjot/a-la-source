@@ -377,6 +377,26 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 }
 .btn-action-sm:hover { background: var(--color-border); }
 
+/* Share dropdown */
+.share-wrapper { position: relative; }
+.share-dropdown {
+  position: absolute; top: 100%; right: 0; margin-top: 4px; z-index: 100;
+  background: var(--color-surface, white); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.15));
+  min-width: 200px; padding: 0.5rem 0;
+}
+.share-dropdown-section { padding: 0 0.5rem; }
+.share-dropdown-label { font-size: 0.75rem; color: var(--color-text-secondary); padding: 0.25rem 0.5rem; display: block; }
+.share-dropdown-empty { font-size: 0.8rem; color: var(--color-text-secondary); padding: 0.25rem 0.5rem; display: block; }
+.share-dropdown-item {
+  display: block; width: 100%; text-align: left; padding: 0.4rem 0.75rem;
+  border: none; background: none; cursor: pointer; font-size: 0.85rem;
+  color: var(--color-text); border-radius: var(--radius-sm);
+}
+.share-dropdown-item:hover { background: var(--color-border); }
+.share-dropdown-divider { height: 1px; background: var(--color-border); margin: 0.25rem 0; }
+.share-dropdown-msg { padding: 0.4rem 0.75rem; font-size: 0.8rem; color: var(--rc-vert, #27ae60); font-weight: 500; }
+
 /* Sidebar */
 .sidebar { display: flex; flex-direction: column; gap: var(--space-md); position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow-y: auto; }
 .sidebar-panel {

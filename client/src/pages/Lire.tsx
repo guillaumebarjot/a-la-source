@@ -8,12 +8,19 @@ import Sidebar from '../components/sidebar/Sidebar'
 
 type ReaderMode = 'original' | 'archive'
 
+interface UserItem { id: number; nom: string }
+
 export default function Lire() {
   const { id } = useParams<{ id: string }>()
   const [source, setSource] = useState<SourceDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<ReaderMode>('archive')
   const user = useAuth((s) => s.user)
+
+  // Partage a un utilisateur
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [users, setUsers] = useState<UserItem[]>([])
+  const [shareMsg, setShareMsg] = useState('')
 
   const loadSource = useCallback(async () => {
     if (!id) return
@@ -32,12 +39,39 @@ export default function Lire() {
   const hasArchive = !!source.archive
   const archivePartielle = source.archive?.statut === 'partielle'
   const isPaywall = source.paywall === 1
+
   async function aLirePlusTard() {
     await api.post('/auth/lectures', { source_id: source!.id, statut: 'a_lire' })
   }
   async function proposerAtelier() {
     await api.patch(`/sources/${source!.id}`, { statut: 'vivier' })
     loadSource()
+  }
+
+  async function openShareMenu() {
+    if (users.length === 0) {
+      const all = await api.get<UserItem[]>('/auth/users')
+      setUsers(all.filter(u => u.id !== user?.id))
+    }
+    setShowShareMenu(!showShareMenu)
+    setShareMsg('')
+  }
+
+  async function recommander(toUserId: number) {
+    await api.post('/auth/lectures', {
+      source_id: source!.id,
+      statut: 'recommande',
+      recommande_a: toUserId,
+    })
+    setShareMsg('Recommandation envoyee !')
+    setTimeout(() => { setShowShareMenu(false); setShareMsg('') }, 1500)
+  }
+
+  function partagerDiscord() {
+    const text = `${source!.titre} — ${source!.media_nom || ''}\n${source!.url || window.location.href}`
+    navigator.clipboard.writeText(text)
+    setShareMsg('Lien copie ! Collez-le dans Discord.')
+    setTimeout(() => setShareMsg(''), 3000)
   }
 
   return (
@@ -57,7 +91,7 @@ export default function Lire() {
             className={`reader-mode-btn ${mode === 'original' ? 'reader-mode-btn--active' : ''}`}
             onClick={() => setMode('original')}
             disabled={!hasUrl}
-            title={hasUrl ? 'Afficher la source originale (site web)' : 'Pas d\'URL disponible'}
+            title={hasUrl ? 'Afficher la source originale (site web)' : "Pas d'URL disponible"}
           >
             🌐 Source
           </button>
@@ -77,6 +111,27 @@ export default function Lire() {
               {source.statut === 'veille' && (
                 <button className="btn-action-sm" onClick={proposerAtelier} title="Proposer pour un atelier">🎯 Vers atelier</button>
               )}
+              <div className="share-wrapper">
+                <button className="btn-action-sm" onClick={openShareMenu} title="Recommander a un membre">👤 Partager</button>
+                {showShareMenu && (
+                  <div className="share-dropdown">
+                    <div className="share-dropdown-section">
+                      <span className="share-dropdown-label">Recommander a :</span>
+                      {users.length === 0 && <span className="share-dropdown-empty">Aucun membre</span>}
+                      {users.map(u => (
+                        <button key={u.id} className="share-dropdown-item" onClick={() => recommander(u.id)}>
+                          {u.nom}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="share-dropdown-divider" />
+                    <button className="share-dropdown-item" onClick={partagerDiscord}>
+                      💬 Copier pour Discord
+                    </button>
+                    {shareMsg && <div className="share-dropdown-msg">{shareMsg}</div>}
+                  </div>
+                )}
+              </div>
             </>
           )}
           <Link to={`/archiver/contribuer?source=${source.id}`} className="btn-action-sm" title="Deposer une copie locale de cette source">📄 Contribuer</Link>
