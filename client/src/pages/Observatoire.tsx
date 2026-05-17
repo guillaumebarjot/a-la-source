@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
-import SubNav from '../components/layout/SubNav'
 import FichesMedias from '../components/observatoire/FichesMedias'
 import type { MecanismeStat, Media } from '../types'
 
@@ -52,12 +51,6 @@ function getMecaColor(index: number): string {
   return MECA_COLORS[index % MECA_COLORS.length]
 }
 
-const SUBNAV_ITEMS = [
-  { label: 'Mecanismes', to: '/observatoire/mecanismes' },
-  { label: 'Medias', to: '/observatoire/medias' },
-  { label: 'Fiches medias', to: '/observatoire/fiches' },
-  { label: 'Sources', to: '/observatoire/sources' },
-]
 
 /* ---------- Section Mecanismes ---------- */
 
@@ -324,8 +317,6 @@ export default function Observatoire() {
 
   return (
     <div className="page-observatoire">
-      <h1>Observatoire</h1>
-      <SubNav items={SUBNAV_ITEMS} />
 
       {section === 'mecanismes' && (
         <SectionMecanismes

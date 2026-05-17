@@ -2,13 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Source } from '../types'
-import SubNav from '../components/layout/SubNav'
 
-const SUBNAV_ITEMS = [
-  { label: 'A archiver', to: '/archiver/priorite' },
-  { label: 'Archives partielles', to: '/archiver/partielles' },
-  { label: 'Completer', to: '/archiver/contribuer' },
-]
 
 /* ---------- Section : A archiver en priorite ---------- */
 
@@ -377,8 +371,6 @@ export default function Archiver() {
 
   return (
     <div className="page-archiver">
-      <h1>Archiver</h1>
-      <SubNav items={SUBNAV_ITEMS} />
       <p className="page-intro">
         L'archivage preserve le contenu des sources contre la disparition des liens.
         Aidez la communaute en archivant les sources les plus consultees.

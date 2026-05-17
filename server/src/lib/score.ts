@@ -18,11 +18,11 @@ interface ParamPoids {
  */
 function getPoids(): ParamPoids {
   const row = db.prepare("SELECT valeur FROM parametres WHERE cle = 'score_poids'").get() as { valeur: string } | undefined
-  if (!row) return { pedagogie: 50, echo: 50 }
+  if (!row) return { pedagogie: 60, echo: 40 }
   try {
     return JSON.parse(row.valeur) as ParamPoids
   } catch {
-    return { pedagogie: 50, echo: 50 }
+    return { pedagogie: 60, echo: 40 }
   }
 }
 
@@ -54,14 +54,19 @@ export function coeffFraicheur(datePublication: string | null, typeSource?: stri
 }
 
 /**
- * Indice timing A/B/C/D base sur la duree de lecture/visionnage
+ * Indice timing A/B/C/D base sur la duree de lecture/visionnage.
+ * Zone optimale atelier : 5-10 min = A. Trop court ou trop long = penalise.
+ *   A : 5-10 min (ideal atelier)
+ *   B : 3-5 min ou 10-12 min
+ *   C : 1-3 min ou 12-20 min
+ *   D : < 1 min ou > 20 min
  */
 export function calculerTiming(dureeMinutes: number | null, timingOverride: string | null): string {
   if (timingOverride) return timingOverride
   if (!dureeMinutes) return 'B' // defaut si inconnu
-  if (dureeMinutes <= 8) return 'A'
-  if (dureeMinutes <= 15) return 'B'
-  if (dureeMinutes <= 30) return 'C'
+  if (dureeMinutes >= 5 && dureeMinutes <= 10) return 'A'
+  if ((dureeMinutes >= 3 && dureeMinutes < 5) || (dureeMinutes > 10 && dureeMinutes <= 12)) return 'B'
+  if ((dureeMinutes >= 1 && dureeMinutes < 3) || (dureeMinutes > 12 && dureeMinutes <= 20)) return 'C'
   return 'D'
 }
 

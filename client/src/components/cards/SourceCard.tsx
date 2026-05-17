@@ -16,7 +16,7 @@ interface Props {
 }
 
 export default function SourceCard({ source, score, showFraicheur, action }: Props) {
-  const imgSrc = source.image_url || (source as Record<string, unknown>).og_image as string | undefined
+  const imgSrc = source.image_url || (source as unknown as Record<string, unknown>).og_image as string | undefined
   const hasArchive = !!source.has_archive
   const isPaywall = source.paywall === 1
 

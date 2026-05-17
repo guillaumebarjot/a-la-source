@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
-import SubNav from '../components/layout/SubNav'
 import SourceCard from '../components/cards/SourceCard'
 import type { Source, Atelier, Tag } from '../types'
 
@@ -42,13 +41,6 @@ interface AtelierInfos {
   observations: string
 }
 
-const SUBNAV_ITEMS = [
-  { label: 'Vivier', to: '/ateliers/vivier' },
-  { label: 'Selection', to: '/ateliers/selection' },
-  { label: 'Preparation', to: '/ateliers/preparation' },
-  { label: 'Atelier', to: '/ateliers/en-cours' },
-  { label: 'Historique', to: '/ateliers/historique' },
-]
 
 /* ---------- Composant ---------- */
 
@@ -63,12 +55,9 @@ export default function Ateliers() {
   const [ateliersPasses, setAteliersPasses] = useState<Atelier[]>([])
   const [selection, setSelection] = useState<VivierSource[]>([])
   const [loading, setLoading] = useState(true)
-  const [showFraicheur, setShowFraicheur] = useState(false)
 
   // Filtres vivier
-  const [filtreTag, setFiltreTag] = useState('')
-  const [filtreType, setFiltreType] = useState('')
-  const [filtreTiming, setFiltreTiming] = useState('')
+  const [scoreMin, setScoreMin] = useState(0)
 
   // Preparation notes
   const [prepNotes, setPrepNotes] = useState<PreparationNote[]>([])
@@ -123,31 +112,20 @@ export default function Ateliers() {
 
   /* ---------- Filtres ---------- */
 
-  const allTags = useMemo(() => {
-    const map = new Map<string, Tag>()
-    vivier.forEach((s) => s.tags.forEach((t) => map.set(t.nom, t)))
-    return Array.from(map.values()).sort((a, b) => a.nom.localeCompare(b.nom))
-  }, [vivier])
-
-  const allTypes = useMemo(() => {
-    const set = new Set<string>()
-    vivier.forEach((s) => { if (s.type_source) set.add(s.type_source) })
-    return Array.from(set).sort()
-  }, [vivier])
-
   const vivierFiltre = useMemo(() => {
-    let list = vivier.filter((s) => {
-      if (selection.find((sel) => sel.id === s.id)) return false
-      if (filtreTag && !s.tags.some((t) => t.nom === filtreTag)) return false
-      if (filtreType && s.type_source !== filtreType) return false
-      if (filtreTiming && s.score.timing !== filtreTiming) return false
-      return true
-    })
-    if (showFraicheur) {
-      list = [...list].sort((a, b) => b.score.fraicheur - a.score.fraicheur)
-    }
-    return list
-  }, [vivier, selection, filtreTag, filtreType, filtreTiming, showFraicheur])
+    return vivier
+      .filter((s) => {
+        if (selection.find((sel) => sel.id === s.id)) return false
+        if (scoreMin > 0 && s.score.scoreTotal < scoreMin) return false
+        return true
+      })
+      .sort((a, b) => {
+        // Tri par date de soumission, plus recent en premier
+        const dateA = a.soumis_le || ''
+        const dateB = b.soumis_le || ''
+        return dateB.localeCompare(dateA)
+      })
+  }, [vivier, selection, scoreMin])
 
   /* ---------- Actions ---------- */
 
@@ -235,8 +213,6 @@ export default function Ateliers() {
 
   if (loading) return (
     <div className="page-ateliers">
-      <h1>Ateliers</h1>
-      <SubNav items={SUBNAV_ITEMS} />
       <p className="loading">Chargement...</p>
     </div>
   )
@@ -245,14 +221,12 @@ export default function Ateliers() {
 
   return (
     <div className="page-ateliers">
-      <h1>Ateliers</h1>
-      <SubNav items={SUBNAV_ITEMS} />
 
       {/* ===== VIVIER ===== */}
       {section === 'vivier' && (
         <section className="atelier-section">
           <header className="atelier-section-header">
-            <h1>Vivier ({vivierFiltre.length} sources)</h1>
+            <h2>Vivier ({vivierFiltre.length} sources)</h2>
             {isFacilitateur && !atelierEnCours && (
               <button className="btn btn-primary" onClick={creerAtelier} type="button">
                 Nouvel atelier
@@ -260,35 +234,16 @@ export default function Ateliers() {
             )}
           </header>
 
-          <p className="section-intro">Sources evaluees par la communaute, triees par pertinence pour un atelier.</p>
-
-          <div className="vivier-timing-chips">
-            {(['', 'A', 'B', 'C', 'D'] as const).map((t) => (
-              <button
-                key={t || 'all'}
-                className={`chip${filtreTiming === t ? ' active' : ''}`}
-                onClick={() => setFiltreTiming(t)}
-                type="button"
-              >
-                {t === '' ? 'Tous' : t === 'A' ? 'A (court)' : t === 'B' ? 'B (moyen)' : t === 'C' ? 'C (long)' : 'D (tres long)'}
-              </button>
-            ))}
-          </div>
+          <p className="section-intro">Sources du vivier, triees par date (plus recentes en premier). Fraicheur toujours visible.</p>
 
           <div className="vivier-controles">
-            <div className="vivier-filtres">
-              <select value={filtreType} onChange={(e) => setFiltreType(e.target.value)}>
-                <option value="">Type (tous)</option>
-                {allTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <select value={filtreTag} onChange={(e) => setFiltreTag(e.target.value)}>
-                <option value="">Tag (tous)</option>
-                {allTags.map((t) => <option key={t.id} value={t.nom}>{t.nom}</option>)}
-              </select>
-            </div>
-            <label className="toggle-fraicheur">
-              <input type="checkbox" checked={showFraicheur} onChange={(e) => setShowFraicheur(e.target.checked)} />
-              Trier par fraicheur
+            <label className="vivier-score-filter">
+              Score min : <strong>{scoreMin}</strong>/100
+              <input
+                type="range" min={0} max={100} step={5}
+                value={scoreMin}
+                onChange={(e) => setScoreMin(Number(e.target.value))}
+              />
             </label>
           </div>
 
@@ -304,7 +259,7 @@ export default function Ateliers() {
                   fraicheur: s.score.fraicheur,
                   nbEvaluations: s.score.nbEvaluations,
                 }}
-                showFraicheur={showFraicheur}
+                showFraicheur={true}
                 action={isFacilitateur ? (
                   <button className="btn btn-sm btn-primary" onClick={() => ajouterASelection(s)} type="button">
                     + Atelier
@@ -438,9 +393,14 @@ export default function Ateliers() {
                       <Link to={`/lire/${s.id}`}>{s.titre}</Link>
                     </div>
                   ))}
-                  <Link to="/projection" className="btn btn-primary" style={{ marginTop: 'var(--space-sm)' }}>
-                    Lancer la projection
-                  </Link>
+                  <div className="atelier-actions-inline">
+                    <Link to="/projection" className="btn btn-primary">
+                      Lancer la projection
+                    </Link>
+                    <a href={`/api/ateliers/${atelierEnCours!.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                      Version imprimable (PDF)
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -484,6 +444,7 @@ export default function Ateliers() {
                 <div className="historique-meta">
                   {a.lieu && <span>Lieu : {a.lieu}</span>}
                   {a.nb_participants && <span>{a.nb_participants} participant·es</span>}
+                  <a href={`/api/ateliers/${a.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">PDF</a>
                 </div>
                 {a.compte_rendu && (
                   <p className="historique-cr">{a.compte_rendu.substring(0, 200)}{a.compte_rendu.length > 200 ? '...' : ''}</p>

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import { useAuth } from '../store/useAuth'
 import { api } from '../api/client'
-import SubNav from '../components/layout/SubNav'
 
 interface Parametre {
   cle: string
@@ -10,10 +9,6 @@ interface Parametre {
   modifie_le: string
 }
 
-const SUBNAV_ITEMS = [
-  { label: 'Parametrage', to: '/admin/parametrage' },
-  { label: 'Utilisateurs', to: '/admin/utilisateurs' },
-]
 
 export default function AdminParametrage() {
   const { section } = useParams<{ section?: string }>()
@@ -65,8 +60,6 @@ export default function AdminParametrage() {
 
   return (
     <div className="page-admin">
-      <h1>Administration</h1>
-      <SubNav items={SUBNAV_ITEMS} />
       <p className="page-intro">
         Configuration des courbes de fraicheur, poids du score atelier, et formule de confiance media.
       </p>

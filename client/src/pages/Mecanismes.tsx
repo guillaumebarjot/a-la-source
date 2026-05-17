@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { api } from '../api/client'
-import SubNav from '../components/layout/SubNav'
 import type { Contenu } from '../types'
 
 interface Mecanisme {
@@ -35,10 +34,6 @@ const CATEGORIE_LABELS: Record<string, string> = {
   selection_info: "Selection de l'information",
 }
 
-const SUBNAV_ITEMS = [
-  { label: 'Catalogue', to: '/apprendre' },
-  { label: 'Aide & Ressources', to: '/apprendre/aide' },
-]
 
 export default function Mecanismes() {
   const { categorie, slug } = useParams()
@@ -88,8 +83,6 @@ export default function Mecanismes() {
   if (categorie === 'aide') {
     return (
       <div className="page-mecanismes">
-        <h1>Apprendre</h1>
-        <SubNav items={SUBNAV_ITEMS} />
         <p className="page-intro">
           Comment fonctionne l'outil et les ressources pour aller plus loin.
         </p>
@@ -154,8 +147,6 @@ export default function Mecanismes() {
 
     return (
       <div className="page-mecanismes">
-        <h1>Apprendre</h1>
-        <SubNav items={SUBNAV_ITEMS} />
         <nav className="mecanismes-breadcrumb">
           <Link to="/apprendre">Catalogue</Link>
           <span className="breadcrumb-sep">/</span>
@@ -238,8 +229,6 @@ export default function Mecanismes() {
 
     return (
       <div className="page-mecanismes">
-        <h1>Apprendre</h1>
-        <SubNav items={SUBNAV_ITEMS} />
         <nav className="mecanismes-breadcrumb">
           <Link to="/apprendre">Catalogue</Link>
           <span className="breadcrumb-sep">/</span>
@@ -270,7 +259,6 @@ export default function Mecanismes() {
   return (
     <div className="page-mecanismes">
       <h1>Apprendre</h1>
-      <SubNav items={SUBNAV_ITEMS} />
       <p className="page-intro">
         Ces mecanismes sont des procedes recurrents dans le traitement mediatique de l'information.
         Les identifier permet de mieux comprendre comment une information est construite — pas de

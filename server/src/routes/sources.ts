@@ -151,6 +151,153 @@ router.get('/:id', (req, res) => {
   res.json({ ...source, tags, mecanismes, archive, score })
 })
 
+// POST /api/sources/from-url — creation simplifiee : auto-fetch metadata + archive
+router.post('/from-url', async (req, res) => {
+  const { url } = req.body
+  if (!url) { res.status(400).json({ error: 'URL requise' }); return }
+
+  // 1. Fetch OpenGraph metadata
+  const og = await fetchOpenGraph(url)
+  const titre = og.title || new URL(url).hostname
+  const accroche = og.description || null
+
+  // 2. Match or create media from og:site_name
+  let media_id: number | null = null
+  let media_nom: string | null = null
+  if (og.siteName) {
+    const existing = db.prepare('SELECT id, nom FROM medias WHERE nom = ? COLLATE NOCASE').get(og.siteName) as { id: number; nom: string } | undefined
+    if (existing) {
+      media_id = existing.id
+      media_nom = existing.nom
+    } else {
+      // Try matching by domain
+      try {
+        const domain = new URL(url).hostname.replace('www.', '')
+        const byUrl = db.prepare("SELECT id, nom FROM medias WHERE url_site LIKE ?").get(`%${domain}%`) as { id: number; nom: string } | undefined
+        if (byUrl) {
+          media_id = byUrl.id
+          media_nom = byUrl.nom
+        } else {
+          const r = db.prepare('INSERT INTO medias (nom) VALUES (?)').run(og.siteName)
+          media_id = Number(r.lastInsertRowid)
+          media_nom = og.siteName
+        }
+      } catch {
+        const r = db.prepare('INSERT INTO medias (nom) VALUES (?)').run(og.siteName)
+        media_id = Number(r.lastInsertRowid)
+        media_nom = og.siteName
+      }
+    }
+  } else {
+    // Fallback: match by domain
+    try {
+      const domain = new URL(url).hostname.replace('www.', '')
+      const byUrl = db.prepare("SELECT id, nom FROM medias WHERE url_site LIKE ?").get(`%${domain}%`) as { id: number; nom: string } | undefined
+      if (byUrl) {
+        media_id = byUrl.id
+        media_nom = byUrl.nom
+      }
+    } catch { /* ignore */ }
+  }
+
+  // 3. Match or create auteur
+  let auteur_id: number | null = null
+  let auteur_nom: string | null = null
+  if (og.author) {
+    auteur_nom = og.author
+    const existing = db.prepare(
+      'SELECT id FROM auteurs WHERE nom = ? AND (media_id = ? OR media_id IS NULL)'
+    ).get(og.author, media_id) as { id: number } | undefined
+    if (existing) {
+      auteur_id = existing.id
+    } else {
+      const r = db.prepare('INSERT INTO auteurs (nom, media_id) VALUES (?, ?)').run(og.author, media_id)
+      auteur_id = Number(r.lastInsertRowid)
+    }
+  }
+
+  // 4. Insert source
+  const result = db.prepare(`
+    INSERT INTO sources (titre, url, auteur_id, media_id, date_publication, paywall, accroche, mots_cles, image_url, soumis_par)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    titre, url, auteur_id, media_id,
+    og.datePublished || null,
+    og.paywall ? 1 : 0,
+    accroche,
+    og.keywords ? og.keywords.join(', ') : null,
+    og.image || null,
+    req.user?.id || null
+  )
+  const sourceId = Number(result.lastInsertRowid)
+
+  // 5. Trigger archivage in background
+  extractReadability(url).then(article => {
+    if (!article) return
+    const nbMots = compterMots(article.content)
+    const paywall = db.prepare('SELECT paywall FROM sources WHERE id = ?').get(sourceId) as { paywall: number } | undefined
+    const statut = detecterArchivePartielle(article.textContent, paywall?.paywall || 0)
+    db.prepare(`
+      INSERT INTO archives (source_id, type, contenu, cree_par, nb_mots, statut)
+      VALUES (?, 'readability', ?, ?, ?, ?)
+    `).run(sourceId, article.content, req.user?.id || null, nbMots, statut)
+    // Update keywords if we got more from readability
+    if (article.motsCles.length > 0) {
+      const existing = db.prepare('SELECT mots_cles FROM sources WHERE id = ?').get(sourceId) as { mots_cles: string | null } | undefined
+      if (!existing?.mots_cles) {
+        db.prepare('UPDATE sources SET mots_cles = ? WHERE id = ?').run(article.motsCles.join(', '), sourceId)
+      }
+    }
+  }).catch(() => {})
+
+  // 6. Return enriched data for preview
+  res.status(201).json({
+    id: sourceId,
+    titre,
+    url,
+    media_nom,
+    auteur_nom,
+    date_publication: og.datePublished || null,
+    paywall: og.paywall || false,
+    accroche,
+    mots_cles: og.keywords ? og.keywords.join(', ') : null,
+    image_url: og.image || null,
+    archivage: 'en_cours',
+  })
+})
+
+// POST /api/sources/preview-url — preview metadata without creating
+router.post('/preview-url', async (req, res) => {
+  const { url } = req.body
+  if (!url) { res.status(400).json({ error: 'URL requise' }); return }
+
+  const og = await fetchOpenGraph(url)
+
+  // Match media
+  let media_nom: string | null = null
+  if (og.siteName) {
+    const existing = db.prepare('SELECT nom FROM medias WHERE nom = ? COLLATE NOCASE').get(og.siteName) as { nom: string } | undefined
+    media_nom = existing?.nom || og.siteName
+  } else {
+    try {
+      const domain = new URL(url).hostname.replace('www.', '')
+      const byUrl = db.prepare("SELECT nom FROM medias WHERE url_site LIKE ?").get(`%${domain}%`) as { nom: string } | undefined
+      if (byUrl) media_nom = byUrl.nom
+    } catch { /* ignore */ }
+  }
+
+  res.json({
+    titre: og.title || null,
+    media_nom,
+    auteur_nom: og.author || null,
+    date_publication: og.datePublished || null,
+    paywall: og.paywall || false,
+    accroche: og.description || null,
+    mots_cles: og.keywords ? og.keywords.join(', ') : null,
+    image_url: og.image || null,
+  })
+})
+
 // POST /api/sources — creer une source
 router.post('/', async (req, res) => {
   const { titre, url, type_source, media_nom, auteur_nom, date_publication, paywall, accroche } = req.body

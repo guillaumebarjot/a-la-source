@@ -30,7 +30,7 @@ function CollapsiblePanel({ title, children, defaultOpen = true }: { title: stri
 }
 
 function MotsClefsPanel({ source }: { source: SourceDetail }) {
-  const keywords = (source as Record<string, unknown>).mots_cles as string | undefined
+  const keywords = (source as unknown as Record<string, unknown>).mots_cles as string | undefined
   if (!keywords) return <p className="empty-small">Aucun mot-cle extrait.</p>
   const mots = keywords.split(',').map(m => m.trim()).filter(Boolean)
   return (

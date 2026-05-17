@@ -85,7 +85,7 @@ export default function Flux() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
   const loadSources = useCallback(async () => {
-    const data = await api.get<Source[]>('/sources?statut=veille')
+    const data = await api.get<Source[]>('/sources')
     setSources(data)
   }, [])
 

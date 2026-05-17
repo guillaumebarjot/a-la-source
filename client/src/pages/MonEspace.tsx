@@ -3,7 +3,6 @@ import { Link, useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import type { Lecture, Contenu } from '../types'
-import SubNav from '../components/layout/SubNav'
 
 interface Video {
   id: string
@@ -30,10 +29,6 @@ function formatDuree(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-const SUBNAV_ITEMS = [
-  { label: 'Lectures', to: '/perso/lectures' },
-  { label: 'Chaines amies', to: '/perso/chaines' },
-]
 
 /* ---------- Section Lectures ---------- */
 
@@ -202,8 +197,6 @@ export default function MonEspace() {
 
   return (
     <div className="page-perso">
-      <h1>Bonjour{user ? `, ${user.nom}` : ''}</h1>
-      <SubNav items={SUBNAV_ITEMS} />
       <p className="page-intro">Vos lectures sauvegardees et les chaines partenaires a suivre.</p>
 
       {section === 'lectures' && <SectionLectures />}

@@ -6,84 +6,164 @@ interface Props {
   onClose: () => void
 }
 
+interface PreviewData {
+  titre: string | null
+  media_nom: string | null
+  auteur_nom: string | null
+  date_publication: string | null
+  paywall: boolean
+  accroche: string | null
+  mots_cles: string | null
+  image_url: string | null
+}
+
+type Step = 'url' | 'preview' | 'done'
+
 export default function SubmitSource({ onCreated, onClose }: Props) {
-  const [titre, setTitre] = useState('')
   const [url, setUrl] = useState('')
+  const [step, setStep] = useState<Step>('url')
+  const [loading, setLoading] = useState(false)
+  const [preview, setPreview] = useState<PreviewData | null>(null)
+  const [error, setError] = useState('')
+
+  // Editable overrides
+  const [titre, setTitre] = useState('')
   const [mediaNom, setMediaNom] = useState('')
   const [auteurNom, setAuteurNom] = useState('')
-  const [typeSource, setTypeSource] = useState('')
-  const [datePublication, setDatePublication] = useState('')
-  const [paywall, setPaywall] = useState(false)
-  const [accroche, setAccroche] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  const types = ['presse mainstream', 'PQR', 'pure player', 'video', 'radio', 'rapport', 'lobby', 'associatif', 'officiel', 'tribune']
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!titre) return
+  async function fetchPreview() {
+    if (!url) return
     setLoading(true)
+    setError('')
     try {
-      await api.post('/sources', {
-        titre, url: url || null, media_nom: mediaNom || null,
-        auteur_nom: auteurNom || null, type_source: typeSource || null,
-        date_publication: datePublication || null, paywall, accroche: accroche || null,
-      })
-      onCreated()
-      onClose()
+      const data = await api.post<PreviewData>('/sources/preview-url', { url })
+      setPreview(data)
+      setTitre(data.titre || '')
+      setMediaNom(data.media_nom || '')
+      setAuteurNom(data.auteur_nom || '')
+      setStep('preview')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur')
+      setError(err instanceof Error ? err.message : 'Impossible de recuperer les metadonnees')
     } finally {
       setLoading(false)
     }
   }
 
+  async function handleSubmit() {
+    setLoading(true)
+    setError('')
+    try {
+      await api.post('/sources/from-url', { url })
+      setStep('done')
+      setTimeout(() => {
+        onCreated()
+        onClose()
+      }, 1200)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la creation')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && step === 'url') {
+      e.preventDefault()
+      fetchPreview()
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}>
+      <div className="modal modal-submit" onClick={(e) => e.stopPropagation()}>
         <h2>Soumettre une source</h2>
-        <label>
-          Titre *
-          <input value={titre} onChange={(e) => setTitre(e.target.value)} required />
-        </label>
-        <label>
-          URL
-          <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
-        </label>
-        <label>
-          Media
-          <input value={mediaNom} onChange={(e) => setMediaNom(e.target.value)} placeholder="Le Monde, BFM..." />
-        </label>
-        <label>
-          Auteur
-          <input value={auteurNom} onChange={(e) => setAuteurNom(e.target.value)} />
-        </label>
-        <label>
-          Type
-          <select value={typeSource} onChange={(e) => setTypeSource(e.target.value)}>
-            <option value="">—</option>
-            {types.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </label>
-        <label>
-          Date de publication
-          <input type="date" value={datePublication} onChange={(e) => setDatePublication(e.target.value)} />
-        </label>
-        <label className="checkbox-label">
-          <input type="checkbox" checked={paywall} onChange={(e) => setPaywall(e.target.checked)} />
-          Paywall
-        </label>
-        <label>
-          Accroche
-          <textarea value={accroche} onChange={(e) => setAccroche(e.target.value)} rows={2} />
-        </label>
-        <div className="modal-actions">
-          <button type="button" onClick={onClose} className="btn btn-secondary">Annuler</button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Envoi...' : 'Soumettre'}
-          </button>
-        </div>
-      </form>
+
+        {step === 'url' && (
+          <>
+            <p className="submit-hint">Collez l'URL de l'article. Les metadonnees seront recuperees automatiquement.</p>
+            <div className="submit-url-row">
+              <input
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="https://..."
+                autoFocus
+                className="submit-url-input"
+              />
+              <button
+                onClick={fetchPreview}
+                disabled={!url || loading}
+                className="btn btn-primary"
+              >
+                {loading ? 'Analyse...' : 'Analyser'}
+              </button>
+            </div>
+            {error && <p className="submit-error">{error}</p>}
+          </>
+        )}
+
+        {step === 'preview' && preview && (
+          <>
+            <div className="submit-preview">
+              {preview.image_url && (
+                <img src={preview.image_url} alt="" className="submit-preview-img" />
+              )}
+              <div className="submit-preview-fields">
+                <label>
+                  Titre
+                  <input value={titre} onChange={(e) => setTitre(e.target.value)} />
+                </label>
+                <div className="submit-preview-row">
+                  <label>
+                    Media
+                    <input value={mediaNom} onChange={(e) => setMediaNom(e.target.value)} />
+                  </label>
+                  <label>
+                    Auteur
+                    <input value={auteurNom} onChange={(e) => setAuteurNom(e.target.value)} />
+                  </label>
+                </div>
+                {preview.date_publication && (
+                  <p className="submit-meta">Date : {preview.date_publication}</p>
+                )}
+                {preview.paywall && (
+                  <p className="submit-meta submit-meta--warn">Paywall detecte</p>
+                )}
+                {preview.accroche && (
+                  <p className="submit-accroche">{preview.accroche}</p>
+                )}
+                {preview.mots_cles && (
+                  <div className="submit-keywords">
+                    {preview.mots_cles.split(',').map((k, i) => (
+                      <span key={i} className="badge badge-mot-clef">{k.trim()}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            {error && <p className="submit-error">{error}</p>}
+            <div className="modal-actions">
+              <button onClick={() => setStep('url')} className="btn btn-secondary">Modifier l'URL</button>
+              <button onClick={handleSubmit} disabled={loading} className="btn btn-primary">
+                {loading ? 'Creation...' : 'Soumettre + Archiver'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 'done' && (
+          <div className="submit-done">
+            <p>Source ajoutee ! Archivage en cours...</p>
+          </div>
+        )}
+
+        {step === 'url' && (
+          <div className="modal-actions">
+            <button type="button" onClick={onClose} className="btn btn-secondary">Annuler</button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
