@@ -28,7 +28,6 @@ export default function SourceCard({ source, score, showFraicheur, action }: Pro
         </Link>
       )}
 
-      {/* Overlay score pour le vivier */}
       {score && (
         <div className="source-card-score-overlay">
           <span className="score-overlay-value">{score.scoreTotal}</span>
@@ -55,34 +54,38 @@ export default function SourceCard({ source, score, showFraicheur, action }: Pro
           <div className="source-card-badges">
             {isPaywall && (
               <span
-                className={`badge badge-paywall ${hasArchive && source.archive_statut === 'complete' ? 'badge-paywall--contourne' : ''}`}
-                title={hasArchive && source.archive_statut === 'complete' ? 'Paywall contourne (archive complete)' : 'Acces payant'}
+                className={`badge-icon ${hasArchive && source.archive_statut === 'complete' ? 'badge-icon--success' : 'badge-icon--warning'}`}
+                title={hasArchive && source.archive_statut === 'complete' ? 'Paywall contourne (copie locale complete)' : 'Acces payant'}
               >
-                {hasArchive && source.archive_statut === 'complete' ? <s>Paywall</s> : 'Paywall'}
+                {hasArchive && source.archive_statut === 'complete' ? '🔓' : '🔒'}
               </span>
             )}
             {hasArchive && source.archive_statut === 'partielle' && (
-              <Link to={`/archiver/contribuer?source=${source.id}`} className="badge badge-archive-partielle" title="Archive incomplete — cliquez pour contribuer">
-                Archive partielle
+              <Link
+                to={`/archiver/contribuer?source=${source.id}`}
+                className="badge-icon badge-icon--warning"
+                title="Copie locale incomplete — cliquez pour completer"
+              >
+                📄⚠
               </Link>
             )}
             {hasArchive && source.archive_statut !== 'partielle' && (
-              <span className="badge badge-archive-ok" title="Archive disponible">Archive</span>
+              <span className="badge-icon badge-icon--success" title="Copie locale disponible">📄</span>
             )}
             {!hasArchive && !isPaywall && (
-              <span className="badge badge-no-archive" title="Pas d'archive">Pas d'archive</span>
+              <span className="badge-icon badge-icon--muted" title="Pas de copie locale">📄</span>
             )}
             {score && (
-              <span className="badge badge-veille">{score.nbEvaluations} eval</span>
-            )}
-            {(source.nb_ateliers ?? 0) > 0 && (
-              <span className="badge badge-atelier" title={`${source.nb_ateliers} atelier(s)`}>
-                Atelier
+              <span className="badge-icon" title={`${score.nbEvaluations} evaluation(s)`}>
+                ⭐{score.nbEvaluations}
               </span>
             )}
+            {(source.nb_ateliers ?? 0) > 0 && (
+              <span className="badge-icon" title={`${source.nb_ateliers} atelier(s)`}>🎯</span>
+            )}
             {(source.nb_commentaires ?? 0) > 0 && (
-              <span className="badge badge-discussion" title={`${source.nb_commentaires} commentaire(s)`}>
-                Discussion
+              <span className="badge-icon" title={`${source.nb_commentaires} commentaire(s)`}>
+                💬{source.nb_commentaires}
               </span>
             )}
           </div>

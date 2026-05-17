@@ -4,6 +4,13 @@ import { calculerConfianceMedia } from '../lib/score.js'
 
 const router = Router()
 
+// Migration inline : ajouter colonne description si absente
+try {
+  db.prepare("SELECT description FROM medias LIMIT 1").get()
+} catch {
+  db.prepare("ALTER TABLE medias ADD COLUMN description TEXT").run()
+}
+
 // GET /api/medias
 router.get('/', (_req, res) => {
   const medias = db.prepare(`
@@ -14,21 +21,6 @@ router.get('/', (_req, res) => {
     ORDER BY nb_sources DESC
   `).all()
   res.json(medias)
-})
-
-// GET /api/medias/:id/stats — stats d'un media (confiance agregee)
-router.get('/:id/stats', (req, res) => {
-  const stats = db.prepare(`
-    SELECT
-      COUNT(DISTINCT s.id) as nb_sources,
-      AVG(e.score_echo) as moy_echo,
-      AVG(e.score_pedagogie) as moy_pedagogie,
-      COUNT(DISTINCT e.id) as nb_evaluations
-    FROM sources s
-    LEFT JOIN evaluations e ON e.source_id = s.id
-    WHERE s.media_id = ?
-  `).get(req.params.id)
-  res.json(stats)
 })
 
 // GET /api/medias/matrice — croise media x mecanisme
@@ -60,6 +52,57 @@ router.get('/confiance', (_req, res) => {
   }).filter(r => r.nbSources > 0)
     .sort((a, b) => a.score - b.score)
   res.json(results)
+})
+
+// GET /api/medias/:id/stats — stats d'un media (confiance agregee)
+router.get('/:id/stats', (req, res) => {
+  const base = db.prepare(`
+    SELECT
+      COUNT(DISTINCT s.id) as nb_sources,
+      COUNT(DISTINCT e.id) as nb_evaluations,
+      COUNT(DISTINCT c.id) as nb_commentaires,
+      COUNT(DISTINCT sm.id) as nb_mecanismes
+    FROM sources s
+    LEFT JOIN evaluations e ON e.source_id = s.id
+    LEFT JOIN commentaires c ON c.source_id = s.id
+    LEFT JOIN source_mecanismes sm ON sm.source_id = s.id
+    WHERE s.media_id = ?
+  `).get(req.params.id) as { nb_sources: number; nb_evaluations: number; nb_commentaires: number; nb_mecanismes: number }
+
+  // Score confiance moyen
+  const confiance = calculerConfianceMedia(Number(req.params.id))
+  const score_confiance_moyen = confiance.nbSources > 0 ? confiance.score : null
+
+  // Sources recentes (5 dernieres)
+  const sources_recentes = db.prepare(`
+    SELECT id, titre, date_publication
+    FROM sources
+    WHERE media_id = ?
+    ORDER BY date_publication DESC
+    LIMIT 5
+  `).all(req.params.id) as { id: number; titre: string; date_publication: string | null }[]
+
+  res.json({
+    nb_sources: base.nb_sources,
+    nb_mecanismes: base.nb_mecanismes,
+    nb_commentaires: base.nb_commentaires,
+    nb_evaluations: base.nb_evaluations,
+    score_confiance_moyen,
+    sources_recentes,
+  })
+})
+
+// GET /api/medias/:id — detail d'un media
+router.get('/:id', (req, res) => {
+  const media = db.prepare(`
+    SELECT m.*, COUNT(s.id) as nb_sources
+    FROM medias m
+    LEFT JOIN sources s ON s.media_id = m.id
+    WHERE m.id = ?
+    GROUP BY m.id
+  `).get(req.params.id)
+  if (!media) { res.status(404).json({ error: 'Media non trouve' }); return }
+  res.json(media)
 })
 
 // POST /api/medias

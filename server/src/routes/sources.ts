@@ -233,6 +233,13 @@ router.post('/:id/archiver', async (req, res) => {
   const nbMots = compterMots(article.content)
   const statut = detecterArchivePartielle(article.textContent, source.paywall)
 
+  // Store extracted keywords
+  if (article.motsCles.length > 0) {
+    try {
+      db.prepare('UPDATE sources SET mots_cles = ? WHERE id = ?').run(article.motsCles.join(', '), req.params.id)
+    } catch { /* column may not exist yet */ }
+  }
+
   db.prepare(`
     INSERT INTO archives (source_id, type, contenu, cree_par, nb_mots, statut)
     VALUES (?, 'readability', ?, ?, ?, ?)

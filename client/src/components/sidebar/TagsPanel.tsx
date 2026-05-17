@@ -25,11 +25,10 @@ export default function TagsPanel({ sourceId, tags, onRefresh }: Props) {
   }
 
   return (
-    <div className="sidebar-panel">
-      <h3>Tags</h3>
+    <>
       <div className="tags-list">
         {tags.map((t) => (
-          <span key={t.id} className="badge badge-tag" style={t.couleur ? { backgroundColor: t.couleur } : undefined}>
+          <span key={t.id} className={`badge badge-tag ${t.couleur ? 'badge-tag--colored' : ''}`} style={t.couleur ? { backgroundColor: t.couleur } : undefined}>
             {t.nom}
             <button className="badge-remove" onClick={() => removeTag(t.id)}>&times;</button>
           </span>
@@ -39,6 +38,6 @@ export default function TagsPanel({ sourceId, tags, onRefresh }: Props) {
         <input value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="Ajouter un tag..." />
         <button type="submit" className="btn btn-sm">+</button>
       </form>
-    </div>
+    </>
   )
 }

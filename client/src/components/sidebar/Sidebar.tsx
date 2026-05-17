@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { SourceDetail } from '../../types'
 import MetadataPanel from './MetadataPanel'
 import TagsPanel from './TagsPanel'
@@ -10,45 +11,58 @@ interface Props {
   onRefresh: () => void
 }
 
-export default function Sidebar({ source, onRefresh }: Props) {
+function CollapsiblePanel({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   return (
-    <aside className="sidebar">
-      <MetadataPanel source={source} />
-      <TagsPanel sourceId={source.id} tags={source.tags} onRefresh={onRefresh} />
-      <MecanismesPanel sourceId={source.id} mecanismes={source.mecanismes} onRefresh={onRefresh} />
-      <EvaluationPanel sourceId={source.id} score={source.score} />
-      <CommentairesPanel sourceId={source.id} />
-      <SidebarActions source={source} onRefresh={onRefresh} />
-    </aside>
+    <div className="sidebar-panel">
+      <h3
+        className="sidebar-panel-collapsible"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        {title}
+      </h3>
+      <div className="sidebar-panel-content" aria-hidden={!open}>
+        {children}
+      </div>
+    </div>
   )
 }
 
-import { api } from '../../api/client'
-import { useAuth } from '../../store/useAuth'
-
-function SidebarActions({ source, onRefresh }: { source: SourceDetail; onRefresh: () => void }) {
-  const user = useAuth((s) => s.user)
-
-  async function marquerLu() {
-    await api.post('/auth/lectures', { source_id: source.id, statut: 'lu' })
-  }
-
-  async function proposerVivier() {
-    await api.patch(`/sources/${source.id}`, { statut: 'vivier' })
-    onRefresh()
-  }
-
+function MotsClefsPanel({ source }: { source: SourceDetail }) {
+  const keywords = (source as Record<string, unknown>).mots_cles as string | undefined
+  if (!keywords) return <p className="empty-small">Aucun mot-cle extrait.</p>
+  const mots = keywords.split(',').map(m => m.trim()).filter(Boolean)
   return (
-    <div className="sidebar-panel sidebar-actions">
-      <button className="btn btn-secondary" onClick={marquerLu}>Marquer lu</button>
-      {source.statut === 'veille' && (
-        <button className="btn btn-primary" onClick={proposerVivier}>Proposer au vivier</button>
-      )}
-      {user && source.statut === 'veille' && (
-        <button className="btn btn-secondary" onClick={async () => {
-          await api.post('/auth/lectures', { source_id: source.id, statut: 'a_lire' })
-        }}>A lire plus tard</button>
-      )}
+    <div className="mots-clefs-list">
+      {mots.map((m, i) => (
+        <span key={i} className="badge badge-mot-clef">{m}</span>
+      ))}
     </div>
+  )
+}
+
+export default function Sidebar({ source, onRefresh }: Props) {
+  return (
+    <aside className="sidebar">
+      <CollapsiblePanel title="Metadonnees" defaultOpen={false}>
+        <MetadataPanel source={source} />
+      </CollapsiblePanel>
+      <CollapsiblePanel title="Mots-clefs" defaultOpen={false}>
+        <MotsClefsPanel source={source} />
+      </CollapsiblePanel>
+      <CollapsiblePanel title="Tags" defaultOpen={false}>
+        <TagsPanel sourceId={source.id} tags={source.tags} onRefresh={onRefresh} />
+      </CollapsiblePanel>
+      <CollapsiblePanel title="Evaluation" defaultOpen={false}>
+        <EvaluationPanel sourceId={source.id} score={source.score} />
+      </CollapsiblePanel>
+      <CollapsiblePanel title="Mecanismes" defaultOpen={false}>
+        <MecanismesPanel sourceId={source.id} mecanismes={source.mecanismes} onRefresh={onRefresh} />
+      </CollapsiblePanel>
+      <CollapsiblePanel title="Commentaires" defaultOpen={false}>
+        <CommentairesPanel sourceId={source.id} />
+      </CollapsiblePanel>
+    </aside>
   )
 }

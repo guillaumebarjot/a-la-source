@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
+import SubNav from '../components/layout/SubNav'
+import SourceCard from '../components/cards/SourceCard'
 import type { Source, Atelier, Tag } from '../types'
 
-/* ---------- Types locaux ---------- */
+/* ---------- Types ---------- */
 
 interface ScoreComplet {
   pedagogie: number
@@ -40,45 +42,40 @@ interface AtelierInfos {
   observations: string
 }
 
-type Etape = 'vivier' | 'selection' | 'preparation' | 'atelier'
-
-const ETAPES: { id: Etape; label: string }[] = [
-  { id: 'vivier', label: 'Vivier' },
-  { id: 'selection', label: 'Selection' },
-  { id: 'preparation', label: 'Preparation' },
-  { id: 'atelier', label: 'Atelier' },
+const SUBNAV_ITEMS = [
+  { label: 'Vivier', to: '/ateliers/vivier' },
+  { label: 'Selection', to: '/ateliers/selection' },
+  { label: 'Preparation', to: '/ateliers/preparation' },
+  { label: 'Atelier', to: '/ateliers/en-cours' },
+  { label: 'Historique', to: '/ateliers/historique' },
 ]
 
 /* ---------- Composant ---------- */
 
 export default function Ateliers() {
+  const { section } = useParams<{ section?: string }>()
   const user = useAuth((s) => s.user)
   const isFacilitateur = user?.role === 'animateur' || user?.role === 'admin'
-
-  // Stepper
-  const [etape, setEtape] = useState<Etape>('vivier')
 
   // Data
   const [vivier, setVivier] = useState<VivierSource[]>([])
   const [atelierEnCours, setAtelierEnCours] = useState<AtelierEnCours | null>(null)
+  const [ateliersPasses, setAteliersPasses] = useState<Atelier[]>([])
   const [selection, setSelection] = useState<VivierSource[]>([])
   const [loading, setLoading] = useState(true)
+  const [showFraicheur, setShowFraicheur] = useState(false)
 
   // Filtres vivier
   const [filtreTag, setFiltreTag] = useState('')
   const [filtreType, setFiltreType] = useState('')
   const [filtreTiming, setFiltreTiming] = useState('')
 
-  // Preparation notes (state local, pas persiste)
+  // Preparation notes
   const [prepNotes, setPrepNotes] = useState<PreparationNote[]>([])
 
   // Atelier infos
   const [atelierInfos, setAtelierInfos] = useState<AtelierInfos>({
-    date: '',
-    lieu: '',
-    nbParticipants: '',
-    compteRendu: '',
-    observations: '',
+    date: '', lieu: '', nbParticipants: '', compteRendu: '', observations: '',
   })
 
   /* ---------- Fetch ---------- */
@@ -86,19 +83,18 @@ export default function Ateliers() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [vivierData, enCoursData] = await Promise.all([
+      const [vivierData, enCoursData, historiqueData] = await Promise.all([
         api.get<VivierSource[]>('/ateliers/vivier'),
         api.get<AtelierEnCours | null>('/ateliers/en-cours'),
+        api.get<Atelier[]>('/ateliers'),
       ])
       setVivier(vivierData)
       setAtelierEnCours(enCoursData)
+      setAteliersPasses(historiqueData.filter(a => a.statut === 'termine'))
 
-      // Si atelier en cours, initialiser selection depuis ses sources
       if (enCoursData?.sources) {
         const sourcesIds = new Set(enCoursData.sources.map((s) => s.id))
-        // On reconstruit la selection avec les infos du vivier si possible
         const selectionFromVivier = vivierData.filter((s) => sourcesIds.has(s.id))
-        // Ajouter celles deja en atelier mais pas dans vivier
         const remaining = enCoursData.sources
           .filter((s) => !selectionFromVivier.find((v) => v.id === s.id))
           .map((s) => ({
@@ -109,7 +105,6 @@ export default function Ateliers() {
         setSelection([...selectionFromVivier, ...remaining])
       }
 
-      // Initialiser atelierInfos si atelier en cours
       if (enCoursData) {
         setAtelierInfos({
           date: enCoursData.date_atelier || '',
@@ -141,22 +136,23 @@ export default function Ateliers() {
   }, [vivier])
 
   const vivierFiltre = useMemo(() => {
-    return vivier.filter((s) => {
-      // Exclure celles deja selectionnees
+    let list = vivier.filter((s) => {
       if (selection.find((sel) => sel.id === s.id)) return false
       if (filtreTag && !s.tags.some((t) => t.nom === filtreTag)) return false
       if (filtreType && s.type_source !== filtreType) return false
       if (filtreTiming && s.score.timing !== filtreTiming) return false
       return true
     })
-  }, [vivier, selection, filtreTag, filtreType, filtreTiming])
+    if (showFraicheur) {
+      list = [...list].sort((a, b) => b.score.fraicheur - a.score.fraicheur)
+    }
+    return list
+  }, [vivier, selection, filtreTag, filtreType, filtreTiming, showFraicheur])
 
   /* ---------- Actions ---------- */
 
   const ajouterASelection = async (source: VivierSource) => {
     setSelection((prev) => [...prev, source])
-
-    // Si un atelier en cours existe, persister cote serveur
     if (atelierEnCours) {
       await api.post(`/ateliers/${atelierEnCours.id}/sources`, { source_id: source.id })
     }
@@ -164,7 +160,6 @@ export default function Ateliers() {
 
   const retirerDeSelection = async (sourceId: number) => {
     setSelection((prev) => prev.filter((s) => s.id !== sourceId))
-
     if (atelierEnCours) {
       await api.delete(`/ateliers/${atelierEnCours.id}/sources/${sourceId}`)
     }
@@ -189,7 +184,6 @@ export default function Ateliers() {
   }
 
   const creerAtelier = async () => {
-    // Numero = dernier + 1
     const ateliers = await api.get<Atelier[]>('/ateliers')
     const maxNum = ateliers.reduce((m, a) => Math.max(m, a.numero), 0)
     const res = await api.post<{ id: number }>('/ateliers', { numero: maxNum + 1 })
@@ -212,7 +206,6 @@ export default function Ateliers() {
     if (!atelierEnCours) return
     await api.patch(`/ateliers/${atelierEnCours.id}`, { statut: 'termine' })
     await fetchData()
-    setEtape('vivier')
   }
 
   /* ---------- Preparation helpers ---------- */
@@ -232,39 +225,34 @@ export default function Ateliers() {
   }
 
   const tempsTotal = useMemo(() => {
-    return selection.reduce((total, s) => {
-      const note = getPrepNote(s.id)
-      return total + note.duree
-    }, 0)
+    return selection.reduce((total, s) => total + getPrepNote(s.id).duree, 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, prepNotes])
 
-  /* ---------- Rendu ---------- */
+  /* ---------- Redirect par defaut ---------- */
 
-  if (loading) return <div className="page-ateliers"><p>Chargement...</p></div>
+  if (!section) return <Navigate to="/ateliers/vivier" replace />
+
+  if (loading) return (
+    <div className="page-ateliers">
+      <h1>Ateliers</h1>
+      <SubNav items={SUBNAV_ITEMS} />
+      <p className="loading">Chargement...</p>
+    </div>
+  )
+
+  /* ---------- Rendu ---------- */
 
   return (
     <div className="page-ateliers">
-      {/* Stepper horizontal */}
-      <nav className="stepper" aria-label="Etapes de l'atelier">
-        {ETAPES.map((e, i) => (
-          <button
-            key={e.id}
-            className={`stepper-step ${etape === e.id ? 'stepper-step--active' : ''}`}
-            onClick={() => setEtape(e.id)}
-            type="button"
-          >
-            <span className="stepper-num">{i + 1}</span>
-            <span className="stepper-label">{e.label}</span>
-          </button>
-        ))}
-      </nav>
+      <h1>Ateliers</h1>
+      <SubNav items={SUBNAV_ITEMS} />
 
-      {/* Etape Vivier */}
-      {etape === 'vivier' && (
-        <section className="etape-vivier">
-          <header className="etape-header">
-            <h2>Vivier — Sources disponibles ({vivierFiltre.length})</h2>
+      {/* ===== VIVIER ===== */}
+      {section === 'vivier' && (
+        <section className="atelier-section">
+          <header className="atelier-section-header">
+            <h1>Vivier ({vivierFiltre.length} sources)</h1>
             {isFacilitateur && !atelierEnCours && (
               <button className="btn btn-primary" onClick={creerAtelier} type="button">
                 Nouvel atelier
@@ -272,66 +260,69 @@ export default function Ateliers() {
             )}
           </header>
 
-          {/* Filtres */}
-          <div className="vivier-filtres">
-            <select value={filtreTiming} onChange={(e) => setFiltreTiming(e.target.value)}>
-              <option value="">Timing (tous)</option>
-              <option value="A">A (3-8 min)</option>
-              <option value="B">B (8-15 min)</option>
-              <option value="C">C (15-30 min)</option>
-              <option value="D">D (30+ min)</option>
-            </select>
-            <select value={filtreType} onChange={(e) => setFiltreType(e.target.value)}>
-              <option value="">Type (tous)</option>
-              {allTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select value={filtreTag} onChange={(e) => setFiltreTag(e.target.value)}>
-              <option value="">Tag (tous)</option>
-              {allTags.map((t) => <option key={t.id} value={t.nom}>{t.nom}</option>)}
-            </select>
+          <p className="section-intro">Sources evaluees par la communaute, triees par pertinence pour un atelier.</p>
+
+          <div className="vivier-timing-chips">
+            {(['', 'A', 'B', 'C', 'D'] as const).map((t) => (
+              <button
+                key={t || 'all'}
+                className={`chip${filtreTiming === t ? ' active' : ''}`}
+                onClick={() => setFiltreTiming(t)}
+                type="button"
+              >
+                {t === '' ? 'Tous' : t === 'A' ? 'A (court)' : t === 'B' ? 'B (moyen)' : t === 'C' ? 'C (long)' : 'D (tres long)'}
+              </button>
+            ))}
           </div>
 
-          {/* Liste */}
-          <div className="vivier-list">
-            {vivierFiltre.length === 0 && <p className="empty">Aucune source ne correspond aux filtres.</p>}
+          <div className="vivier-controles">
+            <div className="vivier-filtres">
+              <select value={filtreType} onChange={(e) => setFiltreType(e.target.value)}>
+                <option value="">Type (tous)</option>
+                {allTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select value={filtreTag} onChange={(e) => setFiltreTag(e.target.value)}>
+                <option value="">Tag (tous)</option>
+                {allTags.map((t) => <option key={t.id} value={t.nom}>{t.nom}</option>)}
+              </select>
+            </div>
+            <label className="toggle-fraicheur">
+              <input type="checkbox" checked={showFraicheur} onChange={(e) => setShowFraicheur(e.target.checked)} />
+              Trier par fraicheur
+            </label>
+          </div>
+
+          <div className="source-grid">
+            {vivierFiltre.length === 0 && <p className="empty">Aucune source dans le vivier.</p>}
             {vivierFiltre.map((s) => (
-              <div key={s.id} className="vivier-card">
-                <div className="vivier-score">{s.score.scoreTotal}</div>
-                <span className={`badge-timing badge-timing--${s.score.timing}`}>{s.score.timing}</span>
-                <div className="vivier-info">
-                  <Link to={`/lire/${s.id}`}><h3>{s.titre}</h3></Link>
-                  <span>{s.media_nom || 'Source'} — {s.score.nbEvaluations} eval(s)</span>
-                  {s.tags.length > 0 && (
-                    <div className="vivier-tags">
-                      {s.tags.map((t) => <span key={t.id} className="tag-chip">{t.nom}</span>)}
-                    </div>
-                  )}
-                </div>
-                {isFacilitateur && (
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => ajouterASelection(s)}
-                    type="button"
-                    title="Ajouter a l'atelier"
-                  >
+              <SourceCard
+                key={s.id}
+                source={s}
+                score={{
+                  scoreTotal: s.score.scoreTotal,
+                  timing: s.score.timing,
+                  fraicheur: s.score.fraicheur,
+                  nbEvaluations: s.score.nbEvaluations,
+                }}
+                showFraicheur={showFraicheur}
+                action={isFacilitateur ? (
+                  <button className="btn btn-sm btn-primary" onClick={() => ajouterASelection(s)} type="button">
                     + Atelier
                   </button>
-                )}
-              </div>
+                ) : undefined}
+              />
             ))}
           </div>
         </section>
       )}
 
-      {/* Etape Selection */}
-      {etape === 'selection' && (
-        <section className="etape-selection">
-          <header className="etape-header">
-            <h2>Selection — Sources retenues ({selection.length})</h2>
-          </header>
+      {/* ===== SELECTION ===== */}
+      {section === 'selection' && (
+        <section className="atelier-section">
+          <h1>Selection ({selection.length} source{selection.length > 1 ? 's' : ''})</h1>
 
           {selection.length === 0 && (
-            <p className="empty">Aucune source selectionnee. Retournez au Vivier pour en ajouter.</p>
+            <p className="empty">Aucune source selectionnee. Allez dans le <Link to="/ateliers/vivier">Vivier</Link> pour en ajouter.</p>
           )}
 
           <div className="selection-list">
@@ -340,20 +331,8 @@ export default function Ateliers() {
                 <div className="selection-ordre">
                   {isFacilitateur && (
                     <>
-                      <button
-                        className="btn-arrow"
-                        onClick={() => monterSource(index)}
-                        disabled={index === 0}
-                        type="button"
-                        aria-label="Monter"
-                      >&#9650;</button>
-                      <button
-                        className="btn-arrow"
-                        onClick={() => descendreSource(index)}
-                        disabled={index === selection.length - 1}
-                        type="button"
-                        aria-label="Descendre"
-                      >&#9660;</button>
+                      <button className="btn-arrow" onClick={() => monterSource(index)} disabled={index === 0} type="button">&#9650;</button>
+                      <button className="btn-arrow" onClick={() => descendreSource(index)} disabled={index === selection.length - 1} type="button">&#9660;</button>
                     </>
                   )}
                   <span className="selection-num">{index + 1}</span>
@@ -363,12 +342,7 @@ export default function Ateliers() {
                   <span>{s.media_nom || 'Source'} — Score {s.score.scoreTotal}/100 — Timing {s.score.timing}</span>
                 </div>
                 {isFacilitateur && (
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => retirerDeSelection(s.id)}
-                    type="button"
-                    title="Retirer de la selection"
-                  >
+                  <button className="btn btn-sm" style={{ background: '#dc2626', color: 'white' }} onClick={() => retirerDeSelection(s.id)} type="button">
                     Retirer
                   </button>
                 )}
@@ -378,18 +352,16 @@ export default function Ateliers() {
         </section>
       )}
 
-      {/* Etape Preparation */}
-      {etape === 'preparation' && (
-        <section className="etape-preparation">
-          <header className="etape-header">
-            <h2>Preparation</h2>
-            <div className="prep-temps-total">
-              Temps total estime : <strong>{tempsTotal} min</strong>
-            </div>
+      {/* ===== PREPARATION ===== */}
+      {section === 'preparation' && (
+        <section className="atelier-section">
+          <header className="atelier-section-header">
+            <h1>Preparation</h1>
+            <div className="prep-temps-total">Temps total : <strong>{tempsTotal} min</strong></div>
           </header>
 
           {selection.length === 0 && (
-            <p className="empty">Aucune source a preparer. Selectionnez d'abord des sources.</p>
+            <p className="empty">Rien a preparer. <Link to="/ateliers/selection">Selectionnez des sources</Link> d'abord.</p>
           )}
 
           <div className="preparation-list">
@@ -402,36 +374,19 @@ export default function Ateliers() {
                     <Link to={`/lire/${s.id}`}><h3>{s.titre}</h3></Link>
                     <span className={`badge-timing badge-timing--${s.score.timing}`}>{s.score.timing}</span>
                   </div>
-
                   {isFacilitateur ? (
                     <div className="preparation-fields">
                       <label>
                         <span>Mecanismes identifies</span>
-                        <textarea
-                          value={note.mecanismes}
-                          onChange={(e) => updatePrepNote(s.id, 'mecanismes', e.target.value)}
-                          placeholder="Quels mecanismes de manipulation / biais sont a l'oeuvre dans cette source ?"
-                          rows={3}
-                        />
+                        <textarea value={note.mecanismes} onChange={(e) => updatePrepNote(s.id, 'mecanismes', e.target.value)} placeholder="Quels mecanismes sont a l'oeuvre ?" rows={3} />
                       </label>
                       <label>
-                        <span>Questions guidees pour le debat</span>
-                        <textarea
-                          value={note.questions}
-                          onChange={(e) => updatePrepNote(s.id, 'questions', e.target.value)}
-                          placeholder="Questions a poser au groupe pour lancer la discussion..."
-                          rows={3}
-                        />
+                        <span>Questions guidees</span>
+                        <textarea value={note.questions} onChange={(e) => updatePrepNote(s.id, 'questions', e.target.value)} placeholder="Questions pour lancer la discussion..." rows={3} />
                       </label>
                       <label className="preparation-duree">
-                        <span>Duree estimee (min)</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={120}
-                          value={note.duree}
-                          onChange={(e) => updatePrepNote(s.id, 'duree', parseInt(e.target.value) || 0)}
-                        />
+                        <span>Duree (min)</span>
+                        <input type="number" min={1} max={120} value={note.duree} onChange={(e) => updatePrepNote(s.id, 'duree', parseInt(e.target.value) || 0)} />
                       </label>
                     </div>
                   ) : (
@@ -448,81 +403,61 @@ export default function Ateliers() {
         </section>
       )}
 
-      {/* Etape Atelier */}
-      {etape === 'atelier' && (
-        <section className="etape-atelier">
-          <header className="etape-header">
-            <h2>Atelier{atelierEnCours ? ` #${atelierEnCours.numero}` : ''}</h2>
-          </header>
+      {/* ===== ATELIER EN COURS ===== */}
+      {section === 'en-cours' && (
+        <section className="atelier-section">
+          <h1>Atelier{atelierEnCours ? ` #${atelierEnCours.numero}` : ''}</h1>
 
           {!atelierEnCours && (
-            <p className="empty">Aucun atelier en preparation. Creez-en un depuis l'etape Vivier.</p>
+            <p className="empty">Aucun atelier en cours. <Link to="/ateliers/vivier">Creez-en un depuis le Vivier.</Link></p>
           )}
 
           {atelierEnCours && (
             <div className="atelier-form">
               <div className="atelier-form-grid">
                 <label>
-                  <span>Date de l'atelier</span>
-                  <input
-                    type="date"
-                    value={atelierInfos.date}
-                    onChange={(e) => setAtelierInfos((p) => ({ ...p, date: e.target.value }))}
-                    disabled={!isFacilitateur}
-                  />
+                  <span>Date</span>
+                  <input type="date" value={atelierInfos.date} onChange={(e) => setAtelierInfos((p) => ({ ...p, date: e.target.value }))} disabled={!isFacilitateur} />
                 </label>
                 <label>
                   <span>Lieu</span>
-                  <input
-                    type="text"
-                    value={atelierInfos.lieu}
-                    onChange={(e) => setAtelierInfos((p) => ({ ...p, lieu: e.target.value }))}
-                    placeholder="Ex: Salle des fetes, en ligne..."
-                    disabled={!isFacilitateur}
-                  />
+                  <input type="text" value={atelierInfos.lieu} onChange={(e) => setAtelierInfos((p) => ({ ...p, lieu: e.target.value }))} placeholder="Salle, en ligne..." disabled={!isFacilitateur} />
                 </label>
                 <label>
-                  <span>Nombre de participant·es</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={atelierInfos.nbParticipants}
-                    onChange={(e) => setAtelierInfos((p) => ({ ...p, nbParticipants: e.target.value }))}
-                    disabled={!isFacilitateur}
-                  />
+                  <span>Participant·es</span>
+                  <input type="number" min={1} value={atelierInfos.nbParticipants} onChange={(e) => setAtelierInfos((p) => ({ ...p, nbParticipants: e.target.value }))} disabled={!isFacilitateur} />
                 </label>
               </div>
 
+              {selection.length > 0 && (
+                <div className="atelier-sources-resume">
+                  <h3>Sources selectionnees</h3>
+                  {selection.map((s, i) => (
+                    <div key={s.id} className="atelier-source-mini">
+                      <span>{i + 1}.</span>
+                      <Link to={`/lire/${s.id}`}>{s.titre}</Link>
+                    </div>
+                  ))}
+                  <Link to="/projection" className="btn btn-primary" style={{ marginTop: 'var(--space-sm)' }}>
+                    Lancer la projection
+                  </Link>
+                </div>
+              )}
+
               <label className="atelier-field-large">
                 <span>Compte-rendu</span>
-                <textarea
-                  value={atelierInfos.compteRendu}
-                  onChange={(e) => setAtelierInfos((p) => ({ ...p, compteRendu: e.target.value }))}
-                  placeholder="Resume du deroulement de l'atelier, points saillants..."
-                  rows={5}
-                  disabled={!isFacilitateur}
-                />
+                <textarea value={atelierInfos.compteRendu} onChange={(e) => setAtelierInfos((p) => ({ ...p, compteRendu: e.target.value }))} placeholder="Resume du deroulement..." rows={5} disabled={!isFacilitateur} />
               </label>
 
               <label className="atelier-field-large">
                 <span>Observations</span>
-                <textarea
-                  value={atelierInfos.observations}
-                  onChange={(e) => setAtelierInfos((p) => ({ ...p, observations: e.target.value }))}
-                  placeholder="Observations sur la dynamique de groupe, surprises, difficultes..."
-                  rows={4}
-                  disabled={!isFacilitateur}
-                />
+                <textarea value={atelierInfos.observations} onChange={(e) => setAtelierInfos((p) => ({ ...p, observations: e.target.value }))} placeholder="Dynamique de groupe, surprises..." rows={4} disabled={!isFacilitateur} />
               </label>
 
               {isFacilitateur && (
                 <div className="atelier-actions">
-                  <button className="btn btn-primary" onClick={sauvegarderAtelier} type="button">
-                    Sauvegarder
-                  </button>
-                  <button className="btn btn-success" onClick={terminerAtelier} type="button">
-                    Terminer l'atelier
-                  </button>
+                  <button className="btn btn-primary" onClick={sauvegarderAtelier} type="button">Sauvegarder</button>
+                  <button className="btn" style={{ background: '#059669', color: 'white' }} onClick={terminerAtelier} type="button">Terminer l'atelier</button>
                 </div>
               )}
             </div>
@@ -530,269 +465,37 @@ export default function Ateliers() {
         </section>
       )}
 
-      {/* CSS inline pour eviter fichier supplementaire */}
-      <style>{`
-        .stepper {
-          display: flex;
-          gap: var(--space-xs, 0.25rem);
-          margin-bottom: var(--space-xl, 2rem);
-          padding: var(--space-sm, 0.5rem) 0;
-          border-bottom: 1px solid var(--color-border, #e5e7eb);
-        }
-        .stepper-step {
-          display: flex;
-          align-items: center;
-          gap: var(--space-xs, 0.25rem);
-          padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-sm, 4px);
-          background: none;
-          cursor: pointer;
-          font-size: 0.875rem;
-          color: var(--color-text-secondary, #6b7280);
-          transition: all 0.15s;
-          flex: 1;
-          justify-content: center;
-        }
-        .stepper-step:hover { background: var(--color-surface, #f9fafb); }
-        .stepper-step--active {
-          background: var(--color-primary, #2563eb);
-          color: white;
-          border-color: var(--color-primary, #2563eb);
-        }
-        .stepper-num {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.2);
-          font-size: 0.75rem;
-          font-weight: 700;
-        }
-        .stepper-step:not(.stepper-step--active) .stepper-num {
-          background: var(--color-border, #e5e7eb);
-          color: var(--color-text-secondary, #6b7280);
-        }
-        .stepper-label { font-weight: 500; }
+      {/* ===== HISTORIQUE ===== */}
+      {section === 'historique' && (
+        <section className="atelier-section">
+          <h1>Ateliers passes ({ateliersPasses.length})</h1>
 
-        @media (max-width: 640px) {
-          .stepper { flex-direction: column; }
-          .stepper-step { justify-content: flex-start; }
-        }
+          {ateliersPasses.length === 0 && (
+            <p className="empty">Aucun atelier termine pour l'instant.</p>
+          )}
 
-        .etape-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: var(--space-md, 1rem);
-          flex-wrap: wrap;
-          gap: var(--space-sm, 0.5rem);
-        }
-        .etape-header h2 {
-          font-family: var(--font-display, inherit);
-          font-size: 1.25rem;
-          margin: 0;
-        }
-
-        /* Filtres */
-        .vivier-filtres {
-          display: flex;
-          gap: var(--space-sm, 0.5rem);
-          margin-bottom: var(--space-md, 1rem);
-          flex-wrap: wrap;
-        }
-        .vivier-filtres select {
-          padding: var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-sm, 4px);
-          font-size: 0.8rem;
-          background: var(--color-surface, #fff);
-          color: var(--color-text, #111);
-        }
-
-        /* Vivier cards */
-        .vivier-list { display: flex; flex-direction: column; gap: var(--space-sm, 0.5rem); }
-        .vivier-card {
-          display: flex;
-          align-items: center;
-          gap: var(--space-md, 1rem);
-          padding: var(--space-md, 1rem);
-          background: var(--color-surface, #fff);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-md, 8px);
-        }
-        .vivier-card:hover { box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05)); }
-        .vivier-score {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: var(--color-primary, #2563eb);
-          font-family: var(--font-display, inherit);
-          min-width: 44px;
-          text-align: center;
-        }
-        .vivier-info { flex: 1; min-width: 0; }
-        .vivier-info h3 { font-size: 0.95rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .vivier-info span { font-size: 0.8rem; color: var(--color-text-secondary, #6b7280); }
-        .vivier-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-        .tag-chip {
-          font-size: 0.7rem;
-          padding: 1px 6px;
-          border-radius: 10px;
-          background: var(--color-border, #e5e7eb);
-          color: var(--color-text-secondary, #6b7280);
-        }
-
-        /* Badge timing */
-        .badge-timing {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          font-size: 0.75rem;
-          font-weight: 700;
-          flex-shrink: 0;
-        }
-        .badge-timing--A { background: #d1fae5; color: #065f46; }
-        .badge-timing--B { background: #dbeafe; color: #1e40af; }
-        .badge-timing--C { background: #fef3c7; color: #92400e; }
-        .badge-timing--D { background: #fee2e2; color: #991b1b; }
-
-        /* Selection */
-        .selection-list { display: flex; flex-direction: column; gap: var(--space-sm, 0.5rem); }
-        .selection-card {
-          display: flex;
-          align-items: center;
-          gap: var(--space-md, 1rem);
-          padding: var(--space-md, 1rem);
-          background: var(--color-surface, #fff);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-md, 8px);
-        }
-        .selection-ordre {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2px;
-        }
-        .btn-arrow {
-          background: none;
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: 3px;
-          cursor: pointer;
-          font-size: 0.65rem;
-          padding: 2px 6px;
-          color: var(--color-text-secondary, #6b7280);
-        }
-        .btn-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
-        .btn-arrow:hover:not(:disabled) { background: var(--color-border, #e5e7eb); }
-        .selection-num {
-          font-size: 0.8rem;
-          font-weight: 700;
-          color: var(--color-primary, #2563eb);
-        }
-        .selection-info { flex: 1; min-width: 0; }
-        .selection-info h3 { font-size: 0.95rem; margin: 0; }
-        .selection-info span { font-size: 0.8rem; color: var(--color-text-secondary, #6b7280); }
-
-        /* Preparation */
-        .prep-temps-total {
-          font-size: 0.9rem;
-          padding: var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
-          background: var(--color-surface, #f9fafb);
-          border-radius: var(--radius-sm, 4px);
-          border: 1px solid var(--color-border, #e5e7eb);
-        }
-        .preparation-list { display: flex; flex-direction: column; gap: var(--space-md, 1rem); }
-        .preparation-card {
-          padding: var(--space-md, 1rem);
-          background: var(--color-surface, #fff);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-md, 8px);
-        }
-        .preparation-header {
-          display: flex;
-          align-items: center;
-          gap: var(--space-sm, 0.5rem);
-          margin-bottom: var(--space-sm, 0.5rem);
-        }
-        .preparation-header h3 { font-size: 0.95rem; margin: 0; }
-        .preparation-num { font-weight: 700; color: var(--color-primary, #2563eb); }
-        .preparation-fields {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-sm, 0.5rem);
-        }
-        .preparation-fields label { display: flex; flex-direction: column; gap: 4px; }
-        .preparation-fields label span { font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary, #6b7280); }
-        .preparation-fields textarea,
-        .preparation-fields input {
-          padding: var(--space-sm, 0.5rem);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-sm, 4px);
-          font-size: 0.85rem;
-          font-family: inherit;
-          resize: vertical;
-        }
-        .preparation-duree { max-width: 180px; }
-        .preparation-duree input { width: 80px; }
-        .preparation-readonly { font-size: 0.85rem; color: var(--color-text-secondary, #6b7280); }
-        .preparation-readonly p { margin: 4px 0; }
-
-        /* Atelier form */
-        .atelier-form { display: flex; flex-direction: column; gap: var(--space-md, 1rem); }
-        .atelier-form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: var(--space-md, 1rem);
-        }
-        .atelier-form-grid label,
-        .atelier-field-large { display: flex; flex-direction: column; gap: 4px; }
-        .atelier-form-grid label span,
-        .atelier-field-large span { font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary, #6b7280); }
-        .atelier-form-grid input,
-        .atelier-field-large textarea {
-          padding: var(--space-sm, 0.5rem);
-          border: 1px solid var(--color-border, #e5e7eb);
-          border-radius: var(--radius-sm, 4px);
-          font-size: 0.85rem;
-          font-family: inherit;
-        }
-        .atelier-field-large textarea { resize: vertical; }
-        .atelier-actions {
-          display: flex;
-          gap: var(--space-sm, 0.5rem);
-          padding-top: var(--space-sm, 0.5rem);
-        }
-
-        /* Boutons generiques */
-        .btn {
-          padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
-          border: none;
-          border-radius: var(--radius-sm, 4px);
-          cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 500;
-          transition: opacity 0.15s;
-        }
-        .btn:hover { opacity: 0.85; }
-        .btn-primary { background: var(--color-primary, #2563eb); color: white; }
-        .btn-success { background: #059669; color: white; }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn-outline { background: none; border: 1px solid var(--color-border, #e5e7eb); color: var(--color-text, #111); }
-        .btn-outline:hover { background: var(--color-surface, #f9fafb); }
-        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
-
-        .empty {
-          text-align: center;
-          color: var(--color-text-secondary, #6b7280);
-          padding: var(--space-xl, 2rem);
-          font-size: 0.9rem;
-        }
-      `}</style>
+          <div className="historique-list">
+            {ateliersPasses.map((a) => (
+              <div key={a.id} className="historique-card">
+                <div className="historique-header">
+                  <h3>Atelier #{a.numero}</h3>
+                  <span className="historique-date">{a.date_atelier || 'Date non renseignee'}</span>
+                </div>
+                <div className="historique-meta">
+                  {a.lieu && <span>Lieu : {a.lieu}</span>}
+                  {a.nb_participants && <span>{a.nb_participants} participant·es</span>}
+                </div>
+                {a.compte_rendu && (
+                  <p className="historique-cr">{a.compte_rendu.substring(0, 200)}{a.compte_rendu.length > 200 ? '...' : ''}</p>
+                )}
+                {a.observations && (
+                  <p className="historique-obs"><em>{a.observations.substring(0, 150)}{a.observations.length > 150 ? '...' : ''}</em></p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

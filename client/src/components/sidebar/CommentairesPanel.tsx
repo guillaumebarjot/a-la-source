@@ -25,8 +25,7 @@ export default function CommentairesPanel({ sourceId }: Props) {
   }
 
   return (
-    <div className="sidebar-panel">
-      <h3>Commentaires ({commentaires.length})</h3>
+    <>
       <div className="commentaires-list">
         {commentaires.map((c) => (
           <div key={c.id} className="commentaire-item">
@@ -49,6 +48,6 @@ export default function CommentairesPanel({ sourceId }: Props) {
         <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Votre commentaire..." rows={2} />
         <button type="submit" className="btn btn-sm btn-primary">Envoyer</button>
       </form>
-    </div>
+    </>
   )
 }

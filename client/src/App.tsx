@@ -11,7 +11,6 @@ const Ateliers = lazy(() => import('./pages/Ateliers'))
 const Archiver = lazy(() => import('./pages/Archiver'))
 const BecsRouges = lazy(() => import('./pages/BecsRouges'))
 const MonEspace = lazy(() => import('./pages/MonEspace'))
-const Aide = lazy(() => import('./pages/Aide'))
 const AdminParametrage = lazy(() => import('./pages/AdminParametrage'))
 const Projection = lazy(() => import('./pages/Projection'))
 const Mecanismes = lazy(() => import('./pages/Mecanismes'))
@@ -33,6 +32,7 @@ export default function App() {
             <Route path="/veille" element={<Navigate to="/flux" replace />} />
             <Route path="/lire/:id" element={<Lire />} />
             <Route path="/observatoire" element={<Observatoire />} />
+            <Route path="/observatoire/:section" element={<Observatoire />} />
             <Route path="/decrypter" element={<Navigate to="/observatoire" replace />} />
             <Route path="/ateliers" element={<Ateliers />} />
             <Route path="/ateliers/:section" element={<Ateliers />} />
@@ -41,12 +41,19 @@ export default function App() {
             <Route path="/becs-rouges" element={<Navigate to="/perso/chaines" replace />} />
             <Route path="/perso" element={<MonEspace />} />
             <Route path="/perso/:section" element={<MonEspace />} />
-            <Route path="/aide" element={<Aide />} />
-            <Route path="/admin/parametrage" element={<AdminParametrage />} />
+            {/* Apprendre (ex-Mecanismes + Aide) */}
+            <Route path="/apprendre" element={<Mecanismes />} />
+            <Route path="/apprendre/:categorie" element={<Mecanismes />} />
+            <Route path="/apprendre/:categorie/:slug" element={<Mecanismes />} />
+            {/* Anciennes routes — redirects */}
+            <Route path="/aide" element={<Navigate to="/apprendre/aide" replace />} />
+            <Route path="/mecanismes" element={<Navigate to="/apprendre" replace />} />
+            <Route path="/mecanismes/:categorie" element={<Navigate to="/apprendre" replace />} />
+            <Route path="/mecanismes/:categorie/:slug" element={<Navigate to="/apprendre" replace />} />
+            {/* Admin */}
+            <Route path="/admin" element={<Navigate to="/admin/parametrage" replace />} />
+            <Route path="/admin/:section" element={<AdminParametrage />} />
             <Route path="/projection" element={<Projection />} />
-            <Route path="/mecanismes" element={<Mecanismes />} />
-            <Route path="/mecanismes/:categorie" element={<Mecanismes />} />
-            <Route path="/mecanismes/:categorie/:slug" element={<Mecanismes />} />
           </Routes>
         </Suspense>
       </main>

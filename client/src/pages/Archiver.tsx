@@ -7,7 +7,7 @@ import SubNav from '../components/layout/SubNav'
 const SUBNAV_ITEMS = [
   { label: 'A archiver', to: '/archiver/priorite' },
   { label: 'Archives partielles', to: '/archiver/partielles' },
-  { label: 'Contribuer', to: '/archiver/contribuer' },
+  { label: 'Completer', to: '/archiver/contribuer' },
 ]
 
 /* ---------- Section : A archiver en priorite ---------- */

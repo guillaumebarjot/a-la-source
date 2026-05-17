@@ -42,6 +42,7 @@ export interface Media {
   nom: string
   type: string | null
   url_site: string | null
+  description: string | null
   nb_sources?: number
 }
 

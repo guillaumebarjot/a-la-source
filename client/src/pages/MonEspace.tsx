@@ -204,6 +204,7 @@ export default function MonEspace() {
     <div className="page-perso">
       <h1>Bonjour{user ? `, ${user.nom}` : ''}</h1>
       <SubNav items={SUBNAV_ITEMS} />
+      <p className="page-intro">Vos lectures sauvegardees et les chaines partenaires a suivre.</p>
 
       {section === 'lectures' && <SectionLectures />}
       {section === 'chaines' && <SectionChaines />}

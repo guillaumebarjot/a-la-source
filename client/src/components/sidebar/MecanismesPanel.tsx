@@ -33,8 +33,7 @@ export default function MecanismesPanel({ sourceId, mecanismes, onRefresh }: Pro
   }
 
   return (
-    <div className="sidebar-panel">
-      <h3>Mecanismes identifies</h3>
+    <>
       {mecanismes.length === 0 && <p className="empty-small">Aucun mecanisme identifie.</p>}
       {mecanismes.map((m) => (
         <div key={m.id} className="mecanisme-item">
@@ -58,6 +57,6 @@ export default function MecanismesPanel({ sourceId, mecanismes, onRefresh }: Pro
           </div>
         </form>
       )}
-    </div>
+    </>
   )
 }

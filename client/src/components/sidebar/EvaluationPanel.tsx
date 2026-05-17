@@ -22,8 +22,7 @@ export default function EvaluationPanel({ sourceId, score }: Props) {
   }
 
   return (
-    <div className="sidebar-panel">
-      <h3>Evaluation</h3>
+    <>
       <div className="score-summary">
         <div className="score-total">{score.scoreTotal}</div>
         <div className="score-details">
@@ -55,6 +54,6 @@ export default function EvaluationPanel({ sourceId, score }: Props) {
           </div>
         </form>
       )}
-    </div>
+    </>
   )
 }

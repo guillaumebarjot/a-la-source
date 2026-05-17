@@ -8,6 +8,7 @@ export interface ReadabilityResult {
   textContent: string
   excerpt: string
   byline: string | null
+  motsCles: string[]
 }
 
 // Patterns typiques de coupure paywall en fin d'article
@@ -46,6 +47,41 @@ export function compterMots(html: string): number {
   return html.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length
 }
 
+/**
+ * Extract keywords from HTML meta tags: <meta name="keywords">, og:article:tag, etc.
+ */
+function extraireMotsCles(document: Document): string[] {
+  const keywords = new Set<string>()
+
+  // <meta name="keywords" content="...">
+  const metaKeywords = document.querySelector('meta[name="keywords"]')
+  if (metaKeywords) {
+    const content = metaKeywords.getAttribute('content') || ''
+    content.split(/[,;]/).map(k => k.trim()).filter(Boolean).forEach(k => keywords.add(k))
+  }
+
+  // <meta property="article:tag" content="..."> (multiple)
+  document.querySelectorAll('meta[property="article:tag"]').forEach(el => {
+    const v = el.getAttribute('content')?.trim()
+    if (v) keywords.add(v)
+  })
+
+  // <meta property="og:article:tag" content="...">
+  document.querySelectorAll('meta[property="og:article:tag"]').forEach(el => {
+    const v = el.getAttribute('content')?.trim()
+    if (v) keywords.add(v)
+  })
+
+  // <meta name="news_keywords" content="..."> (Google News)
+  const newsKw = document.querySelector('meta[name="news_keywords"]')
+  if (newsKw) {
+    const content = newsKw.getAttribute('content') || ''
+    content.split(/[,;]/).map(k => k.trim()).filter(Boolean).forEach(k => keywords.add(k))
+  }
+
+  return Array.from(keywords).slice(0, 20)
+}
+
 export async function extractReadability(url: string): Promise<ReadabilityResult | null> {
   try {
     const response = await fetch(url, {
@@ -80,12 +116,16 @@ export async function extractReadability(url: string): Promise<ReadabilityResult
       if (meta.author) byline = meta.author
     }
 
+    // Extract keywords from meta tags
+    const motsCles = extraireMotsCles(document)
+
     return {
       title,
       content: article.content,
       textContent: article.textContent,
       excerpt: article.excerpt,
       byline,
+      motsCles,
     }
   } catch {
     return null

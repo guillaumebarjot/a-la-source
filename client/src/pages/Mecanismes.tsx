@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import { api } from '../api/client'
+import SubNav from '../components/layout/SubNav'
+import type { Contenu } from '../types'
 
 interface Mecanisme {
   id: number
@@ -32,11 +35,21 @@ const CATEGORIE_LABELS: Record<string, string> = {
   selection_info: "Selection de l'information",
 }
 
+const SUBNAV_ITEMS = [
+  { label: 'Catalogue', to: '/apprendre' },
+  { label: 'Aide & Ressources', to: '/apprendre/aide' },
+]
+
 export default function Mecanismes() {
   const { categorie, slug } = useParams()
   const [categories, setCategories] = useState<Categorie[]>([])
   const [mecas, setMecas] = useState<Mecanisme[]>([])
   const [fiche, setFiche] = useState<Mecanisme | null>(null)
+
+  // Aide content
+  const [scoring, setScoring] = useState<Contenu | null>(null)
+  const [guidelines, setGuidelines] = useState<Contenu | null>(null)
+  const [epoche, setEpoche] = useState<Contenu | null>(null)
 
   // Charger les categories au montage
   useEffect(() => {
@@ -45,7 +58,7 @@ export default function Mecanismes() {
 
   // Charger les mecanismes d'une categorie
   useEffect(() => {
-    if (categorie && !slug) {
+    if (categorie && categorie !== 'aide' && !slug) {
       api.get<Mecanisme[]>(`/mecanismes/categorie/${categorie}`).then(setMecas)
     }
   }, [categorie, slug])
@@ -59,6 +72,79 @@ export default function Mecanismes() {
     }
   }, [slug])
 
+  // Charger contenus aide
+  useEffect(() => {
+    if (categorie === 'aide') {
+      api.get<Contenu>('/contenus/scoring').then(setScoring).catch(() => {})
+      api.get<Contenu>('/contenus/guidelines').then(setGuidelines).catch(() => {})
+      api.get<Contenu>('/contenus/epoche').then(setEpoche).catch(() => {})
+    }
+  }, [categorie])
+
+  // Redirect /apprendre sans section vers /apprendre (catalogue = pas de categorie)
+  // On ne redirige pas ici car l'absence de categorie = index catalogue
+
+  // === Section Aide & Ressources ===
+  if (categorie === 'aide') {
+    return (
+      <div className="page-mecanismes">
+        <h1>Apprendre</h1>
+        <SubNav items={SUBNAV_ITEMS} />
+        <p className="page-intro">
+          Comment fonctionne l'outil et les ressources pour aller plus loin.
+        </p>
+
+        <section className="aide-section">
+          <h2>Comment fonctionne l'outil</h2>
+          <p>
+            « A la source » est un outil collaboratif d'education populaire sur l'information,
+            porte par Rouge Coquelicot. Il permet de collecter des sources mediatiques,
+            d'identifier les mecanismes informationnels a l'oeuvre, et de preparer des ateliers
+            de decryptage collectif.
+          </p>
+          <h3>Parcours type</h3>
+          <ol>
+            <li><strong>Flux</strong> — Soumettre des sources, les taguer, commenter</li>
+            <li><strong>Lire</strong> — Lire en detail, identifier des mecanismes, evaluer</li>
+            <li><strong>Vivier</strong> — Les meilleures sources remontent dans le pipeline atelier</li>
+            <li><strong>Atelier</strong> — Le·la facilitateur·ice selectionne, le groupe decouvre et debat</li>
+          </ol>
+        </section>
+
+        <section className="aide-section">
+          <h2>Mecanismes informationnels</h2>
+          <p>
+            Pour comprendre comment l'information est fabriquee, il faut savoir identifier les
+            procedes recurrents du traitement mediatique. Nous avons documente 25 mecanismes,
+            organises en 6 categories, avec des definitions detaillees, des exemples concrets
+            et des questions guidees pour les ateliers.
+          </p>
+          <Link to="/apprendre" className="btn btn-primary" style={{ marginTop: '0.5rem', display: 'inline-block' }}>
+            Explorer les mecanismes
+          </Link>
+        </section>
+
+        {epoche && (
+          <section className="aide-section">
+            <ReactMarkdown>{epoche.contenu || ''}</ReactMarkdown>
+          </section>
+        )}
+
+        {scoring && (
+          <section className="aide-section">
+            <ReactMarkdown>{scoring.contenu || ''}</ReactMarkdown>
+          </section>
+        )}
+
+        {guidelines && (
+          <section className="aide-section">
+            <ReactMarkdown>{guidelines.contenu || ''}</ReactMarkdown>
+          </section>
+        )}
+      </div>
+    )
+  }
+
   // === Niveau 3 : Fiche individuelle ===
   if (slug && fiche) {
     const questions = (() => {
@@ -68,10 +154,12 @@ export default function Mecanismes() {
 
     return (
       <div className="page-mecanismes">
+        <h1>Apprendre</h1>
+        <SubNav items={SUBNAV_ITEMS} />
         <nav className="mecanismes-breadcrumb">
-          <Link to="/mecanismes">Mecanismes</Link>
+          <Link to="/apprendre">Catalogue</Link>
           <span className="breadcrumb-sep">/</span>
-          <Link to={`/mecanismes/${fiche.categorie}`}>
+          <Link to={`/apprendre/${fiche.categorie}`}>
             {fiche.categorie_label || CATEGORIE_LABELS[fiche.categorie] || fiche.categorie}
           </Link>
           <span className="breadcrumb-sep">/</span>
@@ -80,7 +168,7 @@ export default function Mecanismes() {
 
         <article className="mecanisme-fiche">
           <header className="mecanisme-fiche-header">
-            <h1>{fiche.nom}</h1>
+            <h2>{fiche.nom}</h2>
             <span className="mecanisme-categorie-badge">
               {fiche.categorie_label || CATEGORIE_LABELS[fiche.categorie] || fiche.categorie}
             </span>
@@ -150,18 +238,20 @@ export default function Mecanismes() {
 
     return (
       <div className="page-mecanismes">
+        <h1>Apprendre</h1>
+        <SubNav items={SUBNAV_ITEMS} />
         <nav className="mecanismes-breadcrumb">
-          <Link to="/mecanismes">Mecanismes</Link>
+          <Link to="/apprendre">Catalogue</Link>
           <span className="breadcrumb-sep">/</span>
           <span>{catLabel}</span>
         </nav>
 
-        <h1>{catLabel}</h1>
+        <h2>{catLabel}</h2>
         {catDesc && <p className="page-intro">{catDesc}</p>}
 
         <div className="mecanismes-liste">
           {mecas.map((m) => (
-            <Link key={m.id} to={`/mecanismes/${categorie}/${m.slug}`} className="mecanisme-card-large">
+            <Link key={m.id} to={`/apprendre/${categorie}/${m.slug}`} className="mecanisme-card-large">
               <h2>{m.nom}</h2>
               <p>{m.description}</p>
               {m.exemple && (
@@ -176,10 +266,11 @@ export default function Mecanismes() {
     )
   }
 
-  // === Niveau 1 : Index des categories ===
+  // === Niveau 1 : Index des categories (Catalogue) ===
   return (
     <div className="page-mecanismes">
-      <h1>Mecanismes informationnels</h1>
+      <h1>Apprendre</h1>
+      <SubNav items={SUBNAV_ITEMS} />
       <p className="page-intro">
         Ces mecanismes sont des procedes recurrents dans le traitement mediatique de l'information.
         Les identifier permet de mieux comprendre comment une information est construite — pas de
@@ -192,7 +283,7 @@ export default function Mecanismes() {
 
       <div className="mecanismes-categories-grid">
         {categories.map((cat) => (
-          <Link key={cat.categorie} to={`/mecanismes/${cat.categorie}`} className="mecanisme-categorie-card">
+          <Link key={cat.categorie} to={`/apprendre/${cat.categorie}`} className="mecanisme-categorie-card">
             <h2>{cat.categorie_label || CATEGORIE_LABELS[cat.categorie] || cat.categorie}</h2>
             <p>{cat.categorie_description}</p>
             <span className="mecanisme-categorie-count">{cat.nb} mecanisme{cat.nb > 1 ? 's' : ''}</span>
