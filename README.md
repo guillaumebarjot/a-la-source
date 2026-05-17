@@ -10,7 +10,7 @@
 
 ## Pourquoi cet outil ?
 
-Les ateliers « A la source » existent depuis 2024 au sein de Rouge Coquelicot. Un groupe se retrouve, decouvre une source choisie collectivement, et analyse ensemble comment l'information est construite — quels mecanismes informationnels sont a l'oeuvre, quel cadrage, quels implicites.
+Les ateliers « A la source » : un groupe se retrouve, decouvre une source choisie collectivement, et analyse ensemble comment l'information est construite — quels mecanismes informationnels sont a l'oeuvre, quel cadrage, quels implicites.
 
 **Le probleme** : preparer ces ateliers et maintenir une veille collaborative necessitait un outil dedie. Rien sur le marche ne correspondait a notre usage (voir la section [Pourquoi pas Linkwarden ?](#pourquoi-pas-linkwarden-ou-wallabag-ou-shaarli)).
 
