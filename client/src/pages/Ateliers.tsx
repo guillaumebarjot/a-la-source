@@ -3,7 +3,7 @@ import { Link, useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import SourceCard from '../components/cards/SourceCard'
-import type { Source, Atelier, Tag } from '../types'
+import type { Source, Atelier, AtelierDetail, Tag } from '../types'
 
 /* ---------- Types ---------- */
 
@@ -17,30 +17,25 @@ interface ScoreComplet {
   details: Record<string, number>
 }
 
+interface AtelierBadge {
+  atelier_id: number
+  numero: number
+  statut: string
+}
+
+interface QualityGate {
+  ok: boolean
+  hasEvaluation: boolean
+  hasArchive: boolean
+  hasAccroche: boolean
+}
+
 interface VivierSource extends Source {
   score: ScoreComplet
   tags: Tag[]
+  atelier_badges: AtelierBadge[]
+  quality_gate: QualityGate
 }
-
-interface AtelierEnCours extends Atelier {
-  sources: Source[]
-}
-
-interface PreparationNote {
-  sourceId: number
-  mecanismes: string
-  questions: string
-  duree: number
-}
-
-interface AtelierInfos {
-  date: string
-  lieu: string
-  nbParticipants: string
-  compteRendu: string
-  observations: string
-}
-
 
 /* ---------- Composant ---------- */
 
@@ -51,21 +46,19 @@ export default function Ateliers() {
 
   // Data
   const [vivier, setVivier] = useState<VivierSource[]>([])
-  const [atelierEnCours, setAtelierEnCours] = useState<AtelierEnCours | null>(null)
-  const [ateliersPasses, setAteliersPasses] = useState<Atelier[]>([])
-  const [selection, setSelection] = useState<VivierSource[]>([])
+  const [ateliersActifs, setAteliersActifs] = useState<AtelierDetail[]>([])
+  const [ateliersTermines, setAteliersTermines] = useState<Atelier[]>([])
   const [loading, setLoading] = useState(true)
 
   // Filtres vivier
   const [scoreMin, setScoreMin] = useState(0)
+  const [qualityOnly, setQualityOnly] = useState(false)
 
-  // Preparation notes
-  const [prepNotes, setPrepNotes] = useState<PreparationNote[]>([])
-
-  // Atelier infos
-  const [atelierInfos, setAtelierInfos] = useState<AtelierInfos>({
-    date: '', lieu: '', nbParticipants: '', compteRendu: '', observations: '',
-  })
+  // Atelier creation form
+  const [showNewForm, setShowNewForm] = useState(false)
+  const [newDate, setNewDate] = useState('')
+  const [newHeure, setNewHeure] = useState('')
+  const [newLieu, setNewLieu] = useState('')
 
   /* ---------- Fetch ---------- */
 
@@ -74,35 +67,12 @@ export default function Ateliers() {
     try {
       const [vivierData, enCoursData, historiqueData] = await Promise.all([
         api.get<VivierSource[]>('/ateliers/vivier'),
-        api.get<AtelierEnCours | null>('/ateliers/en-cours'),
+        api.get<AtelierDetail[]>('/ateliers/en-cours'),
         api.get<Atelier[]>('/ateliers'),
       ])
       setVivier(vivierData)
-      setAtelierEnCours(enCoursData)
-      setAteliersPasses(historiqueData.filter(a => a.statut === 'termine'))
-
-      if (enCoursData?.sources) {
-        const sourcesIds = new Set(enCoursData.sources.map((s) => s.id))
-        const selectionFromVivier = vivierData.filter((s) => sourcesIds.has(s.id))
-        const remaining = enCoursData.sources
-          .filter((s) => !selectionFromVivier.find((v) => v.id === s.id))
-          .map((s) => ({
-            ...s,
-            score: { pedagogie: 0, echo: 0, fraicheur: 0, scoreTotal: 0, timing: 'B', nbEvaluations: 0, details: {} },
-            tags: [],
-          }) as VivierSource)
-        setSelection([...selectionFromVivier, ...remaining])
-      }
-
-      if (enCoursData) {
-        setAtelierInfos({
-          date: enCoursData.date_atelier || '',
-          lieu: enCoursData.lieu || '',
-          nbParticipants: enCoursData.nb_participants?.toString() || '',
-          compteRendu: enCoursData.compte_rendu || '',
-          observations: enCoursData.observations || '',
-        })
-      }
+      setAteliersActifs(enCoursData)
+      setAteliersTermines(historiqueData.filter(a => a.statut === 'termine'))
     } finally {
       setLoading(false)
     }
@@ -110,102 +80,52 @@ export default function Ateliers() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  /* ---------- Filtres ---------- */
+  /* ---------- Filtres vivier ---------- */
 
   const vivierFiltre = useMemo(() => {
     return vivier
       .filter((s) => {
-        if (selection.find((sel) => sel.id === s.id)) return false
         if (scoreMin > 0 && s.score.scoreTotal < scoreMin) return false
+        if (qualityOnly && !s.quality_gate.ok) return false
         return true
       })
-      .sort((a, b) => {
-        // Tri par date de soumission, plus recent en premier
-        const dateA = a.soumis_le || ''
-        const dateB = b.soumis_le || ''
-        return dateB.localeCompare(dateA)
-      })
-  }, [vivier, selection, scoreMin])
+      .sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
+  }, [vivier, scoreMin, qualityOnly])
 
   /* ---------- Actions ---------- */
 
-  const ajouterASelection = async (source: VivierSource) => {
-    setSelection((prev) => [...prev, source])
-    if (atelierEnCours) {
-      await api.post(`/ateliers/${atelierEnCours.id}/sources`, { source_id: source.id })
-    }
-  }
-
-  const retirerDeSelection = async (sourceId: number) => {
-    setSelection((prev) => prev.filter((s) => s.id !== sourceId))
-    if (atelierEnCours) {
-      await api.delete(`/ateliers/${atelierEnCours.id}/sources/${sourceId}`)
-    }
-  }
-
-  const monterSource = (index: number) => {
-    if (index === 0) return
-    setSelection((prev) => {
-      const next = [...prev]
-      ;[next[index - 1], next[index]] = [next[index], next[index - 1]]
-      return next
-    })
-  }
-
-  const descendreSource = (index: number) => {
-    setSelection((prev) => {
-      if (index >= prev.length - 1) return prev
-      const next = [...prev]
-      ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
-      return next
-    })
-  }
-
   const creerAtelier = async () => {
-    const ateliers = await api.get<Atelier[]>('/ateliers')
-    const maxNum = ateliers.reduce((m, a) => Math.max(m, a.numero), 0)
-    const res = await api.post<{ id: number }>('/ateliers', { numero: maxNum + 1 })
-    const newAtelier = await api.get<AtelierEnCours>(`/ateliers/${res.id}`)
-    setAtelierEnCours(newAtelier)
-  }
-
-  const sauvegarderAtelier = async () => {
-    if (!atelierEnCours) return
-    await api.patch(`/ateliers/${atelierEnCours.id}`, {
-      date_atelier: atelierInfos.date || null,
-      lieu: atelierInfos.lieu || null,
-      nb_participants: atelierInfos.nbParticipants ? parseInt(atelierInfos.nbParticipants) : null,
-      compte_rendu: atelierInfos.compteRendu || null,
-      observations: atelierInfos.observations || null,
+    await api.post<{ id: number; numero: number }>('/ateliers', {
+      date_atelier: newDate || null,
+      heure: newHeure || null,
+      lieu: newLieu || null,
     })
-  }
-
-  const terminerAtelier = async () => {
-    if (!atelierEnCours) return
-    await api.patch(`/ateliers/${atelierEnCours.id}`, { statut: 'termine' })
+    setShowNewForm(false)
+    setNewDate('')
+    setNewHeure('')
+    setNewLieu('')
     await fetchData()
   }
 
-  /* ---------- Preparation helpers ---------- */
-
-  const getPrepNote = (sourceId: number): PreparationNote => {
-    return prepNotes.find((n) => n.sourceId === sourceId) || { sourceId, mecanismes: '', questions: '', duree: 10 }
+  const ajouterSource = async (atelierId: number, sourceId: number) => {
+    await api.post(`/ateliers/${atelierId}/sources`, { source_id: sourceId })
+    await fetchData()
   }
 
-  const updatePrepNote = (sourceId: number, field: keyof Omit<PreparationNote, 'sourceId'>, value: string | number) => {
-    setPrepNotes((prev) => {
-      const existing = prev.find((n) => n.sourceId === sourceId)
-      if (existing) {
-        return prev.map((n) => n.sourceId === sourceId ? { ...n, [field]: value } : n)
-      }
-      return [...prev, { sourceId, mecanismes: '', questions: '', duree: 10, [field]: value }]
-    })
+  const retirerSource = async (atelierId: number, sourceId: number) => {
+    await api.delete(`/ateliers/${atelierId}/sources/${sourceId}`)
+    await fetchData()
   }
 
-  const tempsTotal = useMemo(() => {
-    return selection.reduce((total, s) => total + getPrepNote(s.id).duree, 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selection, prepNotes])
+  const sauvegarderAtelier = async (atelier: AtelierDetail, fields: Record<string, unknown>) => {
+    await api.patch(`/ateliers/${atelier.id}`, fields)
+    await fetchData()
+  }
+
+  const terminerAtelier = async (atelierId: number) => {
+    await api.patch(`/ateliers/${atelierId}`, { statut: 'termine' })
+    await fetchData()
+  }
 
   /* ---------- Redirect par defaut ---------- */
 
@@ -227,14 +147,12 @@ export default function Ateliers() {
         <section className="atelier-section">
           <header className="atelier-section-header">
             <h2>Vivier ({vivierFiltre.length} sources)</h2>
-            {isFacilitateur && !atelierEnCours && (
-              <button className="btn btn-primary" onClick={creerAtelier} type="button">
-                Nouvel atelier
-              </button>
-            )}
           </header>
 
-          <p className="section-intro">Sources du vivier, triees par date (plus recentes en premier). Fraicheur toujours visible.</p>
+          <p className="section-intro">
+            Sources evaluees et archivees, pretes pour les ateliers.
+            {!qualityOnly && ' Activez le filtre "pret" pour ne voir que les sources qui passent la quality gate.'}
+          </p>
 
           <div className="vivier-controles">
             <label className="vivier-score-filter">
@@ -244,6 +162,14 @@ export default function Ateliers() {
                 value={scoreMin}
                 onChange={(e) => setScoreMin(Number(e.target.value))}
               />
+            </label>
+            <label className="vivier-quality-filter">
+              <input
+                type="checkbox"
+                checked={qualityOnly}
+                onChange={(e) => setQualityOnly(e.target.checked)}
+              />
+              Pret pour atelier uniquement
             </label>
           </div>
 
@@ -260,48 +186,33 @@ export default function Ateliers() {
                   nbEvaluations: s.score.nbEvaluations,
                 }}
                 showFraicheur={true}
-                action={isFacilitateur ? (
-                  <button className="btn btn-sm btn-primary" onClick={() => ajouterASelection(s)} type="button">
-                    + Atelier
-                  </button>
+                atelierBadges={s.atelier_badges}
+                action={isFacilitateur && ateliersActifs.length > 0 ? (
+                  <div className="vivier-actions-multi">
+                    {!s.quality_gate.ok && (
+                      <QualityGateIndicator gate={s.quality_gate} />
+                    )}
+                    {s.quality_gate.ok && ateliersActifs.map(a => {
+                      const alreadyIn = a.sources.some(src => src.id === s.id)
+                      return alreadyIn ? (
+                        <span key={a.id} className="badge-atelier badge-atelier--retenue">
+                          #{a.numero}
+                        </span>
+                      ) : (
+                        <button
+                          key={a.id}
+                          className="btn btn-sm btn-primary"
+                          onClick={() => ajouterSource(a.id, s.id)}
+                          type="button"
+                          title={`Ajouter a l'atelier #${a.numero}`}
+                        >
+                          + #{a.numero}
+                        </button>
+                      )
+                    })}
+                  </div>
                 ) : undefined}
               />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ===== SELECTION ===== */}
-      {section === 'selection' && (
-        <section className="atelier-section">
-          <h1>Selection ({selection.length} source{selection.length > 1 ? 's' : ''})</h1>
-
-          {selection.length === 0 && (
-            <p className="empty">Aucune source selectionnee. Allez dans le <Link to="/ateliers/vivier">Vivier</Link> pour en ajouter.</p>
-          )}
-
-          <div className="selection-list">
-            {selection.map((s, index) => (
-              <div key={s.id} className="selection-card">
-                <div className="selection-ordre">
-                  {isFacilitateur && (
-                    <>
-                      <button className="btn-arrow" onClick={() => monterSource(index)} disabled={index === 0} type="button">&#9650;</button>
-                      <button className="btn-arrow" onClick={() => descendreSource(index)} disabled={index === selection.length - 1} type="button">&#9660;</button>
-                    </>
-                  )}
-                  <span className="selection-num">{index + 1}</span>
-                </div>
-                <div className="selection-info">
-                  <Link to={`/lire/${s.id}`}><h3>{s.titre}</h3></Link>
-                  <span>{s.media_nom || 'Source'} — Score {s.score.scoreTotal}/100 — Timing {s.score.timing}</span>
-                </div>
-                {isFacilitateur && (
-                  <button className="btn btn-sm" style={{ background: '#dc2626', color: 'white' }} onClick={() => retirerDeSelection(s.id)} type="button">
-                    Retirer
-                  </button>
-                )}
-              </div>
             ))}
           </div>
         </section>
@@ -311,151 +222,343 @@ export default function Ateliers() {
       {section === 'preparation' && (
         <section className="atelier-section">
           <header className="atelier-section-header">
-            <h1>Preparation</h1>
-            <div className="prep-temps-total">Temps total : <strong>{tempsTotal} min</strong></div>
+            <h2>Ateliers en preparation ({ateliersActifs.length})</h2>
+            {isFacilitateur && (
+              <button className="btn btn-primary" onClick={() => setShowNewForm(true)} type="button">
+                Nouvel atelier
+              </button>
+            )}
           </header>
 
-          {selection.length === 0 && (
-            <p className="empty">Rien a preparer. <Link to="/ateliers/selection">Selectionnez des sources</Link> d'abord.</p>
+          {showNewForm && (
+            <div className="atelier-new-form">
+              <h3>Creer un atelier</h3>
+              <div className="atelier-form-grid">
+                <label>
+                  <span>Date</span>
+                  <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+                </label>
+                <label>
+                  <span>Heure</span>
+                  <input type="time" value={newHeure} onChange={(e) => setNewHeure(e.target.value)} />
+                </label>
+                <label>
+                  <span>Lieu</span>
+                  <input type="text" value={newLieu} onChange={(e) => setNewLieu(e.target.value)} placeholder="Salle, en ligne..." />
+                </label>
+              </div>
+              <div className="atelier-new-actions">
+                <button className="btn btn-primary" onClick={creerAtelier} type="button">Creer</button>
+                <button className="btn" onClick={() => setShowNewForm(false)} type="button">Annuler</button>
+              </div>
+            </div>
           )}
 
-          <div className="preparation-list">
-            {selection.map((s, index) => {
-              const note = getPrepNote(s.id)
-              return (
-                <div key={s.id} className="preparation-card">
-                  <div className="preparation-header">
-                    <span className="preparation-num">{index + 1}.</span>
-                    <Link to={`/lire/${s.id}`}><h3>{s.titre}</h3></Link>
-                    <span className={`badge-timing badge-timing--${s.score.timing}`}>{s.score.timing}</span>
-                  </div>
-                  {isFacilitateur ? (
-                    <div className="preparation-fields">
-                      <label>
-                        <span>Mecanismes identifies</span>
-                        <textarea value={note.mecanismes} onChange={(e) => updatePrepNote(s.id, 'mecanismes', e.target.value)} placeholder="Quels mecanismes sont a l'oeuvre ?" rows={3} />
-                      </label>
-                      <label>
-                        <span>Questions guidees</span>
-                        <textarea value={note.questions} onChange={(e) => updatePrepNote(s.id, 'questions', e.target.value)} placeholder="Questions pour lancer la discussion..." rows={3} />
-                      </label>
-                      <label className="preparation-duree">
-                        <span>Duree (min)</span>
-                        <input type="number" min={1} max={120} value={note.duree} onChange={(e) => updatePrepNote(s.id, 'duree', parseInt(e.target.value) || 0)} />
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="preparation-readonly">
-                      {note.mecanismes && <p><strong>Mecanismes :</strong> {note.mecanismes}</p>}
-                      {note.questions && <p><strong>Questions :</strong> {note.questions}</p>}
-                      <p><strong>Duree :</strong> {note.duree} min</p>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+          {ateliersActifs.length === 0 && !showNewForm && (
+            <p className="empty">Aucun atelier en preparation. Creez-en un pour commencer.</p>
+          )}
+
+          <div className="preparation-ateliers-list">
+            {ateliersActifs.map(a => (
+              <AtelierPreparationCard
+                key={a.id}
+                atelier={a}
+                isFacilitateur={isFacilitateur}
+                onRetirer={(sourceId) => retirerSource(a.id, sourceId)}
+                onSave={(fields) => sauvegarderAtelier(a, fields)}
+              />
+            ))}
           </div>
         </section>
       )}
 
-      {/* ===== ATELIER EN COURS ===== */}
+      {/* ===== EN COURS ===== */}
       {section === 'en-cours' && (
         <section className="atelier-section">
-          <h1>Atelier{atelierEnCours ? ` #${atelierEnCours.numero}` : ''}</h1>
+          <h2>Atelier en cours</h2>
 
-          {!atelierEnCours && (
-            <p className="empty">Aucun atelier en cours. <Link to="/ateliers/vivier">Creez-en un depuis le Vivier.</Link></p>
+          {ateliersActifs.length === 0 && (
+            <p className="empty">Aucun atelier en cours. <Link to="/ateliers/preparation">Preparez-en un d'abord.</Link></p>
           )}
 
-          {atelierEnCours && (
-            <div className="atelier-form">
-              <div className="atelier-form-grid">
-                <label>
-                  <span>Date</span>
-                  <input type="date" value={atelierInfos.date} onChange={(e) => setAtelierInfos((p) => ({ ...p, date: e.target.value }))} disabled={!isFacilitateur} />
-                </label>
-                <label>
-                  <span>Lieu</span>
-                  <input type="text" value={atelierInfos.lieu} onChange={(e) => setAtelierInfos((p) => ({ ...p, lieu: e.target.value }))} placeholder="Salle, en ligne..." disabled={!isFacilitateur} />
-                </label>
-                <label>
-                  <span>Participant·es</span>
-                  <input type="number" min={1} value={atelierInfos.nbParticipants} onChange={(e) => setAtelierInfos((p) => ({ ...p, nbParticipants: e.target.value }))} disabled={!isFacilitateur} />
-                </label>
-              </div>
-
-              {selection.length > 0 && (
-                <div className="atelier-sources-resume">
-                  <h3>Sources selectionnees</h3>
-                  {selection.map((s, i) => (
-                    <div key={s.id} className="atelier-source-mini">
-                      <span>{i + 1}.</span>
-                      <Link to={`/lire/${s.id}`}>{s.titre}</Link>
-                    </div>
-                  ))}
-                  <div className="atelier-actions-inline">
-                    <Link to="/projection" className="btn btn-primary">
-                      Lancer la projection
-                    </Link>
-                    <a href={`/api/ateliers/${atelierEnCours!.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
-                      Version imprimable (PDF)
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              <label className="atelier-field-large">
-                <span>Compte-rendu</span>
-                <textarea value={atelierInfos.compteRendu} onChange={(e) => setAtelierInfos((p) => ({ ...p, compteRendu: e.target.value }))} placeholder="Resume du deroulement..." rows={5} disabled={!isFacilitateur} />
-              </label>
-
-              <label className="atelier-field-large">
-                <span>Observations</span>
-                <textarea value={atelierInfos.observations} onChange={(e) => setAtelierInfos((p) => ({ ...p, observations: e.target.value }))} placeholder="Dynamique de groupe, surprises..." rows={4} disabled={!isFacilitateur} />
-              </label>
-
-              {isFacilitateur && (
-                <div className="atelier-actions">
-                  <button className="btn btn-primary" onClick={sauvegarderAtelier} type="button">Sauvegarder</button>
-                  <button className="btn" style={{ background: '#059669', color: 'white' }} onClick={terminerAtelier} type="button">Terminer l'atelier</button>
-                </div>
-              )}
-            </div>
-          )}
+          {ateliersActifs.map(a => (
+            <AtelierEnCoursCard
+              key={a.id}
+              atelier={a}
+              isFacilitateur={isFacilitateur}
+              onSave={(fields) => sauvegarderAtelier(a, fields)}
+              onTerminer={() => terminerAtelier(a.id)}
+            />
+          ))}
         </section>
       )}
 
-      {/* ===== HISTORIQUE ===== */}
-      {section === 'historique' && (
+      {/* ===== ARCHIVES ===== */}
+      {section === 'archives' && (
         <section className="atelier-section">
-          <h1>Ateliers passes ({ateliersPasses.length})</h1>
+          <h2>Ateliers termines ({ateliersTermines.length})</h2>
 
-          {ateliersPasses.length === 0 && (
+          {ateliersTermines.length === 0 && (
             <p className="empty">Aucun atelier termine pour l'instant.</p>
           )}
 
           <div className="historique-list">
-            {ateliersPasses.map((a) => (
-              <div key={a.id} className="historique-card">
-                <div className="historique-header">
-                  <h3>Atelier #{a.numero}</h3>
-                  <span className="historique-date">{a.date_atelier || 'Date non renseignee'}</span>
-                </div>
-                <div className="historique-meta">
-                  {a.lieu && <span>Lieu : {a.lieu}</span>}
-                  {a.nb_participants && <span>{a.nb_participants} participant·es</span>}
-                  <a href={`/api/ateliers/${a.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">PDF</a>
-                </div>
-                {a.compte_rendu && (
-                  <p className="historique-cr">{a.compte_rendu.substring(0, 200)}{a.compte_rendu.length > 200 ? '...' : ''}</p>
-                )}
-                {a.observations && (
-                  <p className="historique-obs"><em>{a.observations.substring(0, 150)}{a.observations.length > 150 ? '...' : ''}</em></p>
-                )}
-              </div>
+            {ateliersTermines.map((a) => (
+              <AtelierArchiveCard key={a.id} atelier={a} />
             ))}
           </div>
         </section>
+      )}
+    </div>
+  )
+}
+
+/* ---------- Sous-composants ---------- */
+
+function QualityGateIndicator({ gate }: { gate: QualityGate }) {
+  return (
+    <div className="quality-gate-indicator">
+      <span className={gate.hasEvaluation ? 'qg-ok' : 'qg-missing'} title="Evaluation">⭐</span>
+      <span className={gate.hasArchive ? 'qg-ok' : 'qg-missing'} title="Archive locale">📄</span>
+      <span className={gate.hasAccroche ? 'qg-ok' : 'qg-missing'} title="Accroche redigee">✏️</span>
+    </div>
+  )
+}
+
+interface QualityGate {
+  ok: boolean
+  hasEvaluation: boolean
+  hasArchive: boolean
+  hasAccroche: boolean
+}
+
+function AtelierPreparationCard({ atelier, isFacilitateur, onRetirer, onSave }: {
+  atelier: AtelierDetail
+  isFacilitateur: boolean
+  onRetirer: (sourceId: number) => void
+  onSave: (fields: Record<string, unknown>) => void
+}) {
+  const [date, setDate] = useState(atelier.date_atelier || '')
+  const [heure, setHeure] = useState(atelier.heure || '')
+  const [lieu, setLieu] = useState(atelier.lieu || '')
+
+  return (
+    <div className="preparation-atelier-card">
+      <div className="preparation-atelier-header">
+        <h3>Atelier #{atelier.numero}</h3>
+        <span className="badge-statut">{atelier.statut}</span>
+      </div>
+
+      {isFacilitateur && (
+        <div className="atelier-form-grid">
+          <label>
+            <span>Date</span>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Heure</span>
+            <input type="time" value={heure} onChange={(e) => setHeure(e.target.value)} />
+          </label>
+          <label>
+            <span>Lieu</span>
+            <input type="text" value={lieu} onChange={(e) => setLieu(e.target.value)} placeholder="Salle, en ligne..." />
+          </label>
+        </div>
+      )}
+
+      <div className="preparation-sources">
+        <h4>{atelier.sources.length} source{atelier.sources.length > 1 ? 's' : ''} selectionnee{atelier.sources.length > 1 ? 's' : ''}</h4>
+        {atelier.sources.map((s, i) => (
+          <div key={s.id} className="selection-card">
+            <div className="selection-info">
+              <span className="selection-num">{i + 1}.</span>
+              <Link to={`/lire/${s.id}`}>{s.titre}</Link>
+              <span className="selection-media">{s.media_nom || ''}</span>
+            </div>
+            {isFacilitateur && (
+              <button className="btn btn-sm btn-danger" onClick={() => onRetirer(s.id)} type="button">
+                Retirer
+              </button>
+            )}
+          </div>
+        ))}
+        {atelier.sources.length === 0 && (
+          <p className="empty">Aucune source. Ajoutez-en depuis le <Link to="/ateliers/vivier">Vivier</Link>.</p>
+        )}
+      </div>
+
+      {isFacilitateur && (
+        <div className="preparation-atelier-actions">
+          <button className="btn btn-primary" onClick={() => onSave({
+            date_atelier: date || null,
+            heure: heure || null,
+            lieu: lieu || null,
+          })} type="button">
+            Sauvegarder
+          </button>
+          <a href={`/api/ateliers/${atelier.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+            Version imprimable
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AtelierEnCoursCard({ atelier, isFacilitateur, onSave, onTerminer }: {
+  atelier: AtelierDetail
+  isFacilitateur: boolean
+  onSave: (fields: Record<string, unknown>) => void
+  onTerminer: () => void
+}) {
+  const [nbParticipants, setNbParticipants] = useState(atelier.nb_participants?.toString() || '')
+  const [compteRendu, setCompteRendu] = useState(atelier.compte_rendu || '')
+  const [observations, setObservations] = useState(atelier.observations || '')
+
+  return (
+    <div className="atelier-en-cours-card">
+      <div className="atelier-en-cours-header">
+        <h3>Atelier #{atelier.numero}</h3>
+        <div className="atelier-en-cours-meta">
+          {atelier.date_atelier && <span>{new Date(atelier.date_atelier).toLocaleDateString('fr-FR')}</span>}
+          {atelier.heure && <span>{atelier.heure}</span>}
+          {atelier.lieu && <span>{atelier.lieu}</span>}
+        </div>
+      </div>
+
+      {atelier.sources.length > 0 && (
+        <div className="atelier-sources-resume">
+          <h4>Sources ({atelier.sources.length})</h4>
+          {atelier.sources.map((s, i) => (
+            <div key={s.id} className="atelier-source-mini">
+              <span>{i + 1}.</span>
+              <Link to={`/lire/${s.id}`}>{s.titre}</Link>
+            </div>
+          ))}
+          <div className="atelier-actions-inline">
+            <Link to={`/projection/${atelier.id}`} className="btn btn-primary">
+              Lancer la projection
+            </Link>
+            <a href={`/api/ateliers/${atelier.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+              Version imprimable
+            </a>
+          </div>
+        </div>
+      )}
+
+      {isFacilitateur && (
+        <>
+          <div className="atelier-form-grid">
+            <label>
+              <span>Participant·es</span>
+              <input type="number" min={1} value={nbParticipants} onChange={(e) => setNbParticipants(e.target.value)} />
+            </label>
+          </div>
+
+          <label className="atelier-field-large">
+            <span>Compte-rendu</span>
+            <textarea value={compteRendu} onChange={(e) => setCompteRendu(e.target.value)} placeholder="Resume du deroulement..." rows={5} />
+          </label>
+
+          <label className="atelier-field-large">
+            <span>Observations</span>
+            <textarea value={observations} onChange={(e) => setObservations(e.target.value)} placeholder="Dynamique de groupe, surprises..." rows={4} />
+          </label>
+
+          <div className="atelier-actions">
+            <button className="btn btn-primary" onClick={() => onSave({
+              nb_participants: nbParticipants ? parseInt(nbParticipants) : null,
+              compte_rendu: compteRendu || null,
+              observations: observations || null,
+            })} type="button">
+              Sauvegarder
+            </button>
+            <button className="btn btn-success" onClick={onTerminer} type="button">
+              Terminer l'atelier
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function AtelierArchiveCard({ atelier }: { atelier: Atelier }) {
+  const [detail, setDetail] = useState<AtelierDetail | null>(null)
+  const [expanded, setExpanded] = useState(false)
+
+  const loadDetail = async () => {
+    if (!detail) {
+      const d = await api.get<AtelierDetail>(`/ateliers/${atelier.id}`)
+      setDetail(d)
+    }
+    setExpanded(!expanded)
+  }
+
+  return (
+    <div className="historique-card">
+      <div className="historique-header" onClick={loadDetail} style={{ cursor: 'pointer' }}>
+        <h3>Atelier #{atelier.numero}</h3>
+        <span className="historique-date">{atelier.date_atelier || 'Date non renseignee'}</span>
+        <span className="historique-expand">{expanded ? '▼' : '▶'}</span>
+      </div>
+      <div className="historique-meta">
+        {atelier.lieu && <span>Lieu : {atelier.lieu}</span>}
+        {atelier.nb_participants && <span>{atelier.nb_participants} participant·es</span>}
+        <a href={`/api/ateliers/${atelier.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">PDF</a>
+      </div>
+      {!expanded && atelier.compte_rendu && (
+        <p className="historique-cr">{atelier.compte_rendu.substring(0, 200)}{atelier.compte_rendu.length > 200 ? '...' : ''}</p>
+      )}
+
+      {expanded && detail && (
+        <div className="historique-detail">
+          {detail.sources.length > 0 && (
+            <div className="historique-sources">
+              <h4>Sources</h4>
+              {detail.sources.map((s, i) => (
+                <div key={s.id} className="atelier-source-mini">
+                  <span>{i + 1}.</span>
+                  <Link to={`/lire/${s.id}`}>{s.titre}</Link>
+                </div>
+              ))}
+            </div>
+          )}
+          {detail.mecanismes_identifies && detail.mecanismes_identifies.length > 0 && (
+            <div className="historique-mecanismes">
+              <h4>Mecanismes identifies par le groupe</h4>
+              <div className="mecanismes-tags">
+                {detail.mecanismes_identifies.map(m => (
+                  <span key={m.mecanisme_id} className="badge-mecanisme">{m.mecanisme_nom}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {detail.compte_rendu && (
+            <div className="historique-section">
+              <h4>Compte-rendu</h4>
+              <p>{detail.compte_rendu}</p>
+            </div>
+          )}
+          {detail.observations && (
+            <div className="historique-section">
+              <h4>Observations</h4>
+              <p>{detail.observations}</p>
+            </div>
+          )}
+          {detail.observations_surprise && (
+            <div className="historique-section">
+              <h4>Ce qui a surpris</h4>
+              <p>{detail.observations_surprise}</p>
+            </div>
+          )}
+          {detail.questions_restantes && (
+            <div className="historique-section">
+              <h4>Questions restantes</h4>
+              <p>{detail.questions_restantes}</p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

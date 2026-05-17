@@ -129,12 +129,16 @@ CREATE TABLE IF NOT EXISTS ateliers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   numero INTEGER NOT NULL UNIQUE,
   date_atelier DATE,
+  heure TEXT,
   lieu TEXT,
   statut TEXT DEFAULT 'preparation' CHECK(statut IN ('preparation','pret','en_cours','termine')),
+  facilitateur_id INTEGER REFERENCES utilisateurs(id),
   source_choisie_id INTEGER REFERENCES sources(id),
   nb_participants INTEGER,
   compte_rendu TEXT,
   observations TEXT,
+  observations_surprise TEXT,
+  questions_restantes TEXT,
   mecanisme_identifie TEXT,
   cree_le DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -144,7 +148,14 @@ CREATE TABLE IF NOT EXISTS atelier_sources (
   source_id INTEGER REFERENCES sources(id) ON DELETE CASCADE,
   ajoutee_le DATETIME DEFAULT CURRENT_TIMESTAMP,
   retiree_le DATETIME,
+  ordre INTEGER DEFAULT 0,
   PRIMARY KEY (atelier_id, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS atelier_mecanismes (
+  atelier_id INTEGER REFERENCES ateliers(id) ON DELETE CASCADE,
+  mecanisme_id INTEGER REFERENCES mecanismes_reference(id),
+  PRIMARY KEY (atelier_id, mecanisme_id)
 );
 
 CREATE TABLE IF NOT EXISTS contenus (

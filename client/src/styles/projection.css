@@ -1,28 +1,38 @@
 /* =============================================================================
-   Vue Projection — Mode atelier plein ecran
-   Zero scroll, zero biais, cartes type reseau social
+   Vue Projection — Mode atelier
+   Mode CLAIR force (fond blanc, typo serif pour la lecture)
+   Route dediee /projection/:atelierId
    ============================================================================= */
 
 .projection {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: #111;
-  color: #fafafa;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* JAMAIS de scroll */
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Barre de controle discrete */
+/* Mode clair force */
+.projection--light {
+  background: #fafafa;
+  color: #1a1a1a;
+  color-scheme: light;
+}
+
+/* ========== Control bar ========== */
+
 .projection-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 20px;
-  background: rgba(0, 0, 0, 0.5);
   flex-shrink: 0;
+}
+.projection-controls--light {
+  background: #f0f0f0;
+  border-bottom: 1px solid #ddd;
 }
 .projection-ctrl-titre {
   font-size: 0.8rem;
@@ -31,9 +41,9 @@
   text-transform: uppercase;
 }
 .projection-ctrl-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fafafa;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #1a1a1a;
   padding: 6px 14px;
   border-radius: 4px;
   font-size: 0.8rem;
@@ -41,7 +51,11 @@
   transition: background 0.2s;
 }
 .projection-ctrl-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
+}
+.projection-ctrl-right {
+  display: flex;
+  gap: 8px;
 }
 
 /* Loading / Empty */
@@ -58,7 +72,7 @@
 .projection-empty h2 { font-size: 1.5rem; margin: 0; }
 .projection-empty p { opacity: 0.7; }
 
-/* ========== Phase Selection ========== */
+/* ========== Phase Shortlist (grille neutre) ========== */
 
 .projection-selection {
   flex: 1;
@@ -74,67 +88,61 @@
   font-size: 1.4rem;
   font-weight: 300;
   text-align: center;
-  opacity: 0.9;
+  opacity: 0.8;
   margin: 0;
+  color: #2d2d2d;
 }
 
-/* Grille de cartes — jamais de scroll, s'adapte au viewport */
+/* Card grid — no scroll, adapts to viewport */
 .projection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
   width: 100%;
   max-width: 1200px;
-  max-height: calc(100vh - 180px); /* Garantit zero scroll */
+  max-height: calc(100vh - 180px);
   overflow: hidden;
 }
-
-/* Pour 2 sources */
 .projection-grid:has(> :nth-child(2):last-child) {
   grid-template-columns: repeat(2, 1fr);
   max-width: 900px;
 }
-
-/* Pour 3 sources */
 .projection-grid:has(> :nth-child(3):last-child) {
   grid-template-columns: repeat(3, 1fr);
   max-width: 1100px;
 }
-
-/* Pour 4+ sources */
 .projection-grid:has(> :nth-child(5)) {
   grid-template-columns: repeat(3, 1fr);
 }
 
-/* Carte style reseau social (vignette + titre + chapo) */
-.projection-card {
+/* Neutral card (no score, no mechanism — just title + accroche + duration) */
+.projection-card--light {
   display: flex;
   flex-direction: column;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
   text-align: left;
-  max-height: calc((100vh - 200px) / 2); /* Max 2 rangees */
+  max-height: calc((100vh - 200px) / 2);
 }
-.projection-card:hover {
+.projection-card--light:hover {
   transform: scale(1.02);
   border-color: #c0392b;
-  box-shadow: 0 0 20px rgba(192, 57, 43, 0.3);
+  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.15);
 }
-.projection-card:focus-visible {
+.projection-card--light:focus-visible {
   outline: 2px solid #c0392b;
   outline-offset: 2px;
 }
 
-/* Vignette (image OG) */
 .projection-card-img {
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: #222;
+  background: #f0f0f0;
   flex-shrink: 0;
 }
 .projection-card-img img {
@@ -143,7 +151,6 @@
   object-fit: cover;
 }
 
-/* Corps de la carte */
 .projection-card-body {
   padding: 14px 16px;
   display: flex;
@@ -157,6 +164,7 @@
   font-weight: 600;
   margin: 0;
   line-height: 1.3;
+  color: #1a1a1a;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -165,8 +173,9 @@
 .projection-card-accroche {
   font-size: 0.85rem;
   margin: 0;
-  opacity: 0.7;
+  opacity: 0.6;
   line-height: 1.4;
+  color: #4a4a4a;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -174,78 +183,221 @@
 }
 .projection-card-meta {
   font-size: 0.75rem;
-  opacity: 0.5;
+  opacity: 0.4;
   margin-top: auto;
+  color: #6b6b6b;
 }
 
-/* ========== Phase Pourquoi ========== */
+/* ========== Phase Lecture (reader archive, serif, clair) ========== */
 
-.projection-pourquoi {
+.projection-lecture {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  gap: 32px;
-  text-align: center;
+  overflow-y: auto;
 }
 
-.projection-pourquoi-card {
-  max-width: 600px;
+.projection-reader {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+
+.projection-reader-header {
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #c0392b;
+  padding-bottom: 1rem;
+}
+
+.projection-reader-header h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.8rem;
+  line-height: 1.3;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem;
+}
+
+.projection-reader-meta {
   display: flex;
-  flex-direction: column;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #6b6b6b;
+}
+
+.projection-reader-body {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #2d2d2d;
+}
+.projection-reader-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+.projection-reader-body p {
+  margin: 0 0 1em;
+}
+.projection-reader-body h2,
+.projection-reader-body h3 {
+  margin: 1.5em 0 0.5em;
+  color: #1a1a1a;
+}
+.projection-reader-body blockquote {
+  border-left: 3px solid #c0392b;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #4a4a4a;
+  font-style: italic;
+}
+.projection-reader-body a {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+.projection-reader-fallback {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+.projection-reader-accroche {
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #4a4a4a;
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+.projection-reader-notice {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.projection-lecture-nav {
+  padding: 1rem 2rem;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ========== Phase Synthese (formulaire guide) ========== */
+
+.projection-synthese {
+  flex: 1;
+  overflow-y: auto;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+}
+
+.projection-synthese h2 {
+  font-size: 1.5rem;
+  color: #c0392b;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #c0392b;
+  padding-bottom: 0.5rem;
+}
+
+.synthese-section {
+  margin-bottom: 2rem;
+}
+.synthese-section h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #2d2d2d;
+}
+.synthese-hint {
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  margin-bottom: 0.8rem;
+}
+
+.synthese-mecanismes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 8px;
+}
+
+.synthese-mecanisme {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  background: #fff;
+}
+.synthese-mecanisme:hover {
+  background: #f8f8f8;
+}
+.synthese-mecanisme--selected {
+  background: #fef2f2;
+  border-color: #c0392b;
+}
+.synthese-mecanisme input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #c0392b;
+}
+.synthese-mecanisme-nom {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+}
+.synthese-mecanisme-desc {
+  display: block;
+  font-size: 0.78rem;
+  color: #6b6b6b;
+  line-height: 1.3;
+}
+
+.synthese-section textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  background: #fff;
+  color: #1a1a1a;
+}
+.synthese-section textarea:focus {
+  outline: none;
+  border-color: #c0392b;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.1);
+}
+
+.synthese-participants label {
+  display: flex;
   align-items: center;
   gap: 12px;
 }
-.projection-pourquoi-img {
-  width: 100%;
-  max-width: 500px;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: 8px;
+.synthese-participants label span {
+  font-weight: 500;
 }
-.projection-pourquoi-card h2 {
-  font-size: 1.6rem;
-  margin: 0;
-  line-height: 1.3;
-}
-.projection-pourquoi-accroche {
+.synthese-participants input[type="number"] {
+  width: 100px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   font-size: 1rem;
-  opacity: 0.8;
-  margin: 0;
-  max-width: 500px;
-}
-.projection-pourquoi-meta {
-  font-size: 0.85rem;
-  opacity: 0.5;
+  background: #fff;
+  color: #1a1a1a;
 }
 
-.projection-pourquoi-question {
-  background: rgba(192, 57, 43, 0.1);
-  border: 1px solid rgba(192, 57, 43, 0.3);
-  border-radius: 12px;
-  padding: 24px 32px;
-  max-width: 550px;
-}
-.projection-pourquoi-question h3 {
-  font-size: 1.2rem;
-  margin: 0 0 8px;
-  color: #e74c3c;
-}
-.projection-pourquoi-question p {
-  margin: 0;
-  font-size: 0.95rem;
-  opacity: 0.8;
-  line-height: 1.5;
-}
-
-.projection-pourquoi-actions {
+.synthese-actions {
   display: flex;
-  gap: 16px;
+  gap: 12px;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
 }
 
-/* Boutons projection */
+/* Buttons (light theme) */
 .projection-btn {
   padding: 12px 24px;
   border: none;
@@ -256,21 +408,36 @@
   transition: transform 0.1s, opacity 0.2s;
 }
 .projection-btn:hover { opacity: 0.9; transform: scale(1.02); }
+.projection-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .projection-btn-primary {
   background: #c0392b;
   color: white;
 }
 .projection-btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fafafa;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #f0f0f0;
+  color: #1a1a1a;
+  border: 1px solid #ddd;
 }
 
-/* Responsive (tablette/projecteur) */
+/* Responsive */
 @media (max-height: 700px) {
   .projection-consigne { font-size: 1.1rem; }
   .projection-card-titre { font-size: 0.9rem; }
   .projection-card-accroche { -webkit-line-clamp: 1; }
-  .projection-pourquoi { padding: 20px; gap: 20px; }
-  .projection-pourquoi-card h2 { font-size: 1.3rem; }
+}
+
+@media (max-width: 600px) {
+  .projection-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 100% !important;
+  }
+  .projection-reader {
+    padding: 1rem;
+  }
+  .projection-reader-header h1 {
+    font-size: 1.3rem;
+  }
+  .synthese-mecanismes-grid {
+    grid-template-columns: 1fr;
+  }
 }

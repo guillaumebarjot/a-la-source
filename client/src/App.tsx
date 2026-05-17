@@ -53,7 +53,8 @@ export default function App() {
             {/* Admin */}
             <Route path="/admin" element={<Navigate to="/admin/parametrage" replace />} />
             <Route path="/admin/:section" element={<AdminParametrage />} />
-            <Route path="/projection" element={<Projection />} />
+            <Route path="/projection/:atelierId" element={<Projection />} />
+            <Route path="/projection" element={<Navigate to="/ateliers/en-cours" replace />} />
           </Routes>
         </Suspense>
       </main>

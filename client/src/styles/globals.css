@@ -1190,6 +1190,95 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 }
 .historique-cr { font-size: 0.9rem; line-height: 1.5; margin-bottom: var(--space-xs); }
 .historique-obs { font-size: 0.85rem; color: var(--color-text-secondary); margin: 0; }
+.historique-expand { font-size: 0.7rem; color: var(--color-text-secondary); }
+.historique-detail { margin-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-md); }
+.historique-section h4 { font-size: 0.85rem; color: var(--color-primary); margin-bottom: var(--space-xs); }
+.historique-section p { font-size: 0.9rem; line-height: 1.5; }
+.historique-sources h4, .historique-mecanismes h4 { font-size: 0.85rem; color: var(--color-primary); margin-bottom: var(--space-xs); }
+.mecanismes-tags { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.badge-mecanisme { background: #fef2f2; color: #c0392b; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid rgba(192,57,43,0.2); }
+.dark .badge-mecanisme { background: rgba(192,57,43,0.15); }
+
+/* Preparation ateliers */
+.preparation-ateliers-list { display: flex; flex-direction: column; gap: var(--space-lg); }
+.preparation-atelier-card {
+  padding: var(--space-lg); background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  display: flex; flex-direction: column; gap: var(--space-md);
+}
+.preparation-atelier-header { display: flex; align-items: center; gap: var(--space-md); }
+.preparation-atelier-header h3 { font-family: var(--font-display); font-size: 1.1rem; margin: 0; }
+.preparation-sources { display: flex; flex-direction: column; gap: var(--space-xs); }
+.preparation-sources h4 { font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--space-xs); }
+.preparation-atelier-actions { display: flex; gap: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--color-border); }
+
+/* Atelier new form */
+.atelier-new-form {
+  padding: var(--space-lg); background: var(--color-surface);
+  border: 2px dashed var(--color-primary); border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md);
+}
+.atelier-new-form h3 { font-family: var(--font-display); color: var(--color-primary); margin: 0; }
+.atelier-new-actions { display: flex; gap: var(--space-sm); }
+
+/* Atelier en cours */
+.atelier-en-cours-card {
+  padding: var(--space-lg); background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  display: flex; flex-direction: column; gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.atelier-en-cours-header { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+.atelier-en-cours-header h3 { font-family: var(--font-display); font-size: 1.1rem; margin: 0; }
+.atelier-en-cours-meta { display: flex; gap: var(--space-md); font-size: 0.85rem; color: var(--color-text-secondary); }
+.atelier-actions-inline { display: flex; gap: var(--space-sm); margin-top: var(--space-sm); }
+
+/* Selection cards (in preparation) */
+.selection-card {
+  display: flex; align-items: center; gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.selection-info { flex: 1; display: flex; align-items: center; gap: var(--space-sm); min-width: 0; }
+.selection-num { font-weight: 700; color: var(--color-primary); font-size: 0.85rem; }
+.selection-media { font-size: 0.8rem; color: var(--color-text-secondary); }
+
+/* Badge statut */
+.badge-statut {
+  font-size: 0.75rem; padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--rc-gris-100); color: var(--rc-gris-700);
+  text-transform: capitalize;
+}
+
+/* Quality gate */
+.quality-gate-indicator { display: flex; gap: 4px; font-size: 0.8rem; }
+.qg-ok { opacity: 1; }
+.qg-missing { opacity: 0.3; }
+
+/* Vivier actions multi-ateliers */
+.vivier-actions-multi { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.vivier-quality-filter { display: flex; align-items: center; gap: var(--space-xs); font-size: 0.85rem; cursor: pointer; }
+
+/* Atelier badges on source cards */
+.source-card-atelier-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.badge-atelier { font-size: 0.7rem; padding: 1px 6px; border-radius: var(--radius-sm); font-weight: 600; }
+.badge-atelier--retenue { background: #dbeafe; color: #1e40af; }
+.badge-atelier--utilisee { background: #f3f4f6; color: #6b7280; }
+.dark .badge-atelier--retenue { background: rgba(59,130,246,0.2); color: #93c5fd; }
+.dark .badge-atelier--utilisee { background: var(--rc-gris-700); color: var(--rc-gris-300); }
+
+/* Source card used state */
+.source-card--used { opacity: 0.6; }
+
+/* Button variants */
+.btn-danger { background: #dc2626; color: white; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-success { background: #059669; color: white; }
+.btn-success:hover { background: #047857; }
+.btn-secondary { background: var(--rc-gris-100); color: var(--color-text); border: 1px solid var(--color-border); }
+.dark .btn-secondary { background: var(--rc-gris-700); color: var(--color-text); }
 
 /* =============================================================================
    Page Mecanismes — 3 niveaux

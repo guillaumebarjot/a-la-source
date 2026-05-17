@@ -5,13 +5,18 @@ import { calculerScoreSource } from '../lib/score.js'
 
 const router = Router()
 
-// GET /api/ateliers
+// GET /api/ateliers — list all workshops
 router.get('/', (_req, res) => {
-  const ateliers = db.prepare('SELECT * FROM ateliers ORDER BY numero DESC').all()
+  const ateliers = db.prepare(`
+    SELECT a.*, u.nom as facilitateur_nom
+    FROM ateliers a
+    LEFT JOIN utilisateurs u ON a.facilitateur_id = u.id
+    ORDER BY a.numero DESC
+  `).all()
   res.json(ateliers)
 })
 
-// GET /api/ateliers/vivier — sources au vivier avec scores + tags
+// GET /api/ateliers/vivier — sources at vivier with scores + tags + atelier badges
 router.get('/vivier', (_req, res) => {
   const sources = db.prepare(`
     SELECT s.*, m.nom as media_nom
@@ -21,119 +26,253 @@ router.get('/vivier', (_req, res) => {
     ORDER BY s.soumis_le DESC
   `).all() as Array<Record<string, unknown>>
 
+  // Get all active atelier_sources links (for badge info)
+  const atelierLinks = db.prepare(`
+    SELECT asrc.source_id, asrc.atelier_id, a.numero, a.statut as atelier_statut
+    FROM atelier_sources asrc
+    JOIN ateliers a ON a.id = asrc.atelier_id
+    WHERE asrc.retiree_le IS NULL
+  `).all() as Array<{ source_id: number; atelier_id: number; numero: number; atelier_statut: string }>
+
+  const linksBySource = new Map<number, typeof atelierLinks>()
+  for (const link of atelierLinks) {
+    const existing = linksBySource.get(link.source_id) || []
+    existing.push(link)
+    linksBySource.set(link.source_id, existing)
+  }
+
   const result = sources.map(s => {
+    const sid = s.id as number
     const tags = db.prepare(`
       SELECT t.id, t.nom, t.couleur, t.categorie
       FROM tags t JOIN source_tags st ON st.tag_id = t.id
       WHERE st.source_id = ?
-    `).all(s.id as number) as Array<{ id: number; nom: string; couleur: string | null; categorie: string }>
+    `).all(sid) as Array<{ id: number; nom: string; couleur: string | null; categorie: string }>
+
+    const score = calculerScoreSource(sid, s.date_publication as string | null, s.type_source as string | null)
+
+    // Badge info: which ateliers reference this source
+    const atelierBadges = (linksBySource.get(sid) || []).map(l => ({
+      atelier_id: l.atelier_id,
+      numero: l.numero,
+      statut: l.atelier_statut,
+    }))
+
+    // Quality gate check
+    const hasEvaluation = score.nbEvaluations >= 1
+    const hasArchive = db.prepare(
+      'SELECT 1 FROM archives WHERE source_id = ? LIMIT 1'
+    ).get(sid)
+    const hasAccroche = !!(s.accroche as string | null)
+    const qualityGateOk = hasEvaluation && !!hasArchive && hasAccroche
+
     return {
       ...s,
       tags,
-      score: calculerScoreSource(s.id as number, s.date_publication as string | null, s.type_source as string | null)
+      score,
+      atelier_badges: atelierBadges,
+      quality_gate: { ok: qualityGateOk, hasEvaluation, hasArchive: !!hasArchive, hasAccroche },
     }
   })
 
-  // Sort by score descending
   result.sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
   res.json(result)
 })
 
-// GET /api/ateliers/en-cours — atelier en preparation (ou null)
+// GET /api/ateliers/en-cours — workshops in preparation (can be multiple)
 router.get('/en-cours', (_req, res) => {
-  const atelier = db.prepare("SELECT * FROM ateliers WHERE statut = 'preparation' ORDER BY cree_le DESC LIMIT 1").get()
-  if (!atelier) { res.json(null); return }
+  const ateliers = db.prepare(`
+    SELECT a.*, u.nom as facilitateur_nom
+    FROM ateliers a
+    LEFT JOIN utilisateurs u ON a.facilitateur_id = u.id
+    WHERE a.statut IN ('preparation', 'pret', 'en_cours')
+    ORDER BY a.cree_le DESC
+  `).all() as Array<Record<string, unknown>>
 
-  const sources = db.prepare(`
-    SELECT s.*, m.nom as media_nom
-    FROM atelier_sources as2
-    JOIN sources s ON s.id = as2.source_id
-    LEFT JOIN medias m ON s.media_id = m.id
-    WHERE as2.atelier_id = ? AND as2.retiree_le IS NULL
-  `).all((atelier as { id: number }).id)
+  const result = ateliers.map(atelier => {
+    const sources = db.prepare(`
+      SELECT s.*, m.nom as media_nom, asrc.ordre
+      FROM atelier_sources asrc
+      JOIN sources s ON s.id = asrc.source_id
+      LEFT JOIN medias m ON s.media_id = m.id
+      WHERE asrc.atelier_id = ? AND asrc.retiree_le IS NULL
+      ORDER BY asrc.ordre ASC, asrc.ajoutee_le ASC
+    `).all((atelier as { id: number }).id)
+    return { ...atelier, sources }
+  })
 
-  res.json({ ...(atelier as Record<string, unknown>), sources })
+  res.json(result)
 })
 
-// GET /api/ateliers/:id
+// GET /api/ateliers/:id — detail with sources + mecanismes
 router.get('/:id', (req, res) => {
-  const atelier = db.prepare('SELECT * FROM ateliers WHERE id = ?').get(req.params.id)
+  const atelier = db.prepare(`
+    SELECT a.*, u.nom as facilitateur_nom
+    FROM ateliers a
+    LEFT JOIN utilisateurs u ON a.facilitateur_id = u.id
+    WHERE a.id = ?
+  `).get(req.params.id)
   if (!atelier) { res.status(404).json({ error: 'Atelier introuvable' }); return }
 
   const sources = db.prepare(`
-    SELECT s.*, m.nom as media_nom
-    FROM atelier_sources as2
-    JOIN sources s ON s.id = as2.source_id
+    SELECT s.*, m.nom as media_nom, asrc.ordre
+    FROM atelier_sources asrc
+    JOIN sources s ON s.id = asrc.source_id
     LEFT JOIN medias m ON s.media_id = m.id
-    WHERE as2.atelier_id = ? AND as2.retiree_le IS NULL
+    WHERE asrc.atelier_id = ? AND asrc.retiree_le IS NULL
+    ORDER BY asrc.ordre ASC, asrc.ajoutee_le ASC
   `).all(req.params.id)
 
-  res.json({ ...atelier, sources })
+  const mecanismes_identifies = db.prepare(`
+    SELECT am.mecanisme_id, mr.nom as mecanisme_nom
+    FROM atelier_mecanismes am
+    JOIN mecanismes_reference mr ON mr.id = am.mecanisme_id
+    WHERE am.atelier_id = ?
+  `).all(req.params.id)
+
+  res.json({ ...atelier, sources, mecanismes_identifies })
 })
 
-// POST /api/ateliers — creer un atelier (animateur+)
+// POST /api/ateliers — create a workshop (auto-number)
 router.post('/', requireRole('animateur', 'admin'), (req, res) => {
-  const { numero, date_atelier, lieu } = req.body
-  if (!numero) { res.status(400).json({ error: 'Numero requis' }); return }
+  const { date_atelier, heure, lieu } = req.body
+  const facilitateur_id = req.user?.id
+
+  // Auto-number: max + 1
+  const maxRow = db.prepare('SELECT MAX(numero) as max_num FROM ateliers').get() as { max_num: number | null }
+  const numero = (maxRow.max_num || 0) + 1
 
   const r = db.prepare(`
-    INSERT INTO ateliers (numero, date_atelier, lieu) VALUES (?, ?, ?)
-  `).run(numero, date_atelier || null, lieu || null)
-  res.status(201).json({ id: Number(r.lastInsertRowid) })
+    INSERT INTO ateliers (numero, date_atelier, heure, lieu, facilitateur_id)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(numero, date_atelier || null, heure || null, lieu || null, facilitateur_id || null)
+  res.status(201).json({ id: Number(r.lastInsertRowid), numero })
 })
 
-// POST /api/ateliers/:id/sources — ajouter source a un atelier
+// POST /api/ateliers/:id/sources — add source to workshop (NO statut change)
 router.post('/:id/sources', requireRole('animateur', 'admin'), (req, res) => {
   const { source_id } = req.body
-  db.prepare('INSERT OR IGNORE INTO atelier_sources (atelier_id, source_id) VALUES (?, ?)').run(
-    req.params.id, source_id
-  )
-  // Passe la source en statut atelier
-  db.prepare("UPDATE sources SET statut = 'atelier' WHERE id = ?").run(source_id)
+  const atelierId = req.params.id
+
+  // Get max order
+  const maxOrdre = db.prepare(
+    'SELECT MAX(ordre) as max_o FROM atelier_sources WHERE atelier_id = ? AND retiree_le IS NULL'
+  ).get(atelierId) as { max_o: number | null }
+  const ordre = (maxOrdre?.max_o || 0) + 1
+
+  db.prepare(
+    'INSERT OR IGNORE INTO atelier_sources (atelier_id, source_id, ordre) VALUES (?, ?, ?)'
+  ).run(atelierId, source_id, ordre)
+
+  // Source stays at vivier (new model — no statut change)
   res.json({ ok: true })
 })
 
-// DELETE /api/ateliers/:id/sources/:sourceId — retirer source de l'atelier
+// DELETE /api/ateliers/:id/sources/:sourceId — remove source from workshop
 router.delete('/:id/sources/:sourceId', requireRole('animateur', 'admin'), (req, res) => {
   db.prepare(
     "UPDATE atelier_sources SET retiree_le = CURRENT_TIMESTAMP WHERE atelier_id = ? AND source_id = ?"
   ).run(req.params.id, req.params.sourceId)
-  // Repasse la source au vivier
-  db.prepare("UPDATE sources SET statut = 'vivier' WHERE id = ?").run(req.params.sourceId)
+  // Source stays at vivier (no statut change)
   res.json({ ok: true })
 })
 
-// GET /api/ateliers/:id/print — version imprimable HTML (pour PDF via navigateur)
+// PATCH /api/ateliers/:id/sources/order — reorder sources
+router.patch('/:id/sources/order', requireRole('animateur', 'admin'), (req, res) => {
+  const { source_ids } = req.body as { source_ids: number[] }
+  if (!Array.isArray(source_ids)) { res.status(400).json({ error: 'source_ids requis' }); return }
+
+  const stmt = db.prepare(
+    'UPDATE atelier_sources SET ordre = ? WHERE atelier_id = ? AND source_id = ? AND retiree_le IS NULL'
+  )
+  const tx = db.transaction(() => {
+    source_ids.forEach((sid, i) => stmt.run(i, req.params.id, sid))
+  })
+  tx()
+  res.json({ ok: true })
+})
+
+// POST /api/ateliers/:id/synthese — save structured synthesis
+router.post('/:id/synthese', requireRole('animateur', 'admin'), (req, res) => {
+  const { mecanisme_ids, observations_surprise, questions_restantes, nb_participants } = req.body
+  const atelierId = req.params.id
+
+  const atelier = db.prepare('SELECT id FROM ateliers WHERE id = ?').get(atelierId)
+  if (!atelier) { res.status(404).json({ error: 'Atelier introuvable' }); return }
+
+  const tx = db.transaction(() => {
+    // Update atelier fields
+    const updates: string[] = []
+    const params: unknown[] = []
+    if (observations_surprise !== undefined) { updates.push('observations_surprise = ?'); params.push(observations_surprise) }
+    if (questions_restantes !== undefined) { updates.push('questions_restantes = ?'); params.push(questions_restantes) }
+    if (nb_participants !== undefined) { updates.push('nb_participants = ?'); params.push(nb_participants) }
+    if (updates.length > 0) {
+      params.push(atelierId)
+      db.prepare(`UPDATE ateliers SET ${updates.join(', ')} WHERE id = ?`).run(...params)
+    }
+
+    // Replace mecanismes
+    if (Array.isArray(mecanisme_ids)) {
+      db.prepare('DELETE FROM atelier_mecanismes WHERE atelier_id = ?').run(atelierId)
+      const ins = db.prepare('INSERT OR IGNORE INTO atelier_mecanismes (atelier_id, mecanisme_id) VALUES (?, ?)')
+      for (const mid of mecanisme_ids) {
+        ins.run(atelierId, mid)
+      }
+    }
+  })
+  tx()
+
+  res.json({ ok: true })
+})
+
+// PATCH /api/ateliers/:id — update workshop fields
+router.patch('/:id', requireRole('animateur', 'admin'), (req, res) => {
+  const allowed = [
+    'statut', 'source_choisie_id', 'nb_participants', 'compte_rendu',
+    'observations', 'observations_surprise', 'questions_restantes',
+    'mecanisme_identifie', 'date_atelier', 'heure', 'lieu',
+  ]
+  const updates: string[] = []
+  const params: unknown[] = []
+
+  for (const [key, value] of Object.entries(req.body)) {
+    if (allowed.includes(key)) { updates.push(`${key} = ?`); params.push(value) }
+  }
+
+  if (updates.length === 0) { res.status(400).json({ error: 'Rien a modifier' }); return }
+
+  // If setting statut to 'termine', sources stay at vivier but we can track it
+  params.push(req.params.id)
+  db.prepare(`UPDATE ateliers SET ${updates.join(', ')} WHERE id = ?`).run(...params)
+  res.json({ ok: true })
+})
+
+// GET /api/ateliers/:id/print — printable HTML (neutral fiches for the table)
 router.get('/:id/print', (req, res) => {
   const atelier = db.prepare('SELECT * FROM ateliers WHERE id = ?').get(req.params.id) as Record<string, unknown> | undefined
   if (!atelier) { res.status(404).json({ error: 'Atelier introuvable' }); return }
 
   const sources = db.prepare(`
-    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom
-    FROM atelier_sources as2
-    JOIN sources s ON s.id = as2.source_id
+    SELECT s.*, m.nom as media_nom, a2.nom as auteur_nom, asrc.ordre
+    FROM atelier_sources asrc
+    JOIN sources s ON s.id = asrc.source_id
     LEFT JOIN medias m ON s.media_id = m.id
-    LEFT JOIN auteurs a ON s.auteur_id = a.id
-    WHERE as2.atelier_id = ? AND as2.retiree_le IS NULL
+    LEFT JOIN auteurs a2 ON s.auteur_id = a2.id
+    WHERE asrc.atelier_id = ? AND asrc.retiree_le IS NULL
+    ORDER BY asrc.ordre ASC, asrc.ajoutee_le ASC
   `).all(req.params.id) as Array<Record<string, unknown>>
 
-  // Pour chaque source, recuperer les mecanismes et l'archive
+  // For each source: archive content only (neutral — no mechanisms, no scores)
   const sourcesEnriched = sources.map(s => {
-    const mecanismes = db.prepare(`
-      SELECT mr.nom, sm.justification, sm.extrait
-      FROM source_mecanismes sm
-      JOIN mecanismes_reference mr ON sm.mecanisme_id = mr.id
-      WHERE sm.source_id = ?
-    `).all(s.id as number) as Array<{ nom: string; justification: string | null; extrait: string | null }>
-
     const archive = db.prepare(
-      'SELECT contenu, nb_mots FROM archives WHERE source_id = ? ORDER BY cree_le DESC LIMIT 1'
-    ).get(s.id as number) as { contenu: string | null; nb_mots: number | null } | undefined
+      'SELECT contenu FROM archives WHERE source_id = ? ORDER BY cree_le DESC LIMIT 1'
+    ).get(s.id as number) as { contenu: string | null } | undefined
 
-    return { ...s, mecanismes, archive }
+    return { ...(s as Record<string, unknown>), archive } as Record<string, unknown> & { archive: { contenu: string | null } | undefined }
   })
 
-  // Generer HTML imprimable
+  // Neutral printable HTML — no scores, no mechanisms (for the table)
   const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -144,16 +283,12 @@ router.get('/:id/print', (req, res) => {
     body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; padding: 2cm; }
     h1 { font-size: 18pt; color: #c0392b; margin-bottom: 0.5em; border-bottom: 2px solid #c0392b; padding-bottom: 0.3em; }
     h2 { font-size: 14pt; color: #2d2d2d; margin: 1.5em 0 0.5em; page-break-after: avoid; }
-    h3 { font-size: 12pt; margin: 1em 0 0.3em; }
     .meta { font-size: 9pt; color: #666; margin-bottom: 1em; }
     .source-block { page-break-inside: avoid; border: 1px solid #ddd; padding: 1em; margin-bottom: 1.5em; border-radius: 4px; }
     .source-titre { font-size: 13pt; font-weight: bold; margin-bottom: 0.3em; }
     .source-meta { font-size: 9pt; color: #666; margin-bottom: 0.5em; }
-    .mecanismes { margin-top: 0.5em; padding-top: 0.5em; border-top: 1px dashed #ccc; }
-    .mecanisme { margin-bottom: 0.3em; }
-    .mecanisme-nom { font-weight: bold; color: #c0392b; }
-    .extrait { font-style: italic; color: #555; font-size: 10pt; }
-    .archive-content { margin-top: 1em; font-size: 10pt; line-height: 1.5; max-height: none; }
+    .source-duree { font-size: 9pt; color: #888; }
+    .archive-content { margin-top: 1em; font-size: 10pt; line-height: 1.5; }
     .archive-content img { max-width: 100%; }
     .page-selection { page-break-before: always; }
     .selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
@@ -172,22 +307,19 @@ router.get('/:id/print', (req, res) => {
   <h1>Atelier #${atelier.numero} — A la source</h1>
   <div class="meta">
     ${atelier.date_atelier ? `<strong>Date :</strong> ${atelier.date_atelier}` : ''}
+    ${atelier.heure ? ` a ${atelier.heure}` : ''}
     ${atelier.lieu ? ` | <strong>Lieu :</strong> ${atelier.lieu}` : ''}
-    ${atelier.nb_participants ? ` | <strong>Participants :</strong> ${atelier.nb_participants}` : ''}
   </div>
 
-  ${atelier.compte_rendu ? `<h2>Compte rendu</h2><p>${(atelier.compte_rendu as string).replace(/\n/g, '<br>')}</p>` : ''}
-  ${atelier.observations ? `<h2>Observations</h2><p>${(atelier.observations as string).replace(/\n/g, '<br>')}</p>` : ''}
-
   <div class="page-selection">
-    <h2>Sources candidates (page de selection)</h2>
+    <h2>Sources candidates</h2>
     <div class="selection-grid">
       ${sourcesEnriched.map((s, i) => `
         <div class="selection-card">
           <h3>${i + 1}. ${s.titre}</h3>
           <p>${s.media_nom || ''} ${s.auteur_nom ? '— ' + s.auteur_nom : ''}</p>
           <p>${s.accroche ? (s.accroche as string).substring(0, 120) + '...' : ''}</p>
-          <p>${s.mecanismes.length} mecanisme(s) identifie(s)</p>
+          ${s.duree_minutes ? `<p class="source-duree">${s.duree_minutes} min</p>` : ''}
         </div>
       `).join('')}
     </div>
@@ -199,24 +331,11 @@ router.get('/:id/print', (req, res) => {
       <div class="source-meta">
         ${s.media_nom || ''} ${s.auteur_nom ? '— ' + s.auteur_nom : ''}
         ${s.date_publication ? ' | ' + s.date_publication : ''}
-        ${s.url ? ' | <a href="' + s.url + '">' + s.url + '</a>' : ''}
+        ${s.duree_minutes ? ' | ' + s.duree_minutes + ' min' : ''}
       </div>
       ${s.accroche ? `<p><em>${s.accroche}</em></p>` : ''}
-      ${s.mecanismes.length > 0 ? `
-        <div class="mecanismes">
-          <h3>Mecanismes identifies</h3>
-          ${s.mecanismes.map(m => `
-            <div class="mecanisme">
-              <span class="mecanisme-nom">${m.nom}</span>
-              ${m.justification ? ` — ${m.justification}` : ''}
-              ${m.extrait ? `<div class="extrait">${m.extrait}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
       ${s.archive?.contenu ? `
         <div class="archive-content">
-          <h3>Contenu archive</h3>
           ${s.archive.contenu}
         </div>
       ` : ''}
@@ -226,22 +345,6 @@ router.get('/:id/print', (req, res) => {
 </html>`
 
   res.type('html').send(html)
-})
-
-// PATCH /api/ateliers/:id
-router.patch('/:id', requireRole('animateur', 'admin'), (req, res) => {
-  const allowed = ['statut', 'source_choisie_id', 'nb_participants', 'compte_rendu', 'observations', 'mecanisme_identifie']
-  const updates: string[] = []
-  const params: unknown[] = []
-
-  for (const [key, value] of Object.entries(req.body)) {
-    if (allowed.includes(key)) { updates.push(`${key} = ?`); params.push(value) }
-  }
-
-  if (updates.length === 0) { res.status(400).json({ error: 'Rien a modifier' }); return }
-  params.push(req.params.id)
-  db.prepare(`UPDATE ateliers SET ${updates.join(', ')} WHERE id = ?`).run(...params)
-  res.json({ ok: true })
 })
 
 export default router

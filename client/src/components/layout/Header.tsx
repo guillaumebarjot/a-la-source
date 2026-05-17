@@ -16,10 +16,9 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
   ],
   '/ateliers': [
     { label: 'Vivier', to: '/ateliers/vivier' },
-    { label: 'Selection', to: '/ateliers/selection' },
     { label: 'Preparation', to: '/ateliers/preparation' },
-    { label: 'Atelier', to: '/ateliers/en-cours' },
-    { label: 'Historique', to: '/ateliers/historique' },
+    { label: 'En cours', to: '/ateliers/en-cours' },
+    { label: 'Archives', to: '/ateliers/archives' },
   ],
   '/archiver': [
     { label: 'A archiver', to: '/archiver/priorite' },

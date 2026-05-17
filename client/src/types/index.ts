@@ -112,14 +112,30 @@ export interface Atelier {
   id: number
   numero: number
   date_atelier: string | null
+  heure: string | null
   lieu: string | null
   statut: 'preparation' | 'pret' | 'en_cours' | 'termine'
+  facilitateur_id: number | null
+  facilitateur_nom?: string
   source_choisie_id: number | null
   nb_participants: number | null
   compte_rendu: string | null
   observations: string | null
+  observations_surprise: string | null
+  questions_restantes: string | null
   mecanisme_identifie: string | null
   cree_le: string
+}
+
+export interface AtelierMecanisme {
+  atelier_id: number
+  mecanisme_id: number
+  mecanisme_nom?: string
+}
+
+export interface AtelierDetail extends Atelier {
+  sources: Source[]
+  mecanismes_identifies?: AtelierMecanisme[]
 }
 
 export interface Utilisateur {
