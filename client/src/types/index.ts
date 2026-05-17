@@ -16,6 +16,10 @@ export interface Source {
   // Joined
   media_nom?: string
   auteur_nom?: string
+  // Badges
+  has_archive?: number
+  nb_commentaires?: number
+  nb_ateliers?: number
 }
 
 export interface SourceDetail extends Source {

@@ -11,7 +11,10 @@ router.get('/', (req, res) => {
   const { statut, type_source, media, tag, limit = '50', offset = '0' } = req.query
 
   let sql = `
-    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom
+    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom,
+      (SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) > 0 as has_archive,
+      (SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) as nb_commentaires,
+      (SELECT COUNT(*) FROM atelier_sources ats WHERE ats.source_id = s.id) as nb_ateliers
     FROM sources s
     LEFT JOIN medias m ON s.media_id = m.id
     LEFT JOIN auteurs a ON s.auteur_id = a.id
