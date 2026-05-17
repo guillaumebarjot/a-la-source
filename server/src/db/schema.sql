@@ -43,7 +43,13 @@ CREATE TABLE IF NOT EXISTS sources (
   image_url TEXT,
   soumis_par INTEGER REFERENCES utilisateurs(id),
   soumis_le DATETIME DEFAULT CURRENT_TIMESTAMP,
-  statut TEXT DEFAULT 'veille' CHECK(statut IN ('veille','vivier','atelier','archive'))
+  statut TEXT DEFAULT 'veille' CHECK(statut IN ('veille','vivier','atelier','archive')),
+  origine TEXT DEFAULT 'web' CHECK(origine IN ('web', 'discord', 'import')),
+  origine_meta JSON,
+  duree_estimee REAL,
+  viralite_qualitative TEXT CHECK(viralite_qualitative IN ('confidentiel', 'circule', 'viral', 'tres_viral')),
+  viralite_chiffre INTEGER,
+  timing_override TEXT CHECK(timing_override IN ('A', 'B', 'C', 'D'))
 );
 
 CREATE TABLE IF NOT EXISTS archives (
@@ -148,6 +154,21 @@ CREATE TABLE IF NOT EXISTS contenus (
   modifie_le DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS parametres (
+  cle TEXT PRIMARY KEY,
+  valeur JSON NOT NULL DEFAULT '{}',
+  modifie_le DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS mots_cles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_id INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+  mot TEXT NOT NULL,
+  score_tfidf REAL DEFAULT 0,
+  origine TEXT DEFAULT 'meta' CHECK(origine IN ('meta', 'tfidf')),
+  UNIQUE(source_id, mot)
+);
+
 -- Index
 CREATE INDEX IF NOT EXISTS idx_sources_media ON sources(media_id);
 CREATE INDEX IF NOT EXISTS idx_sources_statut ON sources(statut);
@@ -156,3 +177,4 @@ CREATE INDEX IF NOT EXISTS idx_evaluations_source ON evaluations(source_id);
 CREATE INDEX IF NOT EXISTS idx_commentaires_source ON commentaires(source_id);
 CREATE INDEX IF NOT EXISTS idx_source_mecanismes_source ON source_mecanismes(source_id);
 CREATE INDEX IF NOT EXISTS idx_source_tags_source ON source_tags(source_id);
+CREATE INDEX IF NOT EXISTS idx_mots_cles_source ON mots_cles(source_id);

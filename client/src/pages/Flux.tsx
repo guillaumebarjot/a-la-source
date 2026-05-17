@@ -4,7 +4,7 @@ import type { Source, Tag, Media } from '../types'
 import SourceCard from '../components/cards/SourceCard'
 import SubmitSource from '../components/forms/SubmitSource'
 
-export default function Veille() {
+export default function Flux() {
   const [sources, setSources] = useState<Source[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [medias, setMedias] = useState<Media[]>([])

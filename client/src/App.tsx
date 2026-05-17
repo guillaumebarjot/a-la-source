@@ -1,14 +1,18 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './store/useAuth'
 import { useUI } from './store/useUI'
 import Header from './components/layout/Header'
-import Veille from './pages/Veille'
-import Lire from './pages/Lire'
-import Decrypter from './pages/Decrypter'
-import Ateliers from './pages/Ateliers'
-import MonEspace from './pages/MonEspace'
-import Aide from './pages/Aide'
+
+const Flux = lazy(() => import('./pages/Flux'))
+const Lire = lazy(() => import('./pages/Lire'))
+const Observatoire = lazy(() => import('./pages/Observatoire'))
+const Ateliers = lazy(() => import('./pages/Ateliers'))
+const Archiver = lazy(() => import('./pages/Archiver'))
+const BecsRouges = lazy(() => import('./pages/BecsRouges'))
+const MonEspace = lazy(() => import('./pages/MonEspace'))
+const Aide = lazy(() => import('./pages/Aide'))
+const AdminParametrage = lazy(() => import('./pages/AdminParametrage'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
@@ -20,15 +24,22 @@ export default function App() {
     <div className={`app ${darkMode ? 'dark' : ''}`}>
       <Header />
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<Navigate to="/veille" replace />} />
-          <Route path="/veille" element={<Veille />} />
-          <Route path="/lire/:id" element={<Lire />} />
-          <Route path="/decrypter" element={<Decrypter />} />
-          <Route path="/ateliers" element={<Ateliers />} />
-          <Route path="/perso" element={<MonEspace />} />
-          <Route path="/aide" element={<Aide />} />
-        </Routes>
+        <Suspense fallback={<div className="loading">Chargement...</div>}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/flux" replace />} />
+            <Route path="/flux" element={<Flux />} />
+            <Route path="/veille" element={<Navigate to="/flux" replace />} />
+            <Route path="/lire/:id" element={<Lire />} />
+            <Route path="/observatoire" element={<Observatoire />} />
+            <Route path="/decrypter" element={<Navigate to="/observatoire" replace />} />
+            <Route path="/ateliers" element={<Ateliers />} />
+            <Route path="/archiver" element={<Archiver />} />
+            <Route path="/becs-rouges" element={<BecsRouges />} />
+            <Route path="/perso" element={<MonEspace />} />
+            <Route path="/aide" element={<Aide />} />
+            <Route path="/admin/parametrage" element={<AdminParametrage />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   )

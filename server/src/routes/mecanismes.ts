@@ -36,4 +36,21 @@ router.get('/stats', (_req, res) => {
   res.json(stats)
 })
 
+// GET /api/mecanismes/timeline — identifications par mois
+router.get('/timeline', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      strftime('%Y-%m', sm.identifie_le) as mois,
+      sm.mecanisme_id,
+      mr.nom as mecanisme_nom,
+      COUNT(sm.id) as nb
+    FROM source_mecanismes sm
+    JOIN mecanismes_reference mr ON mr.id = sm.mecanisme_id
+    WHERE sm.identifie_le IS NOT NULL
+    GROUP BY mois, sm.mecanisme_id
+    ORDER BY mois ASC, nb DESC
+  `).all()
+  res.json(rows)
+})
+
 export default router

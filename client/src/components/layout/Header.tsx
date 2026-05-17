@@ -5,7 +5,7 @@ import { useUI } from '../../store/useUI'
 export default function Header() {
   const user = useAuth((s) => s.user)
   const { darkMode, toggleDarkMode } = useUI()
-  const isAnimateur = user?.role === 'animateur' || user?.role === 'admin'
+  const isAdmin = user?.role === 'admin'
 
   return (
     <header className="header">
@@ -25,14 +25,20 @@ export default function Header() {
         </div>
       </div>
       <nav className="header-nav">
-        <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Veille
+        <NavLink to="/flux" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Flux
         </NavLink>
-        <NavLink to="/decrypter" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Decrypter
+        <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Observatoire
         </NavLink>
         <NavLink to="/ateliers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Ateliers{isAnimateur ? '' : ' (consultation)'}
+          Ateliers
+        </NavLink>
+        <NavLink to="/archiver" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Archiver
+        </NavLink>
+        <NavLink to="/becs-rouges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Becs Rouges
         </NavLink>
         <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Mon espace
@@ -40,6 +46,11 @@ export default function Header() {
         <NavLink to="/aide" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Aide
         </NavLink>
+        {isAdmin && (
+          <NavLink to="/admin/parametrage" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Admin
+          </NavLink>
+        )}
       </nav>
     </header>
   )

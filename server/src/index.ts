@@ -12,6 +12,9 @@ import ateliersRouter from './routes/ateliers.js'
 import authRouter from './routes/auth.js'
 import mecanismesRouter from './routes/mecanismes.js'
 import contenusRouter from './routes/contenus.js'
+import parametresRouter from './routes/parametres.js'
+import rechercheRouter from './routes/recherche.js'
+import becsrougesRouter from './routes/becsrouges.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = parseInt(process.env.PORT || '3031', 10)
@@ -37,6 +40,9 @@ app.use('/api/ateliers', ateliersRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/mecanismes', mecanismesRouter)
 app.use('/api/contenus', contenusRouter)
+app.use('/api/parametres', parametresRouter)
+app.use('/api/recherche', rechercheRouter)
+app.use('/api/becs-rouges', becsrougesRouter)
 
 // Serve React build in production
 const clientDist = join(__dirname, '..', '..', 'client', 'dist')

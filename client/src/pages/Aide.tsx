@@ -28,7 +28,7 @@ export default function Aide() {
         </p>
         <h3>Parcours type</h3>
         <ol>
-          <li><strong>Veille</strong> — Soumettre des sources, les taguer, commenter</li>
+          <li><strong>Flux</strong> — Soumettre des sources, les taguer, commenter</li>
           <li><strong>Lire</strong> — Lire en detail, identifier des mecanismes, evaluer</li>
           <li><strong>Vivier</strong> — Les meilleures sources remontent dans le pipeline atelier</li>
           <li><strong>Atelier</strong> — Le·la facilitateur·ice selectionne, le groupe decouvre et debat</li>

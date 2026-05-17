@@ -8,7 +8,7 @@ const router = Router()
 
 // GET /api/sources — liste avec filtres
 router.get('/', (req, res) => {
-  const { statut, type_source, media, tag, limit = '50', offset = '0' } = req.query
+  const { statut, type_source, media, tag, sans_archive, ordre, limit = '50', offset = '0' } = req.query
 
   let sql = `
     SELECT s.*, m.nom as media_nom, a.nom as auteur_nom,
@@ -25,17 +25,50 @@ router.get('/', (req, res) => {
   if (statut) { conditions.push('s.statut = ?'); params.push(statut) }
   if (type_source) { conditions.push('s.type_source = ?'); params.push(type_source) }
   if (media) { conditions.push('m.nom = ?'); params.push(media) }
+  if (sans_archive === '1') {
+    conditions.push('(SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) = 0')
+  }
   if (tag) {
     sql += ' JOIN source_tags st ON st.source_id = s.id JOIN tags t ON t.id = st.tag_id'
     conditions.push('t.nom = ?'); params.push(tag)
   }
 
   if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ')
-  sql += ' ORDER BY s.soumis_le DESC LIMIT ? OFFSET ?'
+  if (ordre === 'consultations') {
+    sql += ' ORDER BY nb_commentaires DESC, s.soumis_le DESC'
+  } else {
+    sql += ' ORDER BY s.soumis_le DESC'
+  }
+  sql += ' LIMIT ? OFFSET ?'
   params.push(Number(limit), Number(offset))
 
   const sources = db.prepare(sql).all(...params)
   res.json(sources)
+})
+
+// GET /api/sources/top-evaluees — top 10 sources par richesse pedagogique
+router.get('/top-evaluees', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      s.id,
+      s.titre,
+      s.url,
+      m.nom as media_nom,
+      COUNT(DISTINCT sm.id) as nb_mecanismes,
+      COUNT(DISTINCT e.id) as nb_evaluations,
+      COUNT(DISTINCT c.id) as nb_commentaires,
+      (COUNT(DISTINCT sm.id) * 3 + COUNT(DISTINCT e.id) * 2 + COUNT(DISTINCT c.id)) as score_richesse
+    FROM sources s
+    LEFT JOIN medias m ON m.id = s.media_id
+    LEFT JOIN source_mecanismes sm ON sm.source_id = s.id
+    LEFT JOIN evaluations e ON e.source_id = s.id
+    LEFT JOIN commentaires c ON c.source_id = s.id
+    GROUP BY s.id
+    HAVING score_richesse > 0
+    ORDER BY score_richesse DESC
+    LIMIT 10
+  `).all()
+  res.json(rows)
 })
 
 // GET /api/sources/:id — detail avec score, tags, mecanismes
@@ -69,7 +102,8 @@ router.get('/:id', (req, res) => {
 
   const score = calculerScoreSource(
     Number(req.params.id),
-    source.date_publication as string | null
+    source.date_publication as string | null,
+    source.type_source as string | null
   )
 
   res.json({ ...source, tags, mecanismes, archive, score })
@@ -128,7 +162,7 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/sources/:id — modifier statut ou champs
 router.patch('/:id', (req, res) => {
-  const allowed = ['titre', 'url', 'type_source', 'date_publication', 'paywall', 'accroche', 'statut', 'image_url']
+  const allowed = ['titre', 'url', 'type_source', 'date_publication', 'paywall', 'accroche', 'statut', 'image_url', 'duree_estimee', 'viralite_qualitative', 'viralite_chiffre', 'timing_override']
   const updates: string[] = []
   const params: unknown[] = []
 
