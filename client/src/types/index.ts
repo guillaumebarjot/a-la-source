@@ -1,0 +1,146 @@
+export interface Source {
+  id: number
+  titre: string
+  url: string | null
+  auteur_id: number | null
+  media_id: number | null
+  type_source: string | null
+  date_publication: string | null
+  paywall: number
+  duree_minutes: number | null
+  accroche: string | null
+  image_url: string | null
+  soumis_par: number | null
+  soumis_le: string
+  statut: 'veille' | 'vivier' | 'atelier' | 'archive'
+  // Joined
+  media_nom?: string
+  auteur_nom?: string
+}
+
+export interface SourceDetail extends Source {
+  tags: Tag[]
+  mecanismes: SourceMecanisme[]
+  archive: Archive | null
+  score: ScoreResult
+}
+
+export interface Tag {
+  id: number
+  nom: string
+  couleur: string | null
+  categorie: 'thematique' | 'mecanisme' | 'media' | 'libre'
+}
+
+export interface Media {
+  id: number
+  nom: string
+  type: string | null
+  url_site: string | null
+  nb_sources?: number
+}
+
+export interface MecanismeReference {
+  id: number
+  nom: string
+  description: string | null
+  exemple: string | null
+  questions_guidees: string | null
+}
+
+export interface SourceMecanisme {
+  id: number
+  source_id: number
+  mecanisme_id: number
+  identifie_par: number | null
+  justification: string | null
+  extrait: string | null
+  identifie_le: string
+  mecanisme_nom: string
+  mecanisme_description: string | null
+  identifie_par_nom?: string
+}
+
+export interface Evaluation {
+  id: number
+  source_id: number
+  evaluateur_id: number
+  score_echo: number
+  score_pedagogie: number
+  commentaire: string | null
+  evaluee_le: string
+  evaluateur_nom?: string
+}
+
+export interface Commentaire {
+  id: number
+  source_id: number
+  auteur_id: number
+  type: 'commentaire' | 'analyse' | 'question' | 'lien'
+  contenu: string
+  url: string | null
+  cree_le: string
+  auteur_nom?: string
+}
+
+export interface Archive {
+  id: number
+  source_id: number
+  type: 'readability' | 'markdown' | 'pdf' | 'html'
+  contenu: string | null
+  chemin: string | null
+  cree_le: string
+}
+
+export interface ScoreResult {
+  moyEcho: number
+  moyPedagogie: number
+  fraicheur: number
+  scoreTotal: number
+  nbEvaluations: number
+}
+
+export interface Atelier {
+  id: number
+  numero: number
+  date_atelier: string | null
+  lieu: string | null
+  statut: 'preparation' | 'pret' | 'en_cours' | 'termine'
+  source_choisie_id: number | null
+  nb_participants: number | null
+  compte_rendu: string | null
+  observations: string | null
+  mecanisme_identifie: string | null
+  cree_le: string
+}
+
+export interface Utilisateur {
+  id: number
+  nom: string
+  role: 'membre' | 'animateur' | 'admin'
+}
+
+export interface Lecture {
+  source_id: number
+  utilisateur_id: number
+  statut: 'a_lire' | 'lu' | 'recommande'
+  recommande_a: number | null
+  date_maj: string
+  titre?: string
+  url?: string
+  media_nom?: string
+}
+
+export interface Contenu {
+  cle: string
+  titre: string | null
+  contenu: string | null
+  modifie_le: string
+}
+
+export interface MecanismeStat {
+  id: number
+  nom: string
+  description: string | null
+  nb_sources: number
+}

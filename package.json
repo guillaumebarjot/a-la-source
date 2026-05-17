@@ -1,0 +1,28 @@
+{
+  "name": "a-la-source",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Outil d'education populaire sur l'information — Rouge Coquelicot",
+  "keywords": ["education-populaire", "media-literacy", "rouge-coquelicot", "yunohost"],
+  "author": "Rouge Coquelicot",
+  "license": "CC-BY-NC-SA-4.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guillaumebarjot/a-la-source.git"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=client",
+    "start": "npm run start --workspace=server",
+    "init-db": "npm run init-db --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

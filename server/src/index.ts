@@ -1,0 +1,52 @@
+import express from 'express'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { existsSync } from 'fs'
+import { authMiddleware } from './lib/auth.js'
+import sourcesRouter from './routes/sources.js'
+import tagsRouter from './routes/tags.js'
+import evaluationsRouter from './routes/evaluations.js'
+import commentairesRouter from './routes/commentaires.js'
+import mediasRouter from './routes/medias.js'
+import ateliersRouter from './routes/ateliers.js'
+import authRouter from './routes/auth.js'
+import mecanismesRouter from './routes/mecanismes.js'
+import contenusRouter from './routes/contenus.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const PORT = parseInt(process.env.PORT || '3031', 10)
+
+const app = express()
+
+app.use(express.json())
+app.use(authMiddleware)
+
+// Static files: uploads and images
+const uploadsDir = join(__dirname, '..', '..', 'uploads')
+const imagesDir = join(__dirname, '..', '..', 'db', 'image-cache')
+app.use('/uploads', express.static(uploadsDir))
+app.use('/images', express.static(imagesDir))
+
+// API routes
+app.use('/api/sources', sourcesRouter)
+app.use('/api/tags', tagsRouter)
+app.use('/api/evaluations', evaluationsRouter)
+app.use('/api/commentaires', commentairesRouter)
+app.use('/api/medias', mediasRouter)
+app.use('/api/ateliers', ateliersRouter)
+app.use('/api/auth', authRouter)
+app.use('/api/mecanismes', mecanismesRouter)
+app.use('/api/contenus', contenusRouter)
+
+// Serve React build in production
+const clientDist = join(__dirname, '..', '..', 'client', 'dist')
+if (existsSync(clientDist)) {
+  app.use(express.static(clientDist))
+  app.get('*', (_req, res) => {
+    res.sendFile(join(clientDist, 'index.html'))
+  })
+}
+
+app.listen(PORT, () => {
+  console.log(`A la source v2 — http://localhost:${PORT}`)
+})
