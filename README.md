@@ -6,7 +6,7 @@ Outil d'education populaire sur l'information, porte par [Rouge Coquelicot](http
 - **Collecter** des sources mediatiques (articles, videos, rapports)
 - **Identifier** les mecanismes informationnels a l'oeuvre (cadrage, cherry-picking, appel a l'emotion...)
 - **Evaluer** collectivement l'interet pedagogique des sources
-- **Preparer** des ateliers de decryptage en presentiel
+- **Preparer** des ateliers de decryptage en presentiel, facilites par des facilitateur·ices
 
 Les ateliers « A la source » sont le point culminant : un groupe se retrouve, decouvre une source choisie collectivement, et analyse ensemble comment l'information est construite.
 

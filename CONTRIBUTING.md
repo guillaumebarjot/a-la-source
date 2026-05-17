@@ -36,5 +36,5 @@ Le schema est dans `server/src/db/schema.sql`. Les migrations dans `server/src/d
 ## Roles
 
 - **membre** : soumettre, taguer, commenter, evaluer, lire
-- **animateur** : tout ce qu'un membre peut faire + gerer les ateliers
+- **facilitateur·ice** : tout ce qu'un membre peut faire + gerer les ateliers
 - **admin** : tout + gerer les utilisateurs

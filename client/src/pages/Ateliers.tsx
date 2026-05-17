@@ -58,7 +58,7 @@ export default function Ateliers() {
             </div>
           ))}
           {isAnimateur && (
-            <p className="info">Gestion des ateliers disponible pour les animateurs.</p>
+            <p className="info">Gestion des ateliers disponible pour les facilitateur·ices.</p>
           )}
         </div>
       )}

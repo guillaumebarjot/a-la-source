@@ -32,7 +32,7 @@ export default function Header() {
           Decrypter
         </NavLink>
         <NavLink to="/ateliers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Ateliers{isAnimateur ? '' : ' (lecture)'}
+          Ateliers{isAnimateur ? '' : ' (consultation)'}
         </NavLink>
         <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Mon espace

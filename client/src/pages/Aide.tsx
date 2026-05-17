@@ -31,7 +31,7 @@ export default function Aide() {
           <li><strong>Veille</strong> — Soumettre des sources, les taguer, commenter</li>
           <li><strong>Lire</strong> — Lire en detail, identifier des mecanismes, evaluer</li>
           <li><strong>Vivier</strong> — Les meilleures sources remontent dans le pipeline atelier</li>
-          <li><strong>Atelier</strong> — L'animateur selectionne, le groupe decouvre et debat</li>
+          <li><strong>Atelier</strong> — Le·la facilitateur·ice selectionne, le groupe decouvre et debat</li>
         </ol>
       </section>
 
