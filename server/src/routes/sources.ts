@@ -1,8 +1,26 @@
 import { Router } from 'express'
+import multer from 'multer'
+import { join, dirname, extname } from 'path'
+import { fileURLToPath } from 'url'
+import { readFileSync, renameSync, unlinkSync } from 'fs'
 import db from '../lib/db.js'
 import { calculerScoreSource } from '../lib/score.js'
 import { fetchOpenGraph } from '../lib/opengraph.js'
-import { extractReadability } from '../lib/readability.js'
+import { extractReadability, detecterArchivePartielle, compterMots } from '../lib/readability.js'
+import { findSiteConfig, getSiteConfigCount, getConfiguredDomains } from '../lib/ftr-site-config.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const uploadsDir = join(__dirname, '..', '..', '..', 'uploads')
+
+const upload = multer({
+  dest: uploadsDir,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.md', '.pdf', '.html', '.htm', '.txt', '.png', '.jpg', '.jpeg', '.webp']
+    const ext = extname(file.originalname).toLowerCase()
+    cb(null, allowed.includes(ext))
+  },
+})
 
 const router = Router()
 
@@ -13,6 +31,7 @@ router.get('/', (req, res) => {
   let sql = `
     SELECT s.*, m.nom as media_nom, a.nom as auteur_nom,
       (SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) > 0 as has_archive,
+      (SELECT ar2.statut FROM archives ar2 WHERE ar2.source_id = s.id ORDER BY ar2.cree_le DESC LIMIT 1) as archive_statut,
       (SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) as nb_commentaires,
       (SELECT COUNT(*) FROM atelier_sources ats WHERE ats.source_id = s.id) as nb_ateliers
     FROM sources s
@@ -69,6 +88,29 @@ router.get('/top-evaluees', (_req, res) => {
     LIMIT 10
   `).all()
   res.json(rows)
+})
+
+// GET /api/sources/archives-partielles — sources avec archive incomplete
+router.get('/archives-partielles', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT s.*, m.nom as media_nom,
+      ar.statut as archive_statut, ar.nb_mots as archive_nb_mots, ar.cree_le as archive_date
+    FROM sources s
+    LEFT JOIN medias m ON s.media_id = m.id
+    INNER JOIN archives ar ON ar.source_id = s.id
+    WHERE ar.statut = 'partielle'
+    AND ar.id = (SELECT MAX(a2.id) FROM archives a2 WHERE a2.source_id = s.id)
+    ORDER BY s.date_publication DESC
+  `).all()
+  res.json(rows)
+})
+
+// GET /api/sources/ftr-config — info sur les configs d'extraction par site
+router.get('/ftr-config', (_req, res) => {
+  res.json({
+    count: getSiteConfigCount(),
+    domains: getConfiguredDomains(),
+  })
 })
 
 // GET /api/sources/:id — detail avec score, tags, mecanismes
@@ -182,19 +224,96 @@ router.patch('/:id', (req, res) => {
 
 // POST /api/sources/:id/archiver — archivage readability
 router.post('/:id/archiver', async (req, res) => {
-  const source = db.prepare('SELECT url FROM sources WHERE id = ?').get(req.params.id) as { url: string } | undefined
+  const source = db.prepare('SELECT url, paywall FROM sources WHERE id = ?').get(req.params.id) as { url: string; paywall: number } | undefined
   if (!source?.url) { res.status(400).json({ error: 'Pas d\'URL' }); return }
 
   const article = await extractReadability(source.url)
   if (!article) { res.status(422).json({ error: 'Extraction impossible' }); return }
 
-  db.prepare(`
-    INSERT INTO archives (source_id, type, contenu, cree_par)
-    VALUES (?, 'readability', ?, ?)
-  `).run(req.params.id, article.content, req.user?.id || null)
+  const nbMots = compterMots(article.content)
+  const statut = detecterArchivePartielle(article.textContent, source.paywall)
 
-  res.json({ ok: true, title: article.title, excerpt: article.excerpt })
+  db.prepare(`
+    INSERT INTO archives (source_id, type, contenu, cree_par, nb_mots, statut)
+    VALUES (?, 'readability', ?, ?, ?, ?)
+  `).run(req.params.id, article.content, req.user?.id || null, nbMots, statut)
+
+  res.json({ ok: true, title: article.title, excerpt: article.excerpt, statut, nbMots })
 })
+
+// POST /api/sources/:id/archive-manuelle — l'utilisateur colle le contenu complet
+router.post('/:id/archive-manuelle', (req, res) => {
+  const { contenu, type = 'html' } = req.body
+  if (!contenu || typeof contenu !== 'string') { res.status(400).json({ error: 'Contenu requis' }); return }
+
+  const nbMots = compterMots(contenu)
+  db.prepare(`
+    INSERT INTO archives (source_id, type, contenu, cree_par, nb_mots, statut)
+    VALUES (?, ?, ?, ?, ?, 'complete')
+  `).run(req.params.id, type, contenu, req.user?.id || null, nbMots)
+
+  res.json({ ok: true, nbMots })
+})
+
+// POST /api/sources/:id/archive-fichier — upload d'un fichier (pdf, md, html, image)
+router.post('/:id/archive-fichier', upload.single('fichier'), (req, res) => {
+  if (!req.file) { res.status(400).json({ error: 'Fichier requis' }); return }
+
+  const ext = extname(req.file.originalname).toLowerCase()
+  const isImage = ['.png', '.jpg', '.jpeg', '.webp'].includes(ext)
+  const isPdf = ext === '.pdf'
+  const isMd = ext === '.md'
+
+  let type: string
+  if (isPdf) type = 'pdf'
+  else if (isMd) type = 'markdown'
+  else if (isImage) type = 'html'
+  else type = 'html'
+
+  // For text files, read content inline; for binary (pdf/image), store path
+  let contenu: string | null = null
+  let chemin: string | null = null
+
+  if (isPdf || isImage) {
+    const newName = `archive-${req.params.id}-${Date.now()}${ext}`
+    const newPath = join(uploadsDir, newName)
+    renameSync(req.file.path, newPath)
+    chemin = `uploads/${newName}`
+  } else {
+    contenu = readFileSync(req.file.path, 'utf-8')
+    unlinkSync(req.file.path)
+  }
+
+  const nbMots = contenu ? compterMots(contenu) : null
+  db.prepare(`
+    INSERT INTO archives (source_id, type, contenu, chemin, cree_par, nb_mots, statut)
+    VALUES (?, ?, ?, ?, ?, ?, 'complete')
+  `).run(req.params.id, type, contenu, chemin, req.user?.id || null, nbMots)
+
+  res.json({ ok: true, type, nbMots })
+})
+
+// POST /api/sources/:id/signaler-archive — signaler une archive incomplete
+router.post('/:id/signaler-archive', (req, res) => {
+  const { raison } = req.body
+  const archive = db.prepare(`
+    SELECT id FROM archives WHERE source_id = ? ORDER BY cree_le DESC LIMIT 1
+  `).get(req.params.id) as { id: number } | undefined
+
+  if (!archive) { res.status(404).json({ error: 'Pas d\'archive' }); return }
+
+  // Marquer l'archive comme partielle
+  db.prepare(`UPDATE archives SET statut = 'partielle' WHERE id = ?`).run(archive.id)
+
+  // Enregistrer le signalement
+  db.prepare(`
+    INSERT INTO archive_signalements (archive_id, signale_par, raison)
+    VALUES (?, ?, ?)
+  `).run(archive.id, req.user?.id || null, raison || null)
+
+  res.json({ ok: true })
+})
+
 
 // DELETE /api/sources/:id
 router.delete('/:id', (req, res) => {

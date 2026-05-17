@@ -37,14 +37,11 @@ export default function Header() {
         <NavLink to="/archiver" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Archiver
         </NavLink>
-        <NavLink to="/becs-rouges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Becs Rouges
-        </NavLink>
         <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Mon espace
         </NavLink>
         <NavLink to="/aide" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Aide
+          Aide &amp; Mecanismes
         </NavLink>
         {isAdmin && (
           <NavLink to="/admin/parametrage" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>

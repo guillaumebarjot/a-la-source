@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { api } from '../api/client'
 import type { Contenu } from '../types'
@@ -33,6 +34,19 @@ export default function Aide() {
           <li><strong>Vivier</strong> — Les meilleures sources remontent dans le pipeline atelier</li>
           <li><strong>Atelier</strong> — Le·la facilitateur·ice selectionne, le groupe decouvre et debat</li>
         </ol>
+      </section>
+
+      <section className="aide-section">
+        <h2>Mecanismes informationnels</h2>
+        <p>
+          Pour comprendre comment l'information est fabriquee, il faut savoir identifier les
+          procedes recurrents du traitement mediatique. Nous avons documente 25 mecanismes,
+          organises en 6 categories, avec des definitions detaillees, des exemples concrets
+          et des questions guidees pour les ateliers.
+        </p>
+        <Link to="/mecanismes" className="btn btn-primary" style={{ marginTop: '0.5rem', display: 'inline-block' }}>
+          Explorer les mecanismes
+        </Link>
       </section>
 
       {epoche && (

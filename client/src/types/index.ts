@@ -18,6 +18,7 @@ export interface Source {
   auteur_nom?: string
   // Badges
   has_archive?: number
+  archive_statut?: 'complete' | 'partielle' | 'echouee'
   nb_commentaires?: number
   nb_ateliers?: number
 }
@@ -93,6 +94,8 @@ export interface Archive {
   type: 'readability' | 'markdown' | 'pdf' | 'html'
   contenu: string | null
   chemin: string | null
+  statut: 'complete' | 'partielle' | 'echouee'
+  nb_mots: number | null
   cree_le: string
 }
 

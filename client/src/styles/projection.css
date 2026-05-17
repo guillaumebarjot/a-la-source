@@ -1,0 +1,276 @@
+/* =============================================================================
+   Vue Projection — Mode atelier plein ecran
+   Zero scroll, zero biais, cartes type reseau social
+   ============================================================================= */
+
+.projection {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #111;
+  color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* JAMAIS de scroll */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Barre de controle discrete */
+.projection-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+.projection-ctrl-titre {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.projection-ctrl-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fafafa;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.projection-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Loading / Empty */
+.projection-loading,
+.projection-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+}
+.projection-empty h2 { font-size: 1.5rem; margin: 0; }
+.projection-empty p { opacity: 0.7; }
+
+/* ========== Phase Selection ========== */
+
+.projection-selection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 24px;
+}
+
+.projection-consigne {
+  font-size: 1.4rem;
+  font-weight: 300;
+  text-align: center;
+  opacity: 0.9;
+  margin: 0;
+}
+
+/* Grille de cartes — jamais de scroll, s'adapte au viewport */
+.projection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  max-height: calc(100vh - 180px); /* Garantit zero scroll */
+  overflow: hidden;
+}
+
+/* Pour 2 sources */
+.projection-grid:has(> :nth-child(2):last-child) {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 900px;
+}
+
+/* Pour 3 sources */
+.projection-grid:has(> :nth-child(3):last-child) {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1100px;
+}
+
+/* Pour 4+ sources */
+.projection-grid:has(> :nth-child(5)) {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Carte style reseau social (vignette + titre + chapo) */
+.projection-card {
+  display: flex;
+  flex-direction: column;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  text-align: left;
+  max-height: calc((100vh - 200px) / 2); /* Max 2 rangees */
+}
+.projection-card:hover {
+  transform: scale(1.02);
+  border-color: #c0392b;
+  box-shadow: 0 0 20px rgba(192, 57, 43, 0.3);
+}
+.projection-card:focus-visible {
+  outline: 2px solid #c0392b;
+  outline-offset: 2px;
+}
+
+/* Vignette (image OG) */
+.projection-card-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #222;
+  flex-shrink: 0;
+}
+.projection-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Corps de la carte */
+.projection-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow: hidden;
+}
+.projection-card-titre {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.projection-card-accroche {
+  font-size: 0.85rem;
+  margin: 0;
+  opacity: 0.7;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.projection-card-meta {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin-top: auto;
+}
+
+/* ========== Phase Pourquoi ========== */
+
+.projection-pourquoi {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 32px;
+  text-align: center;
+}
+
+.projection-pourquoi-card {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.projection-pourquoi-img {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.projection-pourquoi-card h2 {
+  font-size: 1.6rem;
+  margin: 0;
+  line-height: 1.3;
+}
+.projection-pourquoi-accroche {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin: 0;
+  max-width: 500px;
+}
+.projection-pourquoi-meta {
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.projection-pourquoi-question {
+  background: rgba(192, 57, 43, 0.1);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 12px;
+  padding: 24px 32px;
+  max-width: 550px;
+}
+.projection-pourquoi-question h3 {
+  font-size: 1.2rem;
+  margin: 0 0 8px;
+  color: #e74c3c;
+}
+.projection-pourquoi-question p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.projection-pourquoi-actions {
+  display: flex;
+  gap: 16px;
+}
+
+/* Boutons projection */
+.projection-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.projection-btn:hover { opacity: 0.9; transform: scale(1.02); }
+.projection-btn-primary {
+  background: #c0392b;
+  color: white;
+}
+.projection-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fafafa;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive (tablette/projecteur) */
+@media (max-height: 700px) {
+  .projection-consigne { font-size: 1.1rem; }
+  .projection-card-titre { font-size: 0.9rem; }
+  .projection-card-accroche { -webkit-line-clamp: 1; }
+  .projection-pourquoi { padding: 20px; gap: 20px; }
+  .projection-pourquoi-card h2 { font-size: 1.3rem; }
+}
