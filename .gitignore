@@ -1,6 +1,5 @@
 node_modules/
 dist/
-db/*.db
 db/*.db-shm
 db/*.db-wal
 db/image-cache/
@@ -8,3 +7,9 @@ uploads/
 .env
 *.log
 .DS_Store
+
+# Copies de conflit OneDrive
+*-[A-Z]*PC.*
+* (1).*
+* (2).*
+*-DESKTOP-*
