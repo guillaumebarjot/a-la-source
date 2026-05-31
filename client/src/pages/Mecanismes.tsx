@@ -46,6 +46,9 @@ export default function Mecanismes() {
   const [guidelines, setGuidelines] = useState<Contenu | null>(null)
   const [epoche, setEpoche] = useState<Contenu | null>(null)
 
+  // Manuel content
+  const [manuel, setManuel] = useState<Contenu | null>(null)
+
   // Charger les categories au montage
   useEffect(() => {
     api.get<Categorie[]>('/mecanismes/categories').then(setCategories)
@@ -76,8 +79,30 @@ export default function Mecanismes() {
     }
   }, [categorie])
 
+  // Charger contenu manuel
+  useEffect(() => {
+    if (categorie === 'manuel') {
+      api.get<Contenu>('/contenus/manuel-deconstruction').then(setManuel).catch(() => {})
+    }
+  }, [categorie])
+
   // Redirect /apprendre sans section vers /apprendre (catalogue = pas de categorie)
   // On ne redirige pas ici car l'absence de categorie = index catalogue
+
+  // === Section Manuel de deconstruction ===
+  if (categorie === 'manuel') {
+    return (
+      <div className="page-mecanismes">
+        {manuel ? (
+          <article className="manuel-content">
+            <ReactMarkdown>{manuel.contenu || ''}</ReactMarkdown>
+          </article>
+        ) : (
+          <p className="loading">Chargement du manuel...</p>
+        )}
+      </div>
+    )
+  }
 
   // === Section Aide & Ressources ===
   if (categorie === 'aide') {
@@ -90,7 +115,7 @@ export default function Mecanismes() {
         <section className="aide-section">
           <h2>Comment fonctionne l'outil</h2>
           <p>
-            « A la source » est un outil collaboratif d'education populaire sur l'information,
+            « A la source » est un outil collaboratif d'education populaire aux medias,
             porte par Rouge Coquelicot. Il permet de collecter des sources mediatiques,
             d'identifier les mecanismes informationnels a l'oeuvre, et de preparer des ateliers
             de decryptage collectif.

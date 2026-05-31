@@ -2,14 +2,14 @@
 
 ## Presentation
 
-« A la source » est un outil collaboratif d'education populaire sur l'information, porte par Rouge Coquelicot. Il permet de collecter des sources mediatiques, d'identifier les mecanismes informationnels a l'oeuvre, et de preparer des ateliers de decryptage collectif.
+« A la source » est un outil collaboratif d'education populaire aux medias, porte par Rouge Coquelicot. Il permet de collecter des sources mediatiques, d'identifier les mecanismes informationnels a l'oeuvre, et de preparer des ateliers de decryptage collectif.
 
 ## Parcours type
 
 1. **Flux** — Decouvrir les dernieres sources partagees par la communaute
 2. **Lire** — Lire en detail une source, identifier des mecanismes, evaluer
 3. **Vivier** — Les meilleures sources remontent dans le pipeline atelier
-4. **Atelier** — Le·la facilitateur·ice selectionne, le groupe decouvre et debat
+4. **Atelier** — Le·la facilitateur·ice compose une shortlist, le groupe choisit et decortique
 
 ## Pages de l'application
 
@@ -38,39 +38,62 @@ Coeur de l'application. Affiche le contenu archive d'une source avec une sidebar
 - Recommander a un·e autre membre
 - Proposer au vivier (pour les ateliers)
 - Archiver (si pas encore fait)
+- Partager (copier le lien, Discord)
 
 ### Observatoire (`/observatoire`)
 
-Visualisations et statistiques sur l'ensemble des sources analysees.
+Visualisations et statistiques sur l'ensemble des sources analysees. 4 onglets :
 
-- Timeline des mecanismes (evolution mois par mois)
-- Matrice media × mecanisme (qui utilise quoi)
-- Top sources les plus evaluees
-- Radar confiance media
+- **Mecanismes** : timeline des mecanismes identifies (barres empilees), matrice media × mecanisme (heatmap)
+- **Medias** : nombre de sources par media, indice de confiance par media
+- **Fiches medias** : fiches detaillees (proprietaire, ligne editoriale, stats)
+- **Sources** : top sources les plus evaluees
 
 ### Ateliers (`/ateliers`)
 
-Pipeline de preparation des ateliers.
+Pipeline de preparation et gestion des ateliers. 4 onglets :
 
-- **Vivier** : sources proposees, triees par score /100
-- **Preparation** : composer un atelier, selectionner les sources
-- **Archives** : historique des ateliers passes
+- **Vivier** : sources proposees, triees par score /100 (60% pedagogie + 40% echo), avec quality gate
+- **Preparation** : composer un atelier, selectionner les sources, definir les questions
+- **En cours** : atelier actif, acces au mode projection plein ecran
+- **Archives** : historique des ateliers termines avec compte-rendu
 
 ### Archiver (`/archiver`)
 
-Page collaborative d'archivage. Montre les sources les plus consultees mais non encore archivees. Permet de lancer l'archivage d'une URL.
+Page collaborative d'archivage anti-linkrot. 3 onglets :
 
-### Becs Rouges (`/becs-rouges`)
+- **A archiver** : sources prioritaires non encore archivees
+- **Archives partielles** : sources dont l'archivage est incomplet
+- **Completer** : contribuer a l'archivage (upload manuel, markdown, PDF)
 
-Page dediee aux Becs Rouges : videos (Indymotion, YouTube), podcasts, presentation.
+### Apprendre (`/apprendre`)
+
+Section pedagogique. 3 onglets :
+
+- **Catalogue** : les 25+ mecanismes informationnels classes par categorie (6 familles), avec fiches detaillees, exemples, questions guidees
+- **Manuel** : le Manuel de deconstruction mediatique, guide complet pour les facilitateur·ices (biais cognitifs, mecaniques de fabrication, grille d'analyse, glossaire, ressources)
+- **Aide & Ressources** : fonctionnement de l'outil, contrat d'epoche, guidelines d'evaluation, systeme de score
 
 ### Mon espace (`/perso`)
 
-Espace personnel : sources a lire, recommandations reçues, contributions.
+Espace personnel. 2 onglets :
 
-### Aide (`/aide`)
+- **Mes lectures** : sources sauvegardees, recommandations reçues
+- **Chaines amies** : videos partenaires (PeerTube / Indymotion)
 
-Documentation integree a l'application.
+### Administration (`/admin`)
+
+Reserve aux admins. 2 onglets :
+
+- **Parametrage** : configuration generale de l'app
+- **Utilisateurs** : gestion des roles (membre, animateur·ice, admin)
+
+### Projection (`/projection/:atelierId`)
+
+Mode plein ecran pour la projection en atelier. Fond clair force, typographie de lecture. 3 phases :
+1. **Selection** : grille neutre des sources de la shortlist (sans scores ni mecanismes)
+2. **Lecture** : reader serif, plein ecran, mode archive
+3. **Synthese** : formulaire guide (mecanismes identifies, observations, nombre de participants)
 
 ## Systeme de score
 
@@ -98,7 +121,7 @@ Les sources s'estompent progressivement avec le temps. La vitesse depend du type
 ## Roles
 
 - **Membre** : soumettre, taguer, commenter, evaluer, identifier des mecanismes, lire
-- **Facilitateur·ice** : + gerer les ateliers, selectionner des sources, overrider le timing
+- **Animateur·ice** : + gerer les ateliers, selectionner des sources, overrider le timing
 - **Admin** : + gerer les utilisateur·ices, configurer les parametres
 
 ## Tags vs Mots-cles

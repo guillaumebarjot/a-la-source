@@ -4,6 +4,7 @@ import { join, dirname, extname } from 'path'
 import { fileURLToPath } from 'url'
 import { readFileSync, renameSync, unlinkSync } from 'fs'
 import db from '../lib/db.js'
+import { requireRole } from '../lib/auth.js'
 import { calculerScoreSource } from '../lib/score.js'
 import { fetchOpenGraph } from '../lib/opengraph.js'
 import { extractReadability, detecterArchivePartielle, compterMots } from '../lib/readability.js'
@@ -469,8 +470,8 @@ router.post('/:id/signaler-archive', (req, res) => {
 })
 
 
-// DELETE /api/sources/:id
-router.delete('/:id', (req, res) => {
+// DELETE /api/sources/:id (animateur/admin only)
+router.delete('/:id', requireRole('animateur', 'admin'), (req, res) => {
   db.prepare('DELETE FROM sources WHERE id = ?').run(req.params.id)
   res.json({ ok: true })
 })

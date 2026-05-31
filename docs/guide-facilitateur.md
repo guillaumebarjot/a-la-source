@@ -63,6 +63,16 @@ Un atelier « A la source » est un moment d'education populaire ou un groupe se
 - Un bon atelier n'est pas un cours : le·la facilitateur·ice n'est pas un·e expert·e, mais un·e guide
 - Adapter le format au groupe (plus court pour un premier atelier, plus long pour un groupe habitue)
 
+## Manuel de deconstruction mediatique
+
+Un guide complet est disponible dans l'application (page **Apprendre** → onglet **Manuel**). Il couvre :
+- Les trois couches de lecture (surface, construction, ressorts invisibles)
+- La titraille, le chapo, l'angle, le cadrage
+- Les biais cognitifs (Systeme 1/2 de Kahneman, ancrage, confirmation, cadrage, disponibilite)
+- Les mecanismes rhetoriques (chiffre-paravent, titre-appat, argument d'autorite, fausse causalite, omission)
+- L'economie de l'attention (agenda setting, modele publicitaire, paywall)
+- Une grille d'analyse imprimable pour les ateliers
+
 ## Les 10 mecanismes de reference
 
 1. **Effet de cadrage** — presenter l'information sous un angle qui oriente l'interpretation

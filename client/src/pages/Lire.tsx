@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Globe, FileText, AlertTriangle, Bookmark, Target, UserPlus, MessageCircle, FileUp } from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import type { SourceDetail } from '../types'
@@ -18,7 +20,6 @@ export default function Lire() {
   const user = useAuth((s) => s.user)
 
   // Partage a un utilisateur
-  const [showShareMenu, setShowShareMenu] = useState(false)
   const [users, setUsers] = useState<UserItem[]>([])
   const [shareMsg, setShareMsg] = useState('')
 
@@ -48,13 +49,12 @@ export default function Lire() {
     loadSource()
   }
 
-  async function openShareMenu() {
-    if (users.length === 0) {
+  async function handleShareOpenChange(open: boolean) {
+    if (open && users.length === 0) {
       const all = await api.get<UserItem[]>('/auth/users')
       setUsers(all.filter(u => u.id !== user?.id))
     }
-    setShowShareMenu(!showShareMenu)
-    setShareMsg('')
+    if (!open) setShareMsg('')
   }
 
   async function recommander(toUserId: number) {
@@ -64,7 +64,7 @@ export default function Lire() {
       recommande_a: toUserId,
     })
     setShareMsg('Recommandation envoyee !')
-    setTimeout(() => { setShowShareMenu(false); setShareMsg('') }, 1500)
+    setTimeout(() => setShareMsg(''), 1500)
   }
 
   function partagerDiscord() {
@@ -93,7 +93,7 @@ export default function Lire() {
             disabled={!hasUrl}
             title={hasUrl ? 'Afficher la source originale (site web)' : "Pas d'URL disponible"}
           >
-            🌐 Source
+            <Globe size={14} /> Source
           </button>
           <button
             className={`reader-mode-btn ${mode === 'archive' ? 'reader-mode-btn--active' : ''}`}
@@ -101,40 +101,42 @@ export default function Lire() {
             disabled={!hasArchive}
             title={hasArchive ? 'Afficher la copie locale extraite' : 'Pas de copie locale disponible'}
           >
-            📄 Locale {archivePartielle && '⚠'}
+            <FileText size={14} /> Locale {archivePartielle && <AlertTriangle size={14} />}
           </button>
         </div>
         <div className="lire-quick-actions">
           {user && (
             <>
-              <button className="btn-action-sm" onClick={aLirePlusTard} title="A lire plus tard">🔖 Lire plus tard</button>
+              <button className="btn-action-sm" onClick={aLirePlusTard} title="A lire plus tard"><Bookmark size={14} /> Lire plus tard</button>
               {source.statut === 'veille' && (
-                <button className="btn-action-sm" onClick={proposerAtelier} title="Proposer pour un atelier">🎯 Vers atelier</button>
+                <button className="btn-action-sm" onClick={proposerAtelier} title="Proposer pour un atelier"><Target size={14} /> Vers atelier</button>
               )}
-              <div className="share-wrapper">
-                <button className="btn-action-sm" onClick={openShareMenu} title="Recommander a un membre">👤 Partager</button>
-                {showShareMenu && (
-                  <div className="share-dropdown">
+              <DropdownMenu.Root onOpenChange={handleShareOpenChange}>
+                <DropdownMenu.Trigger asChild>
+                  <button className="btn-action-sm" title="Recommander a un membre"><UserPlus size={14} /> Partager</button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content className="share-dropdown" sideOffset={4}>
                     <div className="share-dropdown-section">
                       <span className="share-dropdown-label">Recommander a :</span>
                       {users.length === 0 && <span className="share-dropdown-empty">Aucun membre</span>}
                       {users.map(u => (
-                        <button key={u.id} className="share-dropdown-item" onClick={() => recommander(u.id)}>
+                        <DropdownMenu.Item key={u.id} className="share-dropdown-item" onSelect={() => recommander(u.id)}>
                           {u.nom}
-                        </button>
+                        </DropdownMenu.Item>
                       ))}
                     </div>
-                    <div className="share-dropdown-divider" />
-                    <button className="share-dropdown-item" onClick={partagerDiscord}>
-                      💬 Copier pour Discord
-                    </button>
+                    <DropdownMenu.Separator className="share-dropdown-divider" />
+                    <DropdownMenu.Item className="share-dropdown-item" onSelect={partagerDiscord}>
+                      <MessageCircle size={14} /> Copier pour Discord
+                    </DropdownMenu.Item>
                     {shareMsg && <div className="share-dropdown-msg">{shareMsg}</div>}
-                  </div>
-                )}
-              </div>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </>
           )}
-          <Link to={`/archiver/contribuer?source=${source.id}`} className="btn-action-sm" title="Deposer une copie locale de cette source">📄 Contribuer</Link>
+          <Link to={`/archiver/contribuer?source=${source.id}`} className="btn-action-sm" title="Deposer une copie locale de cette source"><FileUp size={14} /> Contribuer</Link>
         </div>
       </div>
       <div className="lire-body">

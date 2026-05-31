@@ -9,7 +9,7 @@ const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
 const Ateliers = lazy(() => import('./pages/Ateliers'))
 const Archiver = lazy(() => import('./pages/Archiver'))
-const BecsRouges = lazy(() => import('./pages/BecsRouges'))
+// BecsRouges: route redirects to /perso/chaines, component kept but not lazy-loaded
 const MonEspace = lazy(() => import('./pages/MonEspace'))
 const AdminParametrage = lazy(() => import('./pages/AdminParametrage'))
 const Projection = lazy(() => import('./pages/Projection'))

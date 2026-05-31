@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
+import { Star, FileCheck, Pencil, ChevronDown, ChevronRight } from 'lucide-react'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import SourceCard from '../components/cards/SourceCard'
@@ -318,9 +319,9 @@ export default function Ateliers() {
 function QualityGateIndicator({ gate }: { gate: QualityGate }) {
   return (
     <div className="quality-gate-indicator">
-      <span className={gate.hasEvaluation ? 'qg-ok' : 'qg-missing'} title="Evaluation">⭐</span>
-      <span className={gate.hasArchive ? 'qg-ok' : 'qg-missing'} title="Archive locale">📄</span>
-      <span className={gate.hasAccroche ? 'qg-ok' : 'qg-missing'} title="Accroche redigee">✏️</span>
+      <span className={gate.hasEvaluation ? 'qg-ok' : 'qg-missing'} title="Evaluation"><Star size={14} /></span>
+      <span className={gate.hasArchive ? 'qg-ok' : 'qg-missing'} title="Archive locale"><FileCheck size={14} /></span>
+      <span className={gate.hasAccroche ? 'qg-ok' : 'qg-missing'} title="Accroche redigee"><Pencil size={14} /></span>
     </div>
   )
 }
@@ -500,7 +501,7 @@ function AtelierArchiveCard({ atelier }: { atelier: Atelier }) {
       <div className="historique-header" onClick={loadDetail} style={{ cursor: 'pointer' }}>
         <h3>Atelier #{atelier.numero}</h3>
         <span className="historique-date">{atelier.date_atelier || 'Date non renseignee'}</span>
-        <span className="historique-expand">{expanded ? '▼' : '▶'}</span>
+        <span className="historique-expand">{expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
       </div>
       <div className="historique-meta">
         {atelier.lieu && <span>Lieu : {atelier.lieu}</span>}

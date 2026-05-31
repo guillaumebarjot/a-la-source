@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Unlock, Lock, FileWarning, FileCheck, File, Star, Target, MessageCircle } from 'lucide-react'
 import type { Source } from '../../types'
 
 interface ScoreOverlay {
@@ -86,7 +87,7 @@ export default function SourceCard({ source, score, showFraicheur, action, ateli
                 className={`badge-icon ${hasArchive && source.archive_statut === 'complete' ? 'badge-icon--success' : 'badge-icon--warning'}`}
                 title={hasArchive && source.archive_statut === 'complete' ? 'Paywall contourne (copie locale complete)' : 'Acces payant'}
               >
-                {hasArchive && source.archive_statut === 'complete' ? '🔓' : '🔒'}
+                {hasArchive && source.archive_statut === 'complete' ? <Unlock size={14} /> : <Lock size={14} />}
               </span>
             )}
             {hasArchive && source.archive_statut === 'partielle' && (
@@ -95,26 +96,26 @@ export default function SourceCard({ source, score, showFraicheur, action, ateli
                 className="badge-icon badge-icon--warning"
                 title="Copie locale incomplete — cliquez pour completer"
               >
-                📄⚠
+                <FileWarning size={14} />
               </Link>
             )}
             {hasArchive && source.archive_statut !== 'partielle' && (
-              <span className="badge-icon badge-icon--success" title="Copie locale disponible">📄</span>
+              <span className="badge-icon badge-icon--success" title="Copie locale disponible"><FileCheck size={14} /></span>
             )}
             {!hasArchive && !isPaywall && (
-              <span className="badge-icon badge-icon--muted" title="Pas de copie locale">📄</span>
+              <span className="badge-icon badge-icon--muted" title="Pas de copie locale"><File size={14} /></span>
             )}
             {score && (
               <span className="badge-icon" title={`${score.nbEvaluations} evaluation(s)`}>
-                ⭐{score.nbEvaluations}
+                <Star size={14} />{score.nbEvaluations}
               </span>
             )}
             {(source.nb_ateliers ?? 0) > 0 && !atelierBadges && (
-              <span className="badge-icon" title={`${source.nb_ateliers} atelier(s)`}>🎯</span>
+              <span className="badge-icon" title={`${source.nb_ateliers} atelier(s)`}><Target size={14} /></span>
             )}
             {(source.nb_commentaires ?? 0) > 0 && (
               <span className="badge-icon" title={`${source.nb_commentaires} commentaire(s)`}>
-                💬{source.nb_commentaires}
+                <MessageCircle size={14} />{source.nb_commentaires}
               </span>
             )}
           </div>

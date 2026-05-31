@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Schema « A la source » v2.0
--- Base SQLite pour l'outil d'education populaire sur l'information
+-- Base SQLite pour l'outil d'education populaire aux medias
 -- Rouge Coquelicot — rouge-coquelicot.fr
 -- =============================================================================
 

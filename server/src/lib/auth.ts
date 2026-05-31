@@ -18,8 +18,19 @@ declare global {
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   // YunoHost SSO: Remote-User header
   const remoteUser = req.headers['remote-user'] as string | undefined
-  // Dev fallback: query param or default
-  const username = remoteUser || (req.query._user as string) || 'HydroLooney'
+
+  // Dev fallback: query param (development only)
+  let username: string | undefined
+  if (remoteUser) {
+    username = remoteUser
+  } else if (process.env.NODE_ENV !== 'production') {
+    username = (req.query._user as string) || 'HydroLooney'
+  }
+
+  if (!username) {
+    next()
+    return
+  }
 
   const row = db.prepare(
     'SELECT id, nom, role FROM utilisateurs WHERE nom = ? AND actif = 1'

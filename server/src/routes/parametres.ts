@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import db from '../lib/db.js'
+import { requireRole } from '../lib/auth.js'
 
 const router = Router()
 
@@ -25,8 +26,8 @@ router.get('/:cle', (req, res) => {
   res.json({ cle: row.cle, valeur: JSON.parse(row.valeur), modifie_le: row.modifie_le })
 })
 
-// PUT /api/parametres/:cle — creer ou mettre a jour
-router.put('/:cle', (req, res) => {
+// PUT /api/parametres/:cle — creer ou mettre a jour (admin only)
+router.put('/:cle', requireRole('admin'), (req, res) => {
   const { valeur } = req.body
   if (valeur === undefined) return res.status(400).json({ error: 'valeur requise' })
 
@@ -39,8 +40,8 @@ router.put('/:cle', (req, res) => {
   res.json({ cle: req.params.cle, valeur, modifie_le: new Date().toISOString() })
 })
 
-// DELETE /api/parametres/:cle
-router.delete('/:cle', (req, res) => {
+// DELETE /api/parametres/:cle (admin only)
+router.delete('/:cle', requireRole('admin'), (req, res) => {
   const result = db.prepare('DELETE FROM parametres WHERE cle = ?').run(req.params.cle)
   if (result.changes === 0) return res.status(404).json({ error: 'Parametre introuvable' })
   res.json({ ok: true })

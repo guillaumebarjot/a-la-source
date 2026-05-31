@@ -1,6 +1,6 @@
 # A la source
 
-**Outil d'education populaire sur l'information**, porte par [Rouge Coquelicot](https://rouge-coquelicot.fr).
+**Outil d'education populaire aux medias**, porte par [Rouge Coquelicot](https://rouge-coquelicot.fr).
 
 > Developper le sens critique, ensemble. Pas denoncer les medias, mais comprendre comment l'information est construite.
 
@@ -12,7 +12,7 @@ Les ateliers « A la source » existent depuis 2024 au sein de Rouge Coquelicot.
 
 **Le probleme** : preparer ces ateliers et maintenir une veille collaborative necessitait un outil dedie. Rien sur le marche ne correspondait a notre usage (voir la section [Pourquoi pas Linkwarden ?](#pourquoi-pas-linkwarden-ou-wallabag-ou-shaarli)).
 
-**La solution** : une application web legere, autohergee, construite sur mesure pour le workflow associatif d'education populaire a l'information.
+**La solution** : une application web legere, autohergee, construite sur mesure pour le workflow associatif d'education populaire aux medias.
 
 ---
 
@@ -64,6 +64,12 @@ Les ateliers « A la source » existent depuis 2024 au sein de Rouge Coquelicot.
 
 - Lectures sauvegardees, recommandations recues
 - Chaines partenaires (YouTube, podcasts)
+
+### Apprendre (pedagogie integree)
+
+- **Catalogue de 25+ mecanismes informationnels** classes en 6 familles, avec fiches detaillees, exemples concrets, questions guidees pour les ateliers
+- **Manuel de deconstruction mediatique** : guide complet pour les facilitateur·ices — biais cognitifs (Kahneman S1/S2, ancrage, cadrage), mecaniques de fabrication (titraille, chapo, angle), economie de l'attention, grille d'analyse imprimable, glossaire, references academiques
+- Contenu stocke en base (anti link-rot), rendu en markdown cote client
 
 ### Integration Discord (prevue)
 
@@ -170,7 +176,8 @@ L'interface s'organise en 3 niveaux de header :
 │ H0 — Bandeau Rouge Coquelicot (logo + titre)                │
 ├─────────────────────────────────────────────────────────────┤
 │ H1 — Navigation principale                                   │
-│   Flux | Observatoire | Ateliers | Archiver | Apprendre     │
+│   Flux | Observatoire | Ateliers | Archiver | Apprendre      │
+│   | Mon espace | [Admin]                                      │
 ├─────────────────────────────────────────────────────────────┤
 │ H2 — Sous-navigation contextuelle (selon la page)            │
 │   ex: Mecanismes | Medias | Fiches medias | Sources          │

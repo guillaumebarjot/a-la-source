@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
 import { api } from '../api/client'
 import type { Source, Tag, Media } from '../types'
 import SourceCard from '../components/cards/SourceCard'
@@ -174,6 +175,7 @@ export default function Flux() {
   const activeFilterCount = activeTags.size + activeTypes.size + (filterMedia ? 1 : 0)
 
   return (
+    <Dialog.Root open={showSubmit} onOpenChange={setShowSubmit}>
     <div className="page-flux">
       {/* Barre de recherche + bouton soumettre */}
       <div className="flux-top">
@@ -194,9 +196,11 @@ export default function Flux() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => setShowSubmit(true)}>
-          + Soumettre source
-        </button>
+        <Dialog.Trigger asChild>
+          <button className="btn btn-primary">
+            + Soumettre source
+          </button>
+        </Dialog.Trigger>
       </div>
 
       <div className="flux-layout">
@@ -296,7 +300,8 @@ export default function Flux() {
         </div>
       </div>
 
-      {showSubmit && <SubmitSource onCreated={loadSources} onClose={() => setShowSubmit(false)} />}
+      <SubmitSource open={showSubmit} onOpenChange={setShowSubmit} onCreated={loadSources} />
     </div>
+    </Dialog.Root>
   )
 }

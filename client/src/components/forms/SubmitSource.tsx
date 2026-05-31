@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
 import { api } from '../../api/client'
 
 interface Props {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onCreated: () => void
-  onClose: () => void
 }
 
 interface PreviewData {
@@ -19,7 +21,7 @@ interface PreviewData {
 
 type Step = 'url' | 'preview' | 'done'
 
-export default function SubmitSource({ onCreated, onClose }: Props) {
+export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
   const [url, setUrl] = useState('')
   const [step, setStep] = useState<Step>('url')
   const [loading, setLoading] = useState(false)
@@ -57,7 +59,7 @@ export default function SubmitSource({ onCreated, onClose }: Props) {
       setStep('done')
       setTimeout(() => {
         onCreated()
-        onClose()
+        onOpenChange(false)
       }, 1200)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la creation')
@@ -74,9 +76,10 @@ export default function SubmitSource({ onCreated, onClose }: Props) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-submit" onClick={(e) => e.stopPropagation()}>
-        <h2>Soumettre une source</h2>
+    <Dialog.Portal>
+      <Dialog.Overlay className="modal-overlay" />
+      <Dialog.Content className="modal modal-submit">
+        <Dialog.Title>Soumettre une source</Dialog.Title>
 
         {step === 'url' && (
           <>
@@ -160,10 +163,10 @@ export default function SubmitSource({ onCreated, onClose }: Props) {
 
         {step === 'url' && (
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn btn-secondary">Annuler</button>
+            <button type="button" onClick={() => onOpenChange(false)} className="btn btn-secondary">Annuler</button>
           </div>
         )}
-      </div>
-    </div>
+      </Dialog.Content>
+    </Dialog.Portal>
   )
 }

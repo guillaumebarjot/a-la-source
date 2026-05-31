@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { Sun, Moon } from 'lucide-react'
 import { useAuth } from '../../store/useAuth'
 import { useUI } from '../../store/useUI'
 
@@ -27,6 +28,7 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
   ],
   '/apprendre': [
     { label: 'Catalogue', to: '/apprendre' },
+    { label: 'Manuel', to: '/apprendre/manuel' },
     { label: 'Aide & Ressources', to: '/apprendre/aide' },
   ],
   '/admin': [
@@ -64,12 +66,12 @@ export default function Header() {
           <img src="/logo-rc.png" alt="Rouge Coquelicot" className="header-logo" />
           <div className="header-titles">
             <h1 className="header-h1">A la source</h1>
-            <h2 className="header-h2">Education populaire sur l'information</h2>
+            <h2 className="header-h2">Éducation populaire aux médias</h2>
           </div>
         </div>
         <div className="header-right">
           <button className="btn-icon" onClick={toggleDarkMode} title="Theme">
-            {darkMode ? '☀️' : '🌙'}
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           {user && <span className="header-user">{user.nom}</span>}
         </div>

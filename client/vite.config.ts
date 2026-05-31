@@ -11,9 +11,9 @@ export default defineConfig({
       manifest: {
         name: 'A la source — Rouge Coquelicot',
         short_name: 'A la source',
-        description: 'Outil d\'education populaire sur l\'information',
-        theme_color: '#c0392b',
-        background_color: '#fafafa',
+        description: 'Outil d\'education populaire aux medias',
+        theme_color: '#D91E2E',
+        background_color: '#FEFDFB',
         display: 'standalone',
         start_url: '/',
         icons: [
