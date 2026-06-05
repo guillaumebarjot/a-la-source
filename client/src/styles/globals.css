@@ -1680,3 +1680,94 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   z-index: 1001;
 }
 [data-radix-popper-content-wrapper] { z-index: 500 !important; }
+
+/* ---------- Couverture multisource (Chantier C) ---------- */
+.couverture-creer,
+.couverture-attach {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.couverture-creer input,
+.couverture-attach input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+}
+.couverture-liste {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.couverture-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.couverture-item:hover {
+  background: rgba(217, 30, 46, 0.05);
+}
+.couverture-item-titre {
+  font-weight: 600;
+}
+.couverture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.couverture-card {
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 10px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.couverture-card-media {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.couverture-badge {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(217, 30, 46, 0.1);
+  color: #D91E2E;
+  white-space: nowrap;
+}
+.couverture-card-prop {
+  font-size: 0.8rem;
+  color: var(--muted, #666);
+}
+.couverture-card-titre {
+  font-weight: 500;
+}
+.couverture-card-accroche {
+  font-size: 0.85rem;
+  color: var(--muted, #555);
+  margin: 0;
+}
+.couverture-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+.couverture-detacher {
+  font-size: 0.75rem;
+  background: none;
+  border: none;
+  color: #D91E2E;
+  cursor: pointer;
+}

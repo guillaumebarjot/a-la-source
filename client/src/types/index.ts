@@ -43,7 +43,45 @@ export interface Media {
   type: string | null
   url_site: string | null
   description: string | null
+  // Propriété structurée (Chantier A)
+  proprietaire?: string | null
+  actionnaire_ultime?: string | null
+  type_propriete?: string | null
+  financement?: string | null
+  annee_creation?: number | null
+  ligne_revendiquee?: string | null
   nb_sources?: number
+}
+
+// Événements (Chantier C) — veille multisourcée
+export interface Evenement {
+  id: number
+  titre: string
+  description: string | null
+  date_evenement: string | null
+  cree_le: string
+  nb_sources?: number
+  nb_medias?: number
+  nb_types_propriete?: number
+}
+
+export interface EvenementSource {
+  id: number
+  titre: string
+  url: string | null
+  accroche: string | null
+  date_publication: string | null
+  type_source: string | null
+  media_id: number | null
+  media_nom: string | null
+  proprietaire: string | null
+  actionnaire_ultime: string | null
+  type_propriete: string | null
+  ligne_revendiquee: string | null
+}
+
+export interface EvenementDetail extends Evenement {
+  sources: EvenementSource[]
 }
 
 export interface MecanismeReference {

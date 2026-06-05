@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { api } from '../api/client'
 import FichesMedias from '../components/observatoire/FichesMedias'
+import Couverture from '../components/observatoire/Couverture'
 import type { MecanismeStat, Media } from '../types'
 
 /* ---------- Types ---------- */
@@ -306,6 +307,10 @@ export default function Observatoire() {
 
       {section === 'fiches' && (
         <FichesMedias />
+      )}
+
+      {section === 'couverture' && (
+        <Couverture />
       )}
 
       {section === 'sources' && (

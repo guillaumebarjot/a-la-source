@@ -9,7 +9,25 @@ interface MediaFiche {
   type: string | null
   url_site: string | null
   description: string | null
+  proprietaire: string | null
+  actionnaire_ultime: string | null
+  type_propriete: string | null
+  financement: string | null
+  annee_creation: number | null
+  ligne_revendiquee: string | null
   nb_sources: number
+}
+
+// Libellés lisibles des types de propriété (Chantier A)
+const TYPE_PROPRIETE_LABELS: Record<string, string> = {
+  conglomerat: 'Conglomérat',
+  capital_prive: 'Capital privé / milliardaire',
+  groupe_industriel: 'Groupe industriel',
+  public: 'Public / service public',
+  cooperative: 'Coopérative / société de personnels',
+  associatif: 'Associatif / dons',
+  independant: 'Indépendant',
+  autre: 'Autre',
 }
 
 interface MediaStats {
@@ -102,6 +120,37 @@ export default function FichesMedias() {
           <p className="media-detail-description">{media.description}</p>
         )}
 
+        {(media.proprietaire || media.actionnaire_ultime || media.type_propriete || media.financement || media.annee_creation || media.ligne_revendiquee) && (
+          <section className="media-propriete">
+            <h3>Propriété et financement</h3>
+            <table className="media-detail-table">
+              <tbody>
+                {media.proprietaire && (
+                  <tr><th>Propriétaire</th><td>{media.proprietaire}</td></tr>
+                )}
+                {media.actionnaire_ultime && (
+                  <tr><th>Au bout de la chaîne</th><td>{media.actionnaire_ultime}</td></tr>
+                )}
+                {media.type_propriete && (
+                  <tr><th>Type de propriété</th><td>{TYPE_PROPRIETE_LABELS[media.type_propriete] ?? media.type_propriete}</td></tr>
+                )}
+                {media.financement && (
+                  <tr><th>Financement</th><td>{media.financement}</td></tr>
+                )}
+                {media.annee_creation && (
+                  <tr><th>Création</th><td>{media.annee_creation}</td></tr>
+                )}
+                {media.ligne_revendiquee && (
+                  <tr><th>Ligne revendiquée</th><td>{media.ligne_revendiquee}</td></tr>
+                )}
+              </tbody>
+            </table>
+            <p className="media-propriete-note">
+              Données de propriété à valider avec la carte Acrimed « Médias français, qui possède quoi ? ». On décrit la propriété, on ne note pas le média.
+            </p>
+          </section>
+        )}
+
         {loadingStats ? (
           <p className="loading">Chargement des statistiques...</p>
         ) : stats ? (
@@ -112,9 +161,8 @@ export default function FichesMedias() {
                 <tr><th>Mecanismes identifies</th><td>{stats.nb_mecanismes}</td></tr>
                 <tr><th>Commentaires</th><td>{stats.nb_commentaires}</td></tr>
                 <tr><th>Evaluations</th><td>{stats.nb_evaluations}</td></tr>
-                {stats.score_confiance_moyen !== null && (
-                  <tr><th>Score confiance moyen</th><td>{stats.score_confiance_moyen}/100</td></tr>
-                )}
+                {/* Indice de confiance retiré (Chantier B) : on décrit la propriété
+                    et la transparence, on ne note pas le média (piège Decodex). */}
               </tbody>
             </table>
 

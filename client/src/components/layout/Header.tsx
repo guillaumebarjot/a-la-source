@@ -13,6 +13,7 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
     { label: 'Mecanismes', to: '/observatoire/mecanismes' },
     { label: 'Medias', to: '/observatoire/medias' },
     { label: 'Fiches medias', to: '/observatoire/fiches' },
+    { label: 'Couverture', to: '/observatoire/couverture' },
     { label: 'Sources', to: '/observatoire/sources' },
   ],
   '/ateliers': [
