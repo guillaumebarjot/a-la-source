@@ -196,5 +196,5 @@ insertMeca.run(
 )
 
 console.log('Migration mecanismes enrichis — terminee')
-console.log(`  ${db.prepare('SELECT COUNT(*) as n FROM mecanismes_reference').get()?.n || 0} mecanismes en base`)
+console.log(`  ${(db.prepare('SELECT COUNT(*) as n FROM mecanismes_reference').get() as { n: number } | undefined)?.n || 0} mecanismes en base`)
 db.close()

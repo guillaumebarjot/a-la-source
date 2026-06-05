@@ -210,7 +210,7 @@ function SectionMedias({
               <BarChart layout="vertical" data={confiance} margin={{ top: 8, right: 24, left: 0, bottom: 8 }}>
                 <YAxis type="category" dataKey="media_nom" width={120} tick={{ fontSize: 13 }} />
                 <XAxis type="number" domain={[0, 100]} allowDecimals={false} />
-                <Tooltip formatter={(value: number) => [`${value}/100`, 'Score']} />
+                <Tooltip formatter={(value) => [`${value}/100`, 'Score']} />
                 <Bar dataKey="score">
                   {confiance.map((entry, i) => (
                     <Cell
