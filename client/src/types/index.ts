@@ -43,6 +43,13 @@ export interface Media {
   type: string | null
   url_site: string | null
   description: string | null
+  // Propriété structurée (Chantier A)
+  proprietaire?: string | null
+  actionnaire_ultime?: string | null
+  type_propriete?: string | null
+  financement?: string | null
+  annee_creation?: number | null
+  ligne_revendiquee?: string | null
   nb_sources?: number
 }
 

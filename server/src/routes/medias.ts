@@ -113,4 +113,32 @@ router.post('/', (req, res) => {
   res.status(201).json({ id: Number(r.lastInsertRowid) })
 })
 
+// Champs de propriété éditables (Chantier A)
+const PROPRIETE_FIELDS = [
+  'proprietaire', 'actionnaire_ultime', 'type_propriete',
+  'financement', 'annee_creation', 'ligne_revendiquee',
+] as const
+
+// PUT /api/medias/:id/propriete — édite la propriété structurée d'un média
+router.put('/:id/propriete', (req, res) => {
+  const exists = db.prepare('SELECT id FROM medias WHERE id = ?').get(req.params.id)
+  if (!exists) { res.status(404).json({ error: 'Media non trouve' }); return }
+
+  const sets: string[] = []
+  const values: (string | number | null)[] = []
+  for (const f of PROPRIETE_FIELDS) {
+    if (f in req.body) {
+      sets.push(`${f} = ?`)
+      const v = req.body[f]
+      values.push(v === '' || v === undefined ? null : v)
+    }
+  }
+  if (sets.length === 0) { res.status(400).json({ error: 'Aucun champ de propriete fourni' }); return }
+
+  values.push(req.params.id)
+  db.prepare(`UPDATE medias SET ${sets.join(', ')} WHERE id = ?`).run(...values)
+  const media = db.prepare('SELECT * FROM medias WHERE id = ?').get(req.params.id)
+  res.json(media)
+})
+
 export default router
