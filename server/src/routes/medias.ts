@@ -141,4 +141,43 @@ router.put('/:id/propriete', (req, res) => {
   res.json(media)
 })
 
+// Profil de transparence (Chantier B) — critères factuels descriptifs, sans score
+const TRANSPARENCE_FIELDS = [
+  'distingue_info_opinion', 'publie_corrections', 'divulgue_propriete',
+  'divulgue_financement', 'sans_publicite', 'credite_auteurs',
+  'charte_deontologique', 'source_observation',
+] as const
+
+// GET /api/medias/:id/transparence — renvoie le profil (ou null si absent)
+router.get('/:id/transparence', (req, res) => {
+  const row = db.prepare('SELECT * FROM media_transparence WHERE media_id = ?').get(req.params.id)
+  res.json(row ?? null)
+})
+
+// PUT /api/medias/:id/transparence — édite le profil de transparence
+router.put('/:id/transparence', (req, res) => {
+  const exists = db.prepare('SELECT id FROM medias WHERE id = ?').get(req.params.id)
+  if (!exists) { res.status(404).json({ error: 'Media non trouve' }); return }
+
+  const cols: string[] = ['media_id']
+  const placeholders: string[] = ['@media_id']
+  const params: Record<string, unknown> = { media_id: Number(req.params.id) }
+  for (const f of TRANSPARENCE_FIELDS) {
+    if (f in req.body) {
+      cols.push(f)
+      placeholders.push(`@${f}`)
+      const v = req.body[f]
+      params[f] = v === '' || v === undefined ? null : v
+    }
+  }
+  const updates = cols.filter(c => c !== 'media_id').map(c => `${c} = excluded.${c}`).join(', ')
+  db.prepare(`
+    INSERT INTO media_transparence (${cols.join(', ')}, maj_le)
+    VALUES (${placeholders.join(', ')}, CURRENT_TIMESTAMP)
+    ON CONFLICT(media_id) DO UPDATE SET ${updates}, maj_le = CURRENT_TIMESTAMP
+  `).run(params)
+
+  res.json(db.prepare('SELECT * FROM media_transparence WHERE media_id = ?').get(req.params.id))
+})
+
 export default router

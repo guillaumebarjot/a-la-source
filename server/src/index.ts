@@ -3,6 +3,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { existsSync } from 'fs'
 import { authMiddleware } from './lib/auth.js'
+import { autoMigrate } from './db/auto-migrate.js'
 import sourcesRouter from './routes/sources.js'
 import tagsRouter from './routes/tags.js'
 import evaluationsRouter from './routes/evaluations.js'
@@ -19,6 +20,9 @@ import becsrougesRouter from './routes/becsrouges.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = parseInt(process.env.PORT || '3031', 10)
+
+// Met le schéma à jour au démarrage (idempotent, sûr si déjà appliqué)
+autoMigrate()
 
 const app = express()
 

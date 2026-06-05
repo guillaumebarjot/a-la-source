@@ -161,9 +161,8 @@ export default function FichesMedias() {
                 <tr><th>Mecanismes identifies</th><td>{stats.nb_mecanismes}</td></tr>
                 <tr><th>Commentaires</th><td>{stats.nb_commentaires}</td></tr>
                 <tr><th>Evaluations</th><td>{stats.nb_evaluations}</td></tr>
-                {stats.score_confiance_moyen !== null && (
-                  <tr><th>Score confiance moyen</th><td>{stats.score_confiance_moyen}/100</td></tr>
-                )}
+                {/* Indice de confiance retiré (Chantier B) : on décrit la propriété
+                    et la transparence, on ne note pas le média (piège Decodex). */}
               </tbody>
             </table>
 

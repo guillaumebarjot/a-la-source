@@ -70,34 +70,41 @@ const DATA: Record<string, Propriete> = {
   'Vert': { proprietaire: 'Vert (association)', type_propriete: 'independant', financement: 'dons', annee_creation: 2020, ligne_revendiquee: 'écologie, accessible' },
 }
 
-const stmt = db.prepare(`
-  UPDATE medias SET
-    proprietaire = COALESCE(@proprietaire, proprietaire),
-    actionnaire_ultime = COALESCE(@actionnaire_ultime, actionnaire_ultime),
-    type_propriete = COALESCE(@type_propriete, type_propriete),
-    financement = COALESCE(@financement, financement),
-    annee_creation = COALESCE(@annee_creation, annee_creation),
-    ligne_revendiquee = COALESCE(@ligne_revendiquee, ligne_revendiquee)
-  WHERE nom = @nom COLLATE NOCASE
-`)
+export function seedMediasPropriete(): { updated: number; absents: number } {
+  const stmt = db.prepare(`
+    UPDATE medias SET
+      proprietaire = COALESCE(@proprietaire, proprietaire),
+      actionnaire_ultime = COALESCE(@actionnaire_ultime, actionnaire_ultime),
+      type_propriete = COALESCE(@type_propriete, type_propriete),
+      financement = COALESCE(@financement, financement),
+      annee_creation = COALESCE(@annee_creation, annee_creation),
+      ligne_revendiquee = COALESCE(@ligne_revendiquee, ligne_revendiquee)
+    WHERE nom = @nom COLLATE NOCASE
+  `)
 
-const run = db.transaction(() => {
-  let updated = 0, absents = 0
-  for (const [nom, p] of Object.entries(DATA)) {
-    const res = stmt.run({
-      nom,
-      proprietaire: p.proprietaire ?? null,
-      actionnaire_ultime: p.actionnaire_ultime ?? null,
-      type_propriete: p.type_propriete ?? null,
-      financement: p.financement ?? null,
-      annee_creation: p.annee_creation ?? null,
-      ligne_revendiquee: p.ligne_revendiquee ?? null,
-    })
-    if (res.changes > 0) updated++
-    else absents++
-  }
-  return { updated, absents }
-})
+  const run = db.transaction(() => {
+    let updated = 0, absents = 0
+    for (const [nom, p] of Object.entries(DATA)) {
+      const res = stmt.run({
+        nom,
+        proprietaire: p.proprietaire ?? null,
+        actionnaire_ultime: p.actionnaire_ultime ?? null,
+        type_propriete: p.type_propriete ?? null,
+        financement: p.financement ?? null,
+        annee_creation: p.annee_creation ?? null,
+        ligne_revendiquee: p.ligne_revendiquee ?? null,
+      })
+      if (res.changes > 0) updated++
+      else absents++
+    }
+    return { updated, absents }
+  })
 
-const { updated, absents } = run()
-console.log(`Seed propriété médias — ${updated} média(s) mis à jour, ${absents} non trouvé(s) dans la base.`)
+  return run()
+}
+
+// Exécution directe en script
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const { updated, absents } = seedMediasPropriete()
+  console.log(`Seed propriété médias — ${updated} média(s) mis à jour, ${absents} non trouvé(s) dans la base.`)
+}
