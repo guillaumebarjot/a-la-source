@@ -37,6 +37,8 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/debunkages` | debunkages.ts | activité débunkage (adhérent) : démonstration, sources pour/contre, liens de posts réseaux, publier |
 | `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
 | `/api/dossiers` | dossiers.ts | activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources |
+| `/partage/debunkage/:id` | partage.ts | **page HTML publique** (sans login) d'un débunk publié, avec OpenGraph pour partage Discord. Au déploiement : déclarer `/partage/` public dans le SSO YunoHost |
+| `/api/debunkages/:id/yeswiki` | debunkages.ts | export d'un débunk en syntaxe YesWiki (lib `yeswiki.ts`) |
 | `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
 | `/api/mecanismes` | mecanismes.ts | 25 mécanismes de référence (fiches pédagogiques) |
 | `/api/contenus` | contenus.ts | pages éditables (clé/valeur) |

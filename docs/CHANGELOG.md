@@ -7,6 +7,14 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Diffusion d'un débunk hors appli (page publique + YesWiki)
+
+Partager un débunkage publié sans se connecter à l'appli.
+
+- **Page HTML publique** `GET /partage/debunkage/:id` (route `partage.ts`, montée avant le fallback SPA) : page autoportante, CSS inline, balises **OpenGraph** (titre, description, url, image de la 1re source) + `twitter:card`, pour que **Discord affiche une carte**. Rendue seulement si le débunk est publié, sinon page « non disponible ». Au déploiement YunoHost, déclarer `/partage/` en accès public (skipped_uris).
+- **Export YesWiki** `GET /api/debunkages/:id/yeswiki` (lib `yeswiki.ts`) : conversion en syntaxe YesWiki (titres, gras, listes, liens) à coller dans becs-rouges.fr / rouge-coquelicot.fr.
+- **Section « Partager »** dans la page débunkage : lien public (copier / ouvrir) + bouton « Exporter en YesWiki ».
+
 ## 2026-06-06 — Dossier/décryptage, hub Activités, accueil vivant, polish
 
 - **Activité Dossier (+ mode Décryptage à chaud).** Table `dossier_contenu` (mise en perspective, contenu, flag `a_chaud`, lien événement). API `/api/dossiers`. Le décryptage est un dossier `a_chaud=1` rattaché à un événement, pas un type distinct. Pages liste (filtre fond / à chaud) et édition (sources en cartes).

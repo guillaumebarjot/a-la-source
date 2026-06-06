@@ -280,3 +280,43 @@
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-xl);
 }
+
+/* ---- Partager hors appli (lien public + export YesWiki), dark-safe ---- */
+
+.debunkage-partage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.debunkage-partage-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Le champ lien public est en lecture seule : on le distingue visuellement. */
+.debunkage-partage-bloc input[readonly] {
+  color: var(--color-text-secondary);
+  cursor: text;
+}
+
+.debunkage-partage-bloc .debunkage-card-meta {
+  margin: 0;
+}
+
+/* Le bouton « Ouvrir » est un lien stylé en bouton : on neutralise la couleur
+   de lien rouge heritee de .dark a, et on conserve un texte lisible. */
+.debunkage-partage-bloc a.btn,
+.dark .debunkage-partage-bloc a.btn {
+  color: var(--color-text);
+  text-decoration: none;
+}
+.debunkage-partage-bloc a.btn:hover,
+.dark .debunkage-partage-bloc a.btn:hover {
+  color: var(--color-text);
+}

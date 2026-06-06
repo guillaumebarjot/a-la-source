@@ -21,6 +21,7 @@ import becsrougesRouter from './routes/becsrouges.js'
 import debunkagesRouter from './routes/debunkages.js'
 import parcoursRouter from './routes/parcours.js'
 import dossiersRouter from './routes/dossiers.js'
+import partageRouter from './routes/partage.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = parseInt(process.env.PORT || '3031', 10)
@@ -57,6 +58,11 @@ app.use('/api/becs-rouges', becsrougesRouter)
 app.use('/api/debunkages', debunkagesRouter)
 app.use('/api/parcours', parcoursRouter)
 app.use('/api/dossiers', dossiersRouter)
+
+// Diffusion publique HORS APPLI (pages HTML autoportantes, OpenGraph pour Discord).
+// Montee AVANT le catch-all React pour ne pas etre avalee par le fallback SPA.
+// Deploiement YunoHost : declarer /partage/ en acces public (skipped_uris du SSO).
+app.use('/partage', partageRouter)
 
 // Serve React build in production
 const clientDist = join(__dirname, '..', '..', 'client', 'dist')

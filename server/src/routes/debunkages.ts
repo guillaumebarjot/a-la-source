@@ -10,6 +10,7 @@
 import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
+import { debunkageVersYeswiki, type YeswikiSource } from '../lib/yeswiki.js'
 
 const router = Router()
 
@@ -59,6 +60,37 @@ router.get('/:id', (req, res) => {
   `).all(activite.id)
 
   res.json({ ...activite, pipeline, posts, sources })
+})
+
+// GET /api/debunkages/:id/yeswiki — export du débunkage en syntaxe YesWiki (text/plain)
+// A coller dans une page becs-rouges.fr ou rouge-coquelicot.fr.
+router.get('/:id/yeswiki', (req, res) => {
+  const activite = db.prepare(
+    "SELECT id, titre FROM activites WHERE id = ? AND type = 'debunkage'"
+  ).get(req.params.id) as { id: number; titre: string } | undefined
+  if (!activite) { res.status(404).json({ error: 'Debunkage non trouve' }); return }
+
+  const pipeline = db.prepare(
+    'SELECT affirmation_visee_md, demonstration_md FROM debunkage_pipeline WHERE activite_id = ?'
+  ).get(activite.id) as { affirmation_visee_md: string | null; demonstration_md: string | null } | undefined
+
+  const sources = db.prepare(`
+    SELECT s.titre, s.url, m.nom AS media_nom, asr.role
+    FROM activite_sources asr
+    JOIN sources s ON s.id = asr.source_id
+    LEFT JOIN medias m ON m.id = s.media_id
+    WHERE asr.activite_id = ?
+    ORDER BY asr.ordre, s.titre
+  `).all(activite.id) as YeswikiSource[]
+
+  const texte = debunkageVersYeswiki({
+    titre: activite.titre,
+    affirmation_visee_md: pipeline?.affirmation_visee_md ?? null,
+    demonstration_md: pipeline?.demonstration_md ?? null,
+    sources,
+  })
+
+  res.type('text/plain; charset=utf-8').send(texte)
 })
 
 // POST /api/debunkages — créer un débunkage (tout membre authentifié)
