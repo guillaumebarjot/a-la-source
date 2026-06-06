@@ -1,0 +1,87 @@
+/*
+ * sujet-dnd.css — glisser-déposer des cartes-sources vers un sujet (dnd-kit).
+ * Principe : « la source est une carte qu'on promène ». On attrape une carte
+ * candidate et on la dépose sur la zone Sources du sujet pour la rattacher.
+ *
+ * Dark-safe : uniquement des tokens --color-* ; jamais de rouge sur fond sombre
+ * (on s'appuie sur --color-accent, recoloré en clair dans le thème sombre).
+ */
+
+/* Carte candidate saisissable : curseur de préhension + indice de promenade. */
+.sujet-source-card--draggable {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sujet-source-card--draggable:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+}
+
+.sujet-source-card--draggable:active {
+  cursor: grabbing;
+}
+
+/* La carte d'origine s'estompe pendant qu'on promène sa copie (DragOverlay). */
+.sujet-source-card--dragging {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+/* Zone de drop : le bloc Sources du sujet. */
+.sujet-dropzone {
+  border: 2px dashed transparent;
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm);
+  margin: calc(-1 * var(--space-sm));
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Survol actif : on signale que le dépôt rattachera la source. */
+.sujet-dropzone--over {
+  border-color: var(--color-accent);
+  background-color: var(--color-surface);
+}
+
+/* Liseré d'invite quand un drag est en cours mais qu'on n'est pas encore au-dessus. */
+.sujet-dropzone--armed {
+  border-color: var(--color-border);
+}
+
+/* Bandeau d'invite affiché dans la zone pendant un drag. */
+.sujet-dropzone-invite {
+  margin: var(--space-sm) 0 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.sujet-dropzone--over .sujet-dropzone-invite {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* La carte promenée (DragOverlay) : surélevée, suit le curseur. */
+.sujet-source-card--overlay {
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-accent);
+  transform: rotate(-2deg) scale(1.03);
+  pointer-events: none;
+}
+
+/* Indice discret sur les cartes candidates : « à promener ». */
+.sujet-source-card-poignee {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+  letter-spacing: 0.3px;
+}

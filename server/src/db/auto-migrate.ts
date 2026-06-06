@@ -10,6 +10,7 @@ import db from '../lib/db.js'
 import { seedMediasPropriete } from './seed-medias-propriete.js'
 import { seedSujets } from './seed-sujets.js'
 import { migrateActivites } from './migrate-activites.js'
+import { migrateDebunkage } from './migrate-debunkage.js'
 
 function colonnes(table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(c => c.name)
@@ -108,6 +109,9 @@ export function autoMigrate(): void {
   // Chantier A — socle des activités + backfill des ateliers (additif, non destructif, idempotent)
   const ra = migrateActivites()
   if (ra.migrated > 0) console.log(`  auto-migrate activités: ${ra.migrated} atelier(s) recopié(s) dans activites`)
+
+  // Extension Débunkage (pipeline + posts + activite_sources.role)
+  migrateDebunkage()
 
   console.log('Auto-migration: schéma à jour.')
 }

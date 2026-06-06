@@ -7,6 +7,15 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Débunkage, attribution visible, glisser-déposer (3 chantiers)
+
+Trois chantiers menés en parallèle.
+
+- **Activité Débunkage.** Un adhérent démonte une infox sur un thème ; la sortie est un post réseau social, dont on consigne les liens. Tables `debunkage_pipeline`, `debunkage_posts`, colonne `activite_sources.role` (pour/contre). API `/api/debunkages` (CRUD, posts, sources pour/contre, publier). Pages Débunkages (liste) et Débunkage (affirmation, démonstration, sources en cartes, liens de posts). Nav « Débunkages ».
+- **Attribution visible (Chantier U).** « proposé par X » sur les cartes-sources (hors carte nue d'atelier, pour préserver l'epoché), « par X » sur les commentaires. Les requêtes joignent les noms.
+- **Glisser-déposer (dnd-kit).** On promène une carte-source candidate et on la dépose sur le sujet pour la rattacher (DragOverlay, zone de dépôt en surbrillance) ; le bouton « + Rattacher » reste en fallback.
+- Lisibilité : titres de cartes neutralisés en sombre partout (jamais de rouge sur fond sombre, vérifié).
+
 ## 2026-06-06 — Apprendre vivant : exemples réels dans les fiches mécanismes
 
 La documentation s'auto-alimente : chaque fiche de mécanisme affiche désormais les **exemples réels** tirés des analyses (sources où ce mécanisme a été identifié), en cartes, avec l'extrait, le média et le contributeur. La section grandit à chaque identification.

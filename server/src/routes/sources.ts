@@ -30,7 +30,7 @@ router.get('/', (req, res) => {
   const { statut, type_source, media, tag, sans_archive, ordre, limit = '50', offset = '0' } = req.query
 
   let sql = `
-    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom,
+    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom, u.nom as soumis_par_nom,
       (SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) > 0 as has_archive,
       (SELECT ar2.statut FROM archives ar2 WHERE ar2.source_id = s.id ORDER BY ar2.cree_le DESC LIMIT 1) as archive_statut,
       (SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) as nb_commentaires,
@@ -38,6 +38,7 @@ router.get('/', (req, res) => {
     FROM sources s
     LEFT JOIN medias m ON s.media_id = m.id
     LEFT JOIN auteurs a ON s.auteur_id = a.id
+    LEFT JOIN utilisateurs u ON u.id = s.soumis_par
   `
   const conditions: string[] = []
   const params: unknown[] = []
@@ -117,10 +118,11 @@ router.get('/ftr-config', (_req, res) => {
 // GET /api/sources/:id — detail avec score, tags, mecanismes
 router.get('/:id', (req, res) => {
   const source = db.prepare(`
-    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom
+    SELECT s.*, m.nom as media_nom, a.nom as auteur_nom, u.nom as soumis_par_nom
     FROM sources s
     LEFT JOIN medias m ON s.media_id = m.id
     LEFT JOIN auteurs a ON s.auteur_id = a.id
+    LEFT JOIN utilisateurs u ON u.id = s.soumis_par
     WHERE s.id = ?
   `).get(req.params.id) as Record<string, unknown> | undefined
 

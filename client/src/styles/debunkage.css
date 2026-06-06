@@ -1,0 +1,282 @@
+/**
+ * Styles Débunkage — dark-safe.
+ *
+ * Tous les textes utilisent les tokens (--color-text / --color-text-secondary)
+ * pour rester lisibles en thème sombre. Piège connu : en sombre, .dark a peint
+ * tous les liens en rouge ; on neutralise donc explicitement la couleur des
+ * cartes-liens (titres = var(--color-text)). Jamais de texte rouge sur fond
+ * sombre.
+ */
+
+.debunkage-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.debunkage-header {
+  margin-bottom: var(--space-xl);
+}
+
+.debunkage-header h1 {
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+.debunkage-intro {
+  color: var(--color-text-secondary);
+  max-width: 60ch;
+  line-height: 1.5;
+}
+
+/* ---- Liste : grille de cartes ---- */
+
+.debunkage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* Carte-lien : on force la couleur de texte neutre pour contrer .dark a */
+.debunkage-card,
+.debunkage-card:hover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.debunkage-card:hover {
+  border-color: var(--color-primary);
+}
+
+.debunkage-card-titre {
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.debunkage-card-affirmation {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.debunkage-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Badges de statut ---- */
+
+.debunkage-badge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+}
+
+.debunkage-badge.publie {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+/* ---- Détail : sections ---- */
+
+.debunkage-section {
+  margin-bottom: var(--space-xl);
+}
+
+.debunkage-section h2 {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.debunkage-field-label {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.debunkage-textarea,
+.debunkage-input,
+.debunkage-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.debunkage-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.debunkage-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.debunkage-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--space-md);
+}
+
+/* ---- Sources pour / contre : cartes image + titre ---- */
+
+.debunkage-sources-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-lg);
+}
+
+.debunkage-sources-col h3 {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  margin: 0 0 var(--space-md);
+}
+
+.debunkage-source-card {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+
+.debunkage-source-visuel {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.debunkage-source-visuel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.debunkage-source-initiale {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.debunkage-source-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Titre de carte source : neutre, jamais rouge en sombre */
+.debunkage-source-titre {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 2px;
+  display: block;
+  text-decoration: none;
+  word-break: break-word;
+}
+/* En sombre, .dark a (plus specifique) repassait ce titre-lien en rouge : on le neutralise. */
+.dark .debunkage-source-titre,
+.dark .debunkage-card-titre { color: var(--color-text); }
+.dark .debunkage-source-titre:hover,
+.dark .debunkage-card-titre:hover { color: var(--color-accent); }
+
+.debunkage-source-media {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+/* ---- Posts (liens réseaux) ---- */
+
+.debunkage-posts-list {
+  list-style: none;
+  margin: 0 0 var(--space-md);
+  padding: 0;
+}
+
+.debunkage-post-item {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.debunkage-post-reseau {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-sm);
+}
+
+.debunkage-post-url {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.debunkage-empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.debunkage-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 560px;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-xl);
+}

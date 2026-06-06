@@ -84,6 +84,9 @@ export default function Header() {
         <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Veille
         </NavLink>
+        <NavLink to="/debunkages" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Debunkages
+        </NavLink>
         <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Observatoire
         </NavLink>

@@ -18,6 +18,7 @@ import contenusRouter from './routes/contenus.js'
 import parametresRouter from './routes/parametres.js'
 import rechercheRouter from './routes/recherche.js'
 import becsrougesRouter from './routes/becsrouges.js'
+import debunkagesRouter from './routes/debunkages.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = parseInt(process.env.PORT || '3031', 10)
@@ -51,6 +52,7 @@ app.use('/api/contenus', contenusRouter)
 app.use('/api/parametres', parametresRouter)
 app.use('/api/recherche', rechercheRouter)
 app.use('/api/becs-rouges', becsrougesRouter)
+app.use('/api/debunkages', debunkagesRouter)
 
 // Serve React build in production
 const clientDist = join(__dirname, '..', '..', 'client', 'dist')

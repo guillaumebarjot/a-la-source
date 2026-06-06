@@ -1,0 +1,18 @@
+/* Attribution discrète des contributions (Chantier U)
+   Texte petit, secondaire, dark-safe (jamais de rouge sur fond sombre). */
+
+.attribution {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.source-card-attribution {
+  margin-top: 0.25rem;
+}
+
+.commentaire-attribution {
+  font-weight: 600;
+  font-style: normal;
+}

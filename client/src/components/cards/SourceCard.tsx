@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Unlock, Lock, FileWarning, FileCheck, File, Star, Target, MessageCircle } from 'lucide-react'
 import type { Source } from '../../types'
+import '../../styles/attribution.css'
 
 interface ScoreOverlay {
   scoreTotal: number
@@ -21,9 +22,11 @@ interface Props {
   showFraicheur?: boolean
   action?: React.ReactNode
   atelierBadges?: AtelierBadge[]
+  /* Contexte atelier/projection : carte nue, on masque l'attribution pour ne pas biaiser. */
+  hideAttribution?: boolean
 }
 
-export default function SourceCard({ source, score, showFraicheur, action, atelierBadges }: Props) {
+export default function SourceCard({ source, score, showFraicheur, action, atelierBadges, hideAttribution }: Props) {
   const imgSrc = source.image_url || (source as unknown as Record<string, unknown>).og_image as string | undefined
   const hasArchive = !!source.has_archive
   const isPaywall = source.paywall === 1
@@ -120,6 +123,9 @@ export default function SourceCard({ source, score, showFraicheur, action, ateli
             )}
           </div>
         </div>
+        {!hideAttribution && source.soumis_par_nom && (
+          <div className="attribution source-card-attribution">propose par {source.soumis_par_nom}</div>
+        )}
         {action && <div className="source-card-action">{action}</div>}
       </div>
     </div>

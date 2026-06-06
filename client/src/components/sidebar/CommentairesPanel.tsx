@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import type { Commentaire } from '../../types'
+import '../../styles/attribution.css'
 
 interface Props {
   sourceId: number
@@ -30,7 +31,7 @@ export default function CommentairesPanel({ sourceId }: Props) {
         {commentaires.map((c) => (
           <div key={c.id} className="commentaire-item">
             <div className="commentaire-header">
-              <strong>{c.auteur_nom}</strong>
+              <strong className="attribution commentaire-attribution">par {c.auteur_nom || 'anonyme'}</strong>
               <span className="commentaire-type">{c.type}</span>
               <time>{new Date(c.cree_le).toLocaleDateString('fr-FR')}</time>
             </div>

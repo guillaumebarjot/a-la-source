@@ -8,7 +8,7 @@ router.get('/:sourceId', (req, res) => {
   const commentaires = db.prepare(`
     SELECT c.*, u.nom as auteur_nom
     FROM commentaires c
-    JOIN utilisateurs u ON c.auteur_id = u.id
+    LEFT JOIN utilisateurs u ON c.auteur_id = u.id
     WHERE c.source_id = ?
     ORDER BY c.cree_le DESC
   `).all(req.params.sourceId)

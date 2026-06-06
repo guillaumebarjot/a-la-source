@@ -16,6 +16,8 @@ const MonEspace = lazy(() => import('./pages/MonEspace'))
 const AdminParametrage = lazy(() => import('./pages/AdminParametrage'))
 const Projection = lazy(() => import('./pages/Projection'))
 const Mecanismes = lazy(() => import('./pages/Mecanismes'))
+const Debunkages = lazy(() => import('./pages/Debunkages'))
+const Debunkage = lazy(() => import('./pages/Debunkage'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
@@ -38,6 +40,8 @@ export default function App() {
             <Route path="/observatoire" element={<Observatoire />} />
             <Route path="/observatoire/:section" element={<Observatoire />} />
             <Route path="/decrypter" element={<Navigate to="/observatoire" replace />} />
+            <Route path="/debunkages" element={<Debunkages />} />
+            <Route path="/debunkages/:id" element={<Debunkage />} />
             <Route path="/ateliers" element={<Ateliers />} />
             <Route path="/ateliers/:section" element={<Ateliers />} />
             <Route path="/archiver" element={<Archiver />} />

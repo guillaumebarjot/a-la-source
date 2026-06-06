@@ -16,6 +16,7 @@ export interface Source {
   // Joined
   media_nom?: string
   auteur_nom?: string
+  soumis_par_nom?: string
   // Badges
   has_archive?: number
   archive_statut?: 'complete' | 'partielle' | 'echouee'
