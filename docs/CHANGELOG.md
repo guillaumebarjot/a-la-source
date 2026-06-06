@@ -7,6 +7,14 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — A1 : bascule de l'atelier sur le socle `activites`
+
+L'atelier rejoint le modèle commun. **Forme d'API inchangée**, le client ne bouge pas.
+
+- `routes/ateliers.ts` lit et écrit désormais depuis `activites` (type='atelier', identité + statut), `atelier_pipeline` (logistique + déroulé), `activite_sources` (corpus, suppression dure) et `activite_mecanismes` (mécanismes de synthèse). L'id atelier = `activites.id`.
+- Table `activite_mecanismes` ajoutée (+ backfill depuis `atelier_mecanismes`). Création, ajout/retrait de sources, réordonnancement, synthèse, transitions de statut, détail, vivier, en-cours, impression : tous rebranchés et vérifiés de bout en bout (création n°3, source, synthèse, statut, relecture).
+- Tables legacy `ateliers` / `atelier_sources` / `atelier_mecanismes` **conservées en filet** (non lues), suppression possible plus tard une fois la confiance établie. Sauvegarde de la base prise avant bascule.
+
 ## 2026-06-06 — « Créer une activité » sur le hub + diffusion publique étendue
 
 - **« Créer une activité »** : section en tête du hub `/activites` avec les 6 formats (atelier, dossier, décryptage à chaud, débunkage, parcours, arpentage), chacun décrit et menant à sa page de création. Point d'entrée unifié.

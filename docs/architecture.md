@@ -32,7 +32,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/evaluations` | evaluations.ts | scores écho (0-40) et pédagogie (0-50) par évaluateur |
 | `/api/commentaires` | commentaires.ts | commentaires/analyses/questions sur les sources |
 | `/api/medias` | medias.ts | liste, détail, stats, matrice média x mécanisme, **indice de confiance** |
-| `/api/ateliers` | ateliers.ts | pipeline préparation + archives ateliers |
+| `/api/ateliers` | ateliers.ts | pipeline atelier (préparation, en-cours, synthèse, impression). **Bascule A1** : lit/écrit depuis `activites` + `atelier_pipeline` + `activite_sources` + `activite_mecanismes` ; API inchangée ; `ateliers*` legacy conservées en filet |
 | `/api/sujets` | sujets.ts | sujets (thèmes durables, refonte par sujets) : CRUD, publication, rattachement sources/événements |
 | `/api/debunkages` | debunkages.ts | activité débunkage (adhérent) : démonstration, sources pour/contre, liens de posts réseaux, publier |
 | `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |

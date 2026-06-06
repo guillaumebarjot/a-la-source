@@ -61,9 +61,28 @@ export function migrateActivites(): { migrated: number } {
       questions_restantes TEXT,
       mecanisme_identifie TEXT
     );
+    CREATE TABLE IF NOT EXISTS activite_mecanismes (
+      activite_id INTEGER NOT NULL REFERENCES activites(id) ON DELETE CASCADE,
+      mecanisme_id INTEGER NOT NULL REFERENCES mecanismes_reference(id),
+      PRIMARY KEY (activite_id, mecanisme_id)
+    );
     CREATE INDEX IF NOT EXISTS idx_activites_type ON activites(type);
     CREATE INDEX IF NOT EXISTS idx_activites_sujet ON activites(sujet_id);
   `)
+
+  // Backfill des mecanismes de synthese d'atelier (atelier_mecanismes -> activite_mecanismes),
+  // via le mapping legacy_atelier_id. Idempotent (INSERT OR IGNORE). No-op si rien.
+  const hasAtelierMeca = db.prepare(
+    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='atelier_mecanismes'"
+  ).get()
+  if (hasAtelierMeca) {
+    db.exec(`
+      INSERT OR IGNORE INTO activite_mecanismes (activite_id, mecanisme_id)
+      SELECT a.id, am.mecanisme_id
+      FROM atelier_mecanismes am
+      JOIN activites a ON a.legacy_atelier_id = am.atelier_id
+    `)
+  }
 
   // La table ateliers peut ne pas exister (base neuve) : on ne backfille que si elle est là.
   const hasAteliers = db.prepare(
