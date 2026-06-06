@@ -1,0 +1,350 @@
+/*
+ * ateliers-prep.css — écran de PRÉPARATION d'atelier en tableau 2 colonnes
+ * glisser-déposer (dnd-kit).
+ *
+ * Contexte ANIMATEUR (curation) : à gauche le VIVIER de sources candidates
+ * (score visible, c'est voulu ici), à droite le CORPUS de l'atelier retenu.
+ * Principe : « la source est une carte qu'on PROMÈNE ». Pas de grand écran à
+ * scroller : la préparation tient en 2 colonnes, chaque colonne défile dans
+ * son propre cadre.
+ *
+ * Dark-safe : uniquement des tokens --color-* / --space-* / --radius-* /
+ * --shadow-*. Jamais de texte rouge sur fond sombre. Comme `.dark a` repeint
+ * les liens en rouge, les titres de cartes-liens sont forcés à var(--color-text)
+ * via des sélecteurs `.dark .prep-*` qui battent `.dark a`.
+ */
+
+/* ---------- Cadre général : 2 colonnes, hauteur bornée ---------- */
+
+.prep-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+@media (max-width: 860px) {
+  .prep-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Chaque colonne : en-tête fixe + liste défilante interne (pas de scroll page). */
+.prep-colonne {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100vh - 230px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.prep-colonne-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prep-colonne-head h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.prep-colonne-head .prep-count {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.prep-colonne-liste {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.prep-empty {
+  margin: var(--space-md) 0;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ---------- Carte commune (vivier + corpus) ---------- */
+
+.prep-carte {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.prep-carte-visuel {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prep-carte-visuel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.prep-carte-initiale {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.prep-carte-corps {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prep-carte-titre {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+/* Titres de cartes : on bat `.dark a` pour ne jamais peindre un titre en rouge. */
+.dark .prep-carte-titre { color: var(--color-text); }
+.dark a.prep-carte-titre:hover { color: var(--color-accent); }
+
+.prep-carte-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.prep-carte-actions {
+  margin-top: auto;
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+/* Pastille de score (contexte animateur : score visible, c'est voulu). */
+.prep-carte-score {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  min-width: 34px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.prep-carte-poignee {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.3px;
+  user-select: none;
+}
+
+/* ---------- Carte du vivier (gauche) : draggable ---------- */
+
+.prep-carte--vivier {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.prep-carte--vivier:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent);
+}
+
+.prep-carte--vivier:active {
+  cursor: grabbing;
+}
+
+/* La carte d'origine s'estompe pendant qu'on promène sa copie (DragOverlay). */
+.prep-carte--dragging {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+/* ---------- Carte du corpus (droite) : sortable + retrait ---------- */
+
+.prep-carte--corpus {
+  background: var(--color-surface);
+}
+
+.prep-carte-rang {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  min-width: 1.2em;
+  text-align: right;
+}
+
+/* Poignée de tri du corpus (sortable). */
+.prep-corpus-grip {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  padding: 0 2px;
+}
+
+.prep-corpus-grip:active { cursor: grabbing; }
+
+.prep-carte--sorting {
+  opacity: 0.5;
+}
+
+/* ---------- Zone de dépôt (colonne corpus) ---------- */
+
+.prep-dropzone {
+  border: 2px dashed transparent;
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Drag en cours mais pas survolé : liseré d'invite discret. */
+.prep-dropzone--armed {
+  border-color: var(--color-border);
+}
+
+/* Survolé : on signale le dépôt avec l'accent (clair en thème sombre). */
+.prep-dropzone--over {
+  border-color: var(--color-accent);
+  background-color: var(--color-bg);
+}
+
+.prep-dropzone-invite {
+  margin: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.prep-dropzone--over .prep-dropzone-invite {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ---------- Overlay : la carte promenée suit le curseur ---------- */
+
+.prep-carte--overlay {
+  cursor: grabbing;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+  transform: rotate(-2deg) scale(1.03);
+  pointer-events: none;
+  max-width: 360px;
+}
+
+/* ---------- Bandeau de contexte : sélection d'atelier + champs compacts ---------- */
+
+.prep-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.prep-barre-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prep-barre-bloc > span {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+
+.prep-barre select,
+.prep-barre input {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.prep-barre-actions {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* Filtres compacts du vivier dans l'en-tête de colonne. */
+.prep-vivier-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.prep-vivier-filtres label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.prep-vivier-filtres input[type='number'] {
+  width: 4.5em;
+  padding: 2px 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+}

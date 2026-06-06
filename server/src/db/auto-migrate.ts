@@ -11,6 +11,7 @@ import { seedMediasPropriete } from './seed-medias-propriete.js'
 import { seedSujets } from './seed-sujets.js'
 import { migrateActivites } from './migrate-activites.js'
 import { migrateDebunkage } from './migrate-debunkage.js'
+import { migrateParcours } from './migrate-parcours.js'
 
 function colonnes(table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(c => c.name)
@@ -112,6 +113,9 @@ export function autoMigrate(): void {
 
   // Extension Débunkage (pipeline + posts + activite_sources.role)
   migrateDebunkage()
+
+  // Parcours / Quiz (cursus d'apprentissage)
+  migrateParcours()
 
   console.log('Auto-migration: schéma à jour.')
 }

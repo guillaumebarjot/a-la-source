@@ -29,6 +29,13 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
   ],
   '/apprendre': [
     { label: 'Catalogue', to: '/apprendre' },
+    { label: 'Parcours', to: '/parcours' },
+    { label: 'Manuel', to: '/apprendre/manuel' },
+    { label: 'Aide & Ressources', to: '/apprendre/aide' },
+  ],
+  '/parcours': [
+    { label: 'Catalogue', to: '/apprendre' },
+    { label: 'Parcours', to: '/parcours' },
     { label: 'Manuel', to: '/apprendre/manuel' },
     { label: 'Aide & Ressources', to: '/apprendre/aide' },
   ],
@@ -96,7 +103,12 @@ export default function Header() {
         <NavLink to="/archiver" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Archiver
         </NavLink>
-        <NavLink to="/apprendre" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+        <NavLink
+          to="/apprendre"
+          className={({ isActive }) =>
+            (isActive || location.pathname.startsWith('/parcours')) ? 'nav-link active' : 'nav-link'
+          }
+        >
           Apprendre
         </NavLink>
         <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>

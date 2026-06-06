@@ -1256,18 +1256,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .badge-mecanisme { background: #fef2f2; color: #D91E2E; padding: 2px 8px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid rgba(217,30,46,0.2); }
 .dark .badge-mecanisme { background: rgba(217,30,46,0.15); }
 
-/* Preparation ateliers */
-.preparation-ateliers-list { display: flex; flex-direction: column; gap: var(--space-lg); }
-.preparation-atelier-card {
-  padding: var(--space-lg); background: var(--color-surface);
-  border: 1px solid var(--color-border); border-radius: var(--radius-md);
-  display: flex; flex-direction: column; gap: var(--space-md);
-}
-.preparation-atelier-header { display: flex; align-items: center; gap: var(--space-md); }
-.preparation-atelier-header h3 { font-family: var(--font-display); font-size: 1.1rem; margin: 0; }
-.preparation-sources { display: flex; flex-direction: column; gap: var(--space-xs); }
-.preparation-sources h4 { font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--space-xs); }
-.preparation-atelier-actions { display: flex; gap: var(--space-sm); padding-top: var(--space-sm); border-top: 1px solid var(--color-border); }
+/* Preparation ateliers : refondue en tableau 2 colonnes glisser-deposer (ateliers-prep.css) */
 
 /* Atelier new form */
 .atelier-new-form {

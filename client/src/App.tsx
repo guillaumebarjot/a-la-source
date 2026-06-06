@@ -18,6 +18,8 @@ const Projection = lazy(() => import('./pages/Projection'))
 const Mecanismes = lazy(() => import('./pages/Mecanismes'))
 const Debunkages = lazy(() => import('./pages/Debunkages'))
 const Debunkage = lazy(() => import('./pages/Debunkage'))
+const Parcours = lazy(() => import('./pages/Parcours'))
+const ParcoursSession = lazy(() => import('./pages/ParcoursSession'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
@@ -53,6 +55,9 @@ export default function App() {
             <Route path="/apprendre" element={<Mecanismes />} />
             <Route path="/apprendre/:categorie" element={<Mecanismes />} />
             <Route path="/apprendre/:categorie/:slug" element={<Mecanismes />} />
+            {/* Parcours / Quiz (cursus d'apprentissage) */}
+            <Route path="/parcours" element={<Parcours />} />
+            <Route path="/parcours/:id" element={<ParcoursSession />} />
             {/* Anciennes routes — redirects */}
             <Route path="/aide" element={<Navigate to="/apprendre/aide" replace />} />
             <Route path="/mecanismes" element={<Navigate to="/apprendre" replace />} />
