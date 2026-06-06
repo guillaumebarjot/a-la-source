@@ -7,6 +7,11 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Page Sujet : couverture + rattachement de la veille
+
+- **Couverture (geste GroundNews).** `/api/sujets/:id` renvoie, par événement, le nombre de médias et la diversité de propriété. La page Sujet affiche cet indicateur par événement.
+- **Rattacher la veille au sujet.** Panneau « Ajouter des sources » : on rattache (et détache) des cartes-sources de la veille au sujet (`POST`/`DELETE /api/sujets/:id/sources`). Donne vie aux thèmes. Le glisser-déposer (dnd-kit, « promener la carte ») reste le raffinement UX prévu.
+
 ## 2026-06-06 — Chantier A (socle) : table activites + backfill des ateliers
 
 Colonne vertébrale des activités d'éducation populaire, **additive et non destructive**.

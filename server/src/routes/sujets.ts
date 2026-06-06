@@ -56,8 +56,14 @@ router.get('/:idOrSlug', (req, res) => {
     ORDER BY s.date_publication DESC
   `).all(sujet.id)
 
+  // Couverture (geste GroundNews) : par événement, combien de médias le couvrent
+  // et combien de types de propriété différents (diversité de la couverture).
   const evenements = db.prepare(`
-    SELECT e.*
+    SELECT e.*,
+      (SELECT COUNT(DISTINCT s.media_id) FROM sources s WHERE s.evenement_id = e.id) AS nb_medias,
+      (SELECT COUNT(DISTINCT m.type_propriete)
+         FROM sources s LEFT JOIN medias m ON m.id = s.media_id
+         WHERE s.evenement_id = e.id AND m.type_propriete IS NOT NULL) AS nb_types_propriete
     FROM sujet_evenements se
     JOIN evenements e ON e.id = se.evenement_id
     WHERE se.sujet_id = ?

@@ -1874,4 +1874,11 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .sujet-source-initiale { font-family: var(--font-display); font-size: 1.6rem; color: #fff; opacity: 0.9; }
 .sujet-source-body { padding: var(--space-sm); }
 .sujet-source-titre { font-size: 0.9rem; font-weight: 600; color: var(--color-text); margin: 0 0 2px; }
-.sujet-source-media { font-size: 0.75rem; color: var(--color-text-secondary); }
+.sujet-source-media { font-size: 0.75rem; color: var(--color-text-secondary); display: block; }
+.sujet-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
+.sujet-evenement { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-xs); }
+.sujet-evenement-couv { font-size: 0.78rem; color: var(--color-text-secondary); padding: 1px 8px; border: 1px solid var(--color-border); border-radius: 999px; }
+.sujet-source-detacher { margin-top: 4px; font-size: 0.72rem; background: none; border: none; color: var(--color-text-secondary); cursor: pointer; padding: 0; text-align: left; }
+.sujet-source-detacher:hover { color: var(--color-primary); }
+.sujet-ajout { margin-top: var(--space-md); padding: var(--space-md); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.sujet-ajout-hint { font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: var(--space-sm); }
