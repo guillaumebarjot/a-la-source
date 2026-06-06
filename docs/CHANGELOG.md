@@ -7,6 +7,14 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Chantier A (socle) : table activites + backfill des ateliers
+
+Colonne vertébrale des activités d'éducation populaire, **additive et non destructive**.
+
+- **Tables `activites` (socle), `activite_sources`, `atelier_pipeline` (extension).** Une activité (atelier, dossier, décryptage, débunkage, parcours, arpentage) est un pipeline-outil posé sur les données communes.
+- **Backfill** des ateliers existants dans `activites` (+ `atelier_pipeline` + `activite_sources`), tracé par `legacy_atelier_id` (idempotent). Les tables `ateliers*` et les routes actuelles sont **intactes** : la bascule des lectures viendra plus tard, une fois ce socle éprouvé. Sauvegarde de la base faite avant migration.
+- Migration auto au boot (`auto-migrate.ts`) + standalone (`migrate-activites.ts`).
+
 ## 2026-06-06 — Chantier S : socle des Sujets
 
 Première brique de code de la refonte par sujets (additive, sans risque).
