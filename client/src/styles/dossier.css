@@ -1,0 +1,315 @@
+/**
+ * Styles Dossier — dark-safe.
+ *
+ * Tous les textes utilisent les tokens (--color-text / --color-text-secondary)
+ * pour rester lisibles en sombre. Piège connu : en sombre, .dark a peint tous
+ * les liens en rouge ; on neutralise donc explicitement la couleur des
+ * cartes-liens (titres = var(--color-text)). Jamais de texte rouge sur fond
+ * sombre.
+ */
+
+.dossier-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.dossier-header {
+  margin-bottom: var(--space-xl);
+}
+
+.dossier-header h1 {
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+.dossier-intro {
+  color: var(--color-text-secondary);
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+/* ---- Barre d'outils & filtres ---- */
+
+.dossier-toolbar {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.dossier-filtres {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.dossier-filtre {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.dossier-filtre:hover {
+  border-color: var(--color-primary);
+}
+
+.dossier-filtre.active {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---- Liste : grille de cartes ---- */
+
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* Carte-lien : couleur de texte neutre pour contrer .dark a */
+.dossier-card,
+.dossier-card:hover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.dossier-card:hover {
+  border-color: var(--color-primary);
+}
+
+.dossier-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.dossier-card-titre {
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dossier-card-sub {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.dossier-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  align-items: center;
+}
+
+/* ---- Badges de statut ---- */
+
+.dossier-badge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  text-transform: capitalize;
+}
+
+.dossier-badge.publie {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+/* « A chaud » : on signale par l'accent de bordure, jamais par du texte rouge. */
+.dossier-badge.chaud {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+/* ---- Détail : sections ---- */
+
+.dossier-section {
+  margin-bottom: var(--space-xl);
+}
+
+.dossier-section h2 {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dossier-field-label {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.dossier-textarea,
+.dossier-input,
+.dossier-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.dossier-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.dossier-textarea-lg {
+  min-height: 220px;
+}
+
+.dossier-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dossier-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-md);
+}
+
+.dossier-toggle {
+  display: inline-flex;
+  gap: var(--space-sm);
+  align-items: center;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dossier-toggle input {
+  accent-color: var(--color-primary);
+}
+
+/* ---- Sources : cartes image + titre ---- */
+
+.dossier-sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-sm);
+}
+
+.dossier-source-card {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.dossier-source-visuel {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dossier-source-visuel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dossier-source-initiale {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.dossier-source-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Titre de carte source : neutre, jamais rouge en sombre */
+.dossier-source-titre {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 2px;
+  display: block;
+  text-decoration: none;
+  word-break: break-word;
+}
+/* En sombre, .dark a (plus spécifique) repassait ces titres-liens en rouge : on neutralise. */
+.dark .dossier-source-titre,
+.dark .dossier-card-titre { color: var(--color-text); }
+.dark .dossier-source-titre:hover,
+.dark .dossier-card-titre:hover { color: var(--color-accent); }
+
+.dossier-source-meta {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dossier-source-media {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.dossier-empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.dossier-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 560px;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-xl);
+}

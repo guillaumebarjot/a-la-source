@@ -20,6 +20,9 @@ const Debunkages = lazy(() => import('./pages/Debunkages'))
 const Debunkage = lazy(() => import('./pages/Debunkage'))
 const Parcours = lazy(() => import('./pages/Parcours'))
 const ParcoursSession = lazy(() => import('./pages/ParcoursSession'))
+const Activites = lazy(() => import('./pages/Activites'))
+const Dossiers = lazy(() => import('./pages/Dossiers'))
+const Dossier = lazy(() => import('./pages/Dossier'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
@@ -44,6 +47,10 @@ export default function App() {
             <Route path="/decrypter" element={<Navigate to="/observatoire" replace />} />
             <Route path="/debunkages" element={<Debunkages />} />
             <Route path="/debunkages/:id" element={<Debunkage />} />
+            {/* Hub Activités + Dossiers & décryptages */}
+            <Route path="/activites" element={<Activites />} />
+            <Route path="/dossiers" element={<Dossiers />} />
+            <Route path="/dossiers/:id" element={<Dossier />} />
             <Route path="/ateliers" element={<Ateliers />} />
             <Route path="/ateliers/:section" element={<Ateliers />} />
             <Route path="/archiver" element={<Archiver />} />

@@ -1,0 +1,129 @@
+/**
+ * Styles Hub Activités — dark-safe.
+ *
+ * Vitrine « éducation populaire » : chaque activité est une carte image-titre.
+ * Tokens --color-* uniquement. Cartes-liens neutralisées contre .dark a (jamais
+ * de titre rouge sur fond sombre).
+ */
+
+.activites-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.activites-header {
+  margin-bottom: var(--space-xl);
+}
+
+.activites-header h1 {
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+.activites-intro {
+  color: var(--color-text-secondary);
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+.activites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* Carte-lien (image + titre), neutre en couleur pour contrer .dark a */
+.activite-carte,
+.activite-carte:hover {
+  display: flex;
+  gap: var(--space-md);
+  align-items: stretch;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.activite-carte:hover {
+  border-color: var(--color-primary);
+}
+
+.activite-carte-visuel {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activite-carte-initiale {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+/* La carte est un <a> : en sombre, .dark a repasserait l'initiale en rouge. On neutralise
+   (la lettre est portee soit par .activite-carte-initiale soit directement par le visuel). */
+.dark .activite-carte-initiale,
+.dark .activite-carte-visuel { color: var(--color-text-secondary); }
+
+.activite-carte-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.activite-carte-titre {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+/* En sombre, .dark a repassait ce titre-lien en rouge : on neutralise. */
+.dark .activite-carte-titre { color: var(--color-text); }
+.dark .activite-carte:hover .activite-carte-titre { color: var(--color-accent); }
+
+.activite-carte-accroche {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.activite-carte-meta {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.activite-compteur {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-sm);
+  font-weight: 600;
+}
+
+.activite-compteur.chaud {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.activite-lien {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.dark .activite-carte:hover .activite-lien { color: var(--color-accent); }

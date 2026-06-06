@@ -36,6 +36,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/sujets` | sujets.ts | sujets (thèmes durables, refonte par sujets) : CRUD, publication, rattachement sources/événements |
 | `/api/debunkages` | debunkages.ts | activité débunkage (adhérent) : démonstration, sources pour/contre, liens de posts réseaux, publier |
 | `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
+| `/api/dossiers` | dossiers.ts | activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources |
 | `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
 | `/api/mecanismes` | mecanismes.ts | 25 mécanismes de référence (fiches pédagogiques) |
 | `/api/contenus` | contenus.ts | pages éditables (clé/valeur) |
@@ -59,7 +60,7 @@ Tables principales : `utilisateurs`, `medias`, `auteurs`, `sources`, `archives`,
 
 Refonte v3 (par sujets), tables additives (auto-migrate au boot, idempotent) :
 - `sujets` + `sujet_sources` + `sujet_evenements` : le Sujet, thème durable, objet pivot éditorial (création membre, publication animateur). Seed : lithium en Alsace + 7 dossiers locaux Becs Rouges.
-- `activites` (socle commun des activités d'éducation populaire) + `activite_sources` (avec `role` pour/contre) + extensions par type : `atelier_pipeline` (backfill des ateliers), `debunkage_pipeline` + `debunkage_posts`.
+- `activites` (socle commun des activités d'éducation populaire) + `activite_sources` (avec `role` pour/contre) + extensions par type : `atelier_pipeline` (backfill des ateliers), `debunkage_pipeline` + `debunkage_posts`, `dossier_contenu` (dossier + décryptage à chaud).
 - `parcours` + `parcours_questions` + `parcours_sessions` + `parcours_reponses` : cursus Apprendre (quiz de repérage des mécanismes, score). Parcours « Découverte des mécanismes » auto-généré depuis `source_mecanismes`.
 - Migrations : `migrate-sujets.ts`, `migrate-activites.ts`, `migrate-debunkage.ts`, `migrate-parcours.ts` ; seed `seed-sujets.ts`.
 
@@ -82,6 +83,8 @@ SPA React 19, react-router-dom 7, pages en `lazy()`. State global zustand (`stor
 | `/veille` (ex `/flux`) | Flux | veille collaborative de sources (substrat) |
 | `/debunkages[/:id]` | Debunkages, Debunkage | activité débunkage (adhérent), liens de posts réseaux |
 | `/parcours[/:id]` | Parcours, ParcoursSession | cursus Apprendre : quiz de repérage des mécanismes |
+| `/activites` | Activites | hub : toutes les activités d'éducation populaire (ateliers, dossiers, débunkages, parcours) |
+| `/dossiers[/:id]` | Dossiers, Dossier | activité dossier / décryptage à chaud |
 | `/lire/:id` | Lire | reader + sidebar d'analyse (cœur) |
 | `/observatoire[/:section]` | Observatoire | visualisations : mécanismes, matrice média x mécanisme, confiance, fiches médias |
 | `/ateliers[/:section]` | Ateliers | pipeline de préparation + archives |

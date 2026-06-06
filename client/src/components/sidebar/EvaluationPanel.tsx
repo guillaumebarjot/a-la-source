@@ -38,11 +38,19 @@ export default function EvaluationPanel({ sourceId, score }: Props) {
         <form className="eval-form" onSubmit={handleSubmit}>
           <label>
             Echo mediatique ({echo}/40)
-            <input type="range" min="0" max="40" value={echo} onChange={(e) => setEcho(Number(e.target.value))} />
+            <span className="slider-saisie">
+              <input type="range" min="0" max="40" value={echo} onChange={(e) => setEcho(Number(e.target.value))} />
+              <input type="number" min="0" max="40" value={echo}
+                onChange={(e) => { const v = Number(e.target.value); if (!Number.isNaN(v)) setEcho(Math.max(0, Math.min(40, v))) }} />
+            </span>
           </label>
           <label>
             Qualite pedagogique ({pedagogie}/50)
-            <input type="range" min="0" max="50" value={pedagogie} onChange={(e) => setPedagogie(Number(e.target.value))} />
+            <span className="slider-saisie">
+              <input type="range" min="0" max="50" value={pedagogie} onChange={(e) => setPedagogie(Number(e.target.value))} />
+              <input type="number" min="0" max="50" value={pedagogie}
+                onChange={(e) => { const v = Number(e.target.value); if (!Number.isNaN(v)) setPedagogie(Math.max(0, Math.min(50, v))) }} />
+            </span>
           </label>
           <label>
             Commentaire

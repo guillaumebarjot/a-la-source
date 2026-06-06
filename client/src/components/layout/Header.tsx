@@ -88,6 +88,14 @@ export default function Header() {
         <NavLink to="/sujets" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Sujets
         </NavLink>
+        <NavLink
+          to="/activites"
+          className={({ isActive }) =>
+            (isActive || location.pathname.startsWith('/dossiers')) ? 'nav-link active' : 'nav-link'
+          }
+        >
+          Activites
+        </NavLink>
         <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Veille
         </NavLink>

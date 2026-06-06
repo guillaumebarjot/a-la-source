@@ -1,0 +1,231 @@
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { api } from '../api/client'
+import type { DossierDetail, DossierSource, EvenementOption } from '../types/dossier'
+import '../styles/dossier.css'
+
+/**
+ * Dossier (détail) — l'établi de fond.
+ *
+ * On rédige la mise en perspective et le contenu, on mobilise des sources de
+ * référence (cartes image + titre), et on peut basculer le dossier en mode
+ * « à chaud » (DÉCRYPTAGE) en le rattachant à un événement daté. On publie
+ * enfin le dossier.
+ */
+export default function Dossier() {
+  const { id } = useParams<{ id: string }>()
+  const [data, setData] = useState<DossierDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [evenements, setEvenements] = useState<EvenementOption[]>([])
+
+  // Champs éditables
+  const [perspective, setPerspective] = useState('')
+  const [contenu, setContenu] = useState('')
+  const [aChaud, setAChaud] = useState(false)
+  const [evenementId, setEvenementId] = useState<string>('')
+  const [saving, setSaving] = useState(false)
+  const [savedAt, setSavedAt] = useState<string | null>(null)
+
+  // Ajout de source
+  const [sourceId, setSourceId] = useState('')
+  const [sourceRole, setSourceRole] = useState<'pour' | 'contre' | ''>('')
+
+  const recharger = useCallback(() => {
+    if (!id) return
+    return api.get<DossierDetail>(`/dossiers/${id}`).then((d) => {
+      setData(d)
+      setPerspective(d.contenu?.mise_en_perspective_md ?? '')
+      setContenu(d.contenu?.contenu_md ?? '')
+      setAChaud(!!d.contenu?.a_chaud)
+      setEvenementId(d.contenu?.evenement_id ? String(d.contenu.evenement_id) : '')
+    })
+  }, [id])
+
+  useEffect(() => {
+    recharger()?.finally(() => setLoading(false))
+    api.get<EvenementOption[]>('/evenements').then(setEvenements).catch(() => setEvenements([]))
+  }, [recharger])
+
+  async function sauverContenu() {
+    if (!id) return
+    setSaving(true)
+    try {
+      await api.put(`/dossiers/${id}`, {
+        mise_en_perspective_md: perspective,
+        contenu_md: contenu,
+        a_chaud: aChaud,
+        evenement_id: aChaud ? (evenementId ? Number(evenementId) : null) : null,
+      })
+      setSavedAt(new Date().toLocaleTimeString())
+      await recharger()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function ajouterSource(e: React.FormEvent) {
+    e.preventDefault()
+    if (!id || !sourceId.trim()) return
+    await api.post(`/dossiers/${id}/sources`, {
+      source_id: Number(sourceId.trim()),
+      role: sourceRole || undefined,
+    })
+    setSourceId('')
+    await recharger()
+  }
+
+  async function retirerSource(sid: number) {
+    if (!id) return
+    await api.delete(`/dossiers/${id}/sources/${sid}`)
+    await recharger()
+  }
+
+  async function publier() {
+    if (!id) return
+    await api.post(`/dossiers/${id}/publier`, {})
+    await recharger()
+  }
+
+  if (loading) return <div className="loading">Chargement du dossier...</div>
+  if (!data) return <div className="dossier-page"><p className="dossier-empty">Dossier introuvable.</p></div>
+
+  const estPublie = data.statut_activite === 'publie'
+
+  return (
+    <div className="dossier-page">
+      <header className="dossier-header">
+        <div className="dossier-row">
+          <h1>{data.titre}</h1>
+          {aChaud && <span className="dossier-badge chaud">A chaud</span>}
+          <span className={`dossier-badge${estPublie ? ' publie' : ''}`}>
+            {estPublie ? 'Publie' : 'Brouillon'}
+          </span>
+        </div>
+        {data.sujet_slug && (
+          <p className="dossier-card-sub">
+            Theme : <Link to={`/sujets/${data.sujet_slug}`} className="dossier-source-titre" style={{ display: 'inline' }}>{data.sujet_titre}</Link>
+          </p>
+        )}
+      </header>
+
+      <section className="dossier-section">
+        <h2>Format</h2>
+        <label className="dossier-toggle">
+          <input type="checkbox" checked={aChaud} onChange={(e) => setAChaud(e.target.checked)} />
+          <span>Decryptage a chaud (dossier date sur un evenement)</span>
+        </label>
+        {aChaud && (
+          <div className="dossier-row" style={{ marginTop: 'var(--space-md)' }}>
+            <label className="dossier-field-label" htmlFor="dos-ev" style={{ marginBottom: 0 }}>Evenement</label>
+            <select
+              id="dos-ev"
+              className="dossier-select"
+              style={{ maxWidth: 360 }}
+              value={evenementId}
+              onChange={(e) => setEvenementId(e.target.value)}
+            >
+              <option value="">Aucun evenement</option>
+              {evenements.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.titre}{ev.date_evenement ? ` (${ev.date_evenement})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </section>
+
+      <section className="dossier-section">
+        <h2>Mise en perspective</h2>
+        <textarea
+          className="dossier-textarea"
+          value={perspective}
+          onChange={(e) => setPerspective(e.target.value)}
+          placeholder="Le cadre, l'angle, ce qui se joue derriere le sujet."
+        />
+      </section>
+
+      <section className="dossier-section">
+        <h2>Contenu</h2>
+        <textarea
+          className="dossier-textarea dossier-textarea-lg"
+          value={contenu}
+          onChange={(e) => setContenu(e.target.value)}
+          placeholder="Le corps du dossier : faits, mecanismes recurrents, mise en regard des sources."
+        />
+        <div className="dossier-actions">
+          <button className="btn btn-primary" onClick={sauverContenu} disabled={saving}>
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
+          </button>
+          {savedAt && <span className="dossier-card-meta">Enregistre a {savedAt}</span>}
+        </div>
+      </section>
+
+      <section className="dossier-section">
+        <h2>Sources mobilisees</h2>
+        <form className="dossier-row" onSubmit={ajouterSource} style={{ marginBottom: 'var(--space-md)' }}>
+          <input
+            className="dossier-input"
+            style={{ maxWidth: 140 }}
+            value={sourceId}
+            onChange={(e) => setSourceId(e.target.value)}
+            placeholder="id source"
+            inputMode="numeric"
+          />
+          <select
+            className="dossier-select"
+            style={{ maxWidth: 200 }}
+            value={sourceRole}
+            onChange={(e) => setSourceRole(e.target.value as 'pour' | 'contre' | '')}
+          >
+            <option value="">Sans role</option>
+            <option value="pour">Pour</option>
+            <option value="contre">Contre</option>
+          </select>
+          <button type="submit" className="btn btn-secondary" disabled={!sourceId.trim()}>Rattacher</button>
+        </form>
+
+        {data.sources.length === 0 ? (
+          <p className="dossier-empty">Aucune source rattachee.</p>
+        ) : (
+          <div className="dossier-sources-grid">
+            {data.sources.map((s) => (
+              <SourceCard key={s.id} source={s} onRemove={retirerSource} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="dossier-section">
+        <div className="dossier-actions">
+          <button className="btn btn-primary" onClick={publier} disabled={estPublie}>
+            {estPublie ? 'Deja publie' : 'Marquer comme publie'}
+          </button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+/** Carte source (image + titre), rôle dark-safe. */
+function SourceCard({ source: s, onRemove }: { source: DossierSource; onRemove: (id: number) => void }) {
+  return (
+    <div className="dossier-source-card">
+      <div className="dossier-source-visuel">
+        {s.image_url
+          ? <img src={s.image_url} alt="" loading="lazy" />
+          : <span className="dossier-source-initiale">{s.titre.charAt(0)}</span>}
+      </div>
+      <div className="dossier-source-body">
+        {s.url
+          ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="dossier-source-titre">{s.titre}</a>
+          : <span className="dossier-source-titre">{s.titre}</span>}
+        <div className="dossier-source-meta">
+          {s.media_nom && <span className="dossier-source-media">{s.media_nom}</span>}
+          {s.role && <span className="dossier-badge">{s.role}</span>}
+        </div>
+      </div>
+      <button className="btn btn-secondary btn-sm" onClick={() => onRemove(s.id)}>Retirer</button>
+    </div>
+  )
+}

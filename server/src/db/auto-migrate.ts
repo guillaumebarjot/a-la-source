@@ -12,6 +12,7 @@ import { seedSujets } from './seed-sujets.js'
 import { migrateActivites } from './migrate-activites.js'
 import { migrateDebunkage } from './migrate-debunkage.js'
 import { migrateParcours } from './migrate-parcours.js'
+import { migrateDossiers } from './migrate-dossiers.js'
 
 function colonnes(table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(c => c.name)
@@ -116,6 +117,9 @@ export function autoMigrate(): void {
 
   // Parcours / Quiz (cursus d'apprentissage)
   migrateParcours()
+
+  // Extension Dossier (contenu de fond + flag à chaud / lien événement pour les décryptages)
+  migrateDossiers()
 
   console.log('Auto-migration: schéma à jour.')
 }

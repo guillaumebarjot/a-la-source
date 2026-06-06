@@ -25,6 +25,7 @@ import { useAuth } from '../store/useAuth'
 import SourceCard from '../components/cards/SourceCard'
 import type { Source, Atelier, AtelierDetail, Tag } from '../types'
 import '../styles/ateliers-prep.css'
+import '../styles/slider-saisie.css'
 
 /* ---------- Types ---------- */
 
@@ -192,11 +193,23 @@ export default function Ateliers() {
           <div className="vivier-controles">
             <label className="vivier-score-filter">
               Score min : <strong>{scoreMin}</strong>/100
-              <input
-                type="range" min={0} max={100} step={5}
-                value={scoreMin}
-                onChange={(e) => setScoreMin(Number(e.target.value))}
-              />
+              <span className="slider-saisie">
+                <input
+                  type="range" min={0} max={100} step={5}
+                  value={scoreMin}
+                  onChange={(e) => setScoreMin(Number(e.target.value))}
+                />
+                <input
+                  type="number" min={0} max={100} step={5}
+                  value={scoreMin}
+                  onChange={(e) => {
+                    const n = Number(e.target.value)
+                    if (Number.isNaN(n)) return
+                    setScoreMin(Math.min(100, Math.max(0, n)))
+                  }}
+                  aria-label="Score minimum"
+                />
+              </span>
             </label>
             <label className="vivier-quality-filter">
               <input

@@ -7,6 +7,13 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Dossier/décryptage, hub Activités, accueil vivant, polish
+
+- **Activité Dossier (+ mode Décryptage à chaud).** Table `dossier_contenu` (mise en perspective, contenu, flag `a_chaud`, lien événement). API `/api/dossiers`. Le décryptage est un dossier `a_chaud=1` rattaché à un événement, pas un type distinct. Pages liste (filtre fond / à chaud) et édition (sources en cartes).
+- **Hub Activités** (`/activites`) : la vitrine d'éducation populaire, qui réunit Ateliers, Dossiers & décryptages, Débunkages, Parcours avec compteurs. Entrée de nav « Activités ».
+- **Accueil « mix vivant »** (`/sujets`) : intro éduc pop, une « décryptage à chaud », activité récente (débunkages + ateliers), puis la grille de thèmes. Robuste aux API vides.
+- **Polish** : convention slider doublé d'une saisie numérique liée (vivier, évaluation écho/pédagogie). Lisibilité sombre vérifiée sur toutes les nouvelles pages (0 texte rouge sur fond sombre).
+
 ## 2026-06-06 — Préparation atelier en glisser-déposer + cursus Parcours/quiz
 
 - **Préparation atelier refondue.** Tableau 2 colonnes glisser-déposer : vivier (cartes avec score, contexte animateur) à gauche, corpus de l'atelier à droite, cartes promenées et réordonnables (poignée), zone de dépôt en surbrillance, fallbacks boutons conservés. Plus de grand écran à scroller. Sur l'API atelier existante (pas de cutover destructif).
