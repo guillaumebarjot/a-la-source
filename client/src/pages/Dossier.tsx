@@ -30,6 +30,10 @@ export default function Dossier() {
   const [sourceId, setSourceId] = useState('')
   const [sourceRole, setSourceRole] = useState<'pour' | 'contre' | ''>('')
 
+  // Partage hors appli
+  const [copieLien, setCopieLien] = useState(false)
+  const [copieYeswiki, setCopieYeswiki] = useState<'idle' | 'ok' | 'erreur'>('idle')
+
   const recharger = useCallback(() => {
     if (!id) return
     return api.get<DossierDetail>(`/dossiers/${id}`).then((d) => {
@@ -84,6 +88,36 @@ export default function Dossier() {
     if (!id) return
     await api.post(`/dossiers/${id}/publier`, {})
     await recharger()
+  }
+
+  // Lien public absolu vers la page autoportante (hors /api).
+  const lienPublic = id ? `${window.location.origin}/partage/dossier/${id}` : ''
+
+  async function copierLien() {
+    if (!lienPublic) return
+    try {
+      await navigator.clipboard.writeText(lienPublic)
+      setCopieLien(true)
+      setTimeout(() => setCopieLien(false), 2000)
+    } catch {
+      setCopieLien(false)
+    }
+  }
+
+  async function exporterYeswiki() {
+    if (!id) return
+    setCopieYeswiki('idle')
+    try {
+      const res = await fetch(`/api/dossiers/${id}/yeswiki`)
+      if (!res.ok) throw new Error('export indisponible')
+      const texte = await res.text()
+      await navigator.clipboard.writeText(texte)
+      setCopieYeswiki('ok')
+      setTimeout(() => setCopieYeswiki('idle'), 2500)
+    } catch {
+      setCopieYeswiki('erreur')
+      setTimeout(() => setCopieYeswiki('idle'), 2500)
+    }
   }
 
   if (loading) return <div className="loading">Chargement du dossier...</div>
@@ -194,6 +228,59 @@ export default function Dossier() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="dossier-section">
+        <h2>Partager hors appli</h2>
+        {!estPublie && (
+          <p className="dossier-empty">
+            Le partage public est concu pour un dossier publie. Marquez-le comme publie ci-dessous pour diffuser une page lisible par tous.
+          </p>
+        )}
+        <div className="dossier-partage">
+          <div className="dossier-partage-bloc">
+            <span className="dossier-field-label">Page publique (Discord, partage direct)</span>
+            <div className="dossier-row">
+              <input
+                className="dossier-input"
+                style={{ flex: 1, minWidth: 200 }}
+                value={lienPublic}
+                readOnly
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <button type="button" className="btn btn-secondary" onClick={copierLien}>
+                {copieLien ? 'Lien copie' : 'Copier le lien'}
+              </button>
+              <a
+                className="btn btn-secondary"
+                href={lienPublic}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ouvrir
+              </a>
+            </div>
+            <p className="dossier-card-meta">
+              Cette page affiche une carte (titre, apercu, image) quand on colle le lien dans Discord.
+            </p>
+          </div>
+
+          <div className="dossier-partage-bloc">
+            <span className="dossier-field-label">Export YesWiki (becs-rouges.fr, rouge-coquelicot.fr)</span>
+            <div className="dossier-row">
+              <button type="button" className="btn btn-secondary" onClick={exporterYeswiki}>
+                {copieYeswiki === 'ok'
+                  ? 'Texte YesWiki copie'
+                  : copieYeswiki === 'erreur'
+                    ? 'Echec, reessayez'
+                    : 'Exporter en YesWiki'}
+              </button>
+            </div>
+            <p className="dossier-card-meta">
+              Le texte est copie dans le presse-papiers en syntaxe YesWiki, pret a coller dans une page du wiki.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="dossier-section">

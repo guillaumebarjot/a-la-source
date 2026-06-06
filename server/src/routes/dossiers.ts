@@ -13,6 +13,7 @@
 import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
+import { dossierVersYeswiki, type YeswikiSource } from '../lib/yeswiki.js'
 
 const router = Router()
 
@@ -66,6 +67,50 @@ router.get('/:id', (req, res) => {
   `).all(activite.id)
 
   res.json({ ...activite, contenu, sources })
+})
+
+// GET /api/dossiers/:id/yeswiki — export du dossier en syntaxe YesWiki (text/plain)
+// A coller dans une page becs-rouges.fr ou rouge-coquelicot.fr.
+router.get('/:id/yeswiki', (req, res) => {
+  const activite = db.prepare(
+    "SELECT id, titre FROM activites WHERE id = ? AND type = 'dossier'"
+  ).get(req.params.id) as { id: number; titre: string } | undefined
+  if (!activite) { res.status(404).json({ error: 'Dossier non trouve' }); return }
+
+  const contenu = db.prepare(`
+    SELECT c.contenu_md, c.mise_en_perspective_md, c.a_chaud,
+           e.titre AS evenement_titre, e.date_evenement
+    FROM dossier_contenu c
+    LEFT JOIN evenements e ON e.id = c.evenement_id
+    WHERE c.activite_id = ?
+  `).get(activite.id) as {
+    contenu_md: string | null
+    mise_en_perspective_md: string | null
+    a_chaud: number | null
+    evenement_titre: string | null
+    date_evenement: string | null
+  } | undefined
+
+  const sources = db.prepare(`
+    SELECT s.titre, s.url, m.nom AS media_nom, asr.role
+    FROM activite_sources asr
+    JOIN sources s ON s.id = asr.source_id
+    LEFT JOIN medias m ON m.id = s.media_id
+    WHERE asr.activite_id = ?
+    ORDER BY asr.ordre, s.titre
+  `).all(activite.id) as YeswikiSource[]
+
+  const texte = dossierVersYeswiki({
+    titre: activite.titre,
+    a_chaud: !!contenu?.a_chaud,
+    evenement_titre: contenu?.evenement_titre ?? null,
+    evenement_date: contenu?.date_evenement ?? null,
+    mise_en_perspective_md: contenu?.mise_en_perspective_md ?? null,
+    contenu_md: contenu?.contenu_md ?? null,
+    sources,
+  })
+
+  res.type('text/plain; charset=utf-8').send(texte)
 })
 
 // POST /api/dossiers — créer un dossier (tout membre authentifié)

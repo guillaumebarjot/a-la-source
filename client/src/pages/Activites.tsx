@@ -25,6 +25,60 @@ interface CarteActivite {
   ill: string // initiale ou pictogramme texte (image-titre sobre, sans dépendance)
 }
 
+/** Formats de création : point d'entrée unifié vers chaque page de création. */
+interface CarteCreation {
+  cle: string
+  titre: string
+  usage: string // une phrase sur l'usage pédagogique
+  to: string
+  ill: string
+}
+
+const CREATIONS: CarteCreation[] = [
+  {
+    cle: 'creer-atelier',
+    titre: 'Atelier',
+    usage: "Une seance collective ou l'on decrypte ensemble une source et l'on nomme ses mecanismes.",
+    to: '/ateliers/preparation',
+    ill: 'A',
+  },
+  {
+    cle: 'creer-dossier',
+    titre: 'Dossier',
+    usage: "Le fond d'un theme media, monte piece par piece avec ses sources.",
+    to: '/dossiers',
+    ill: 'D',
+  },
+  {
+    cle: 'creer-decryptage',
+    titre: 'Decryptage a chaud',
+    usage: "Un dossier date, monte a chaud sur un evenement recent (meme page que le dossier, simple bascule a chaud).",
+    to: '/dossiers',
+    ill: 'C',
+  },
+  {
+    cle: 'creer-debunkage',
+    titre: 'Debunkage',
+    usage: "On vise une affirmation precise, on la demonte avec des sources, on publie le resultat.",
+    to: '/debunkages',
+    ill: 'B',
+  },
+  {
+    cle: 'creer-parcours',
+    titre: 'Parcours / quiz',
+    usage: "Un cursus d'exercices pour s'entrainer a reconnaitre les mecanismes mediatiques.",
+    to: '/parcours',
+    ill: 'P',
+  },
+  {
+    cle: 'creer-arpentage',
+    titre: 'Arpentage',
+    usage: "Une lecture collective fragmentee : on decoupe un document, chacun lit un morceau, on synthetise.",
+    to: '/arpentages',
+    ill: 'R',
+  },
+]
+
 const CARTES: CarteActivite[] = [
   {
     cle: 'ateliers',
@@ -98,6 +152,29 @@ export default function Activites() {
           par les themes ; la critique des medias s'appuie sur Acrimed.
         </p>
       </header>
+
+      <section className="creer-activite" aria-labelledby="creer-activite-titre">
+        <h2 id="creer-activite-titre" className="creer-activite-titre">Creer une activite</h2>
+        <p className="creer-activite-intro">
+          Choisissez un format. Chaque carte mene directement a sa page de creation.
+        </p>
+        <div className="creer-activite-grid">
+          {CREATIONS.map((c) => (
+            <Link key={c.cle} to={c.to} className="creer-carte">
+              <div className="creer-carte-visuel" aria-hidden="true">
+                <span className="creer-carte-initiale">{c.ill}</span>
+              </div>
+              <div className="creer-carte-body">
+                <h3 className="creer-carte-titre">{c.titre}</h3>
+                <p className="creer-carte-usage">{c.usage}</p>
+                <span className="creer-carte-cta">Creer</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <h2 className="activites-section-titre">Toutes les activites</h2>
 
       <div className="activites-grid">
         {CARTES.map((c) => {

@@ -11,6 +11,7 @@
 import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
+import { sujetVersYeswiki, type YeswikiSource, type YeswikiSujetEvenement } from '../lib/yeswiki.js'
 
 const router = Router()
 
@@ -36,6 +37,43 @@ router.get('/', (req, res) => {
     ORDER BY s.statut = 'publie' DESC, s.titre
   `).all(...(statut ? [statut] : []))
   res.json(rows)
+})
+
+// GET /api/sujets/:idOrSlug/yeswiki — export du thème en syntaxe YesWiki (text/plain)
+// Place AVANT /:idOrSlug pour l'expressivite ; A coller dans une page YesWiki.
+router.get('/:idOrSlug/yeswiki', (req, res) => {
+  const key = req.params.idOrSlug
+  const sujet = db.prepare(
+    `SELECT id, titre, accroche, description_md FROM sujets WHERE ${/^\d+$/.test(key) ? 'id' : 'slug'} = ?`
+  ).get(key) as { id: number; titre: string; accroche: string | null; description_md: string | null } | undefined
+  if (!sujet) { res.status(404).json({ error: 'Sujet non trouve' }); return }
+
+  const sources = db.prepare(`
+    SELECT s.titre, s.url, m.nom AS media_nom, NULL AS role
+    FROM sujet_sources ss
+    JOIN sources s ON s.id = ss.source_id
+    LEFT JOIN medias m ON m.id = s.media_id
+    WHERE ss.sujet_id = ?
+    ORDER BY s.date_publication DESC
+  `).all(sujet.id) as YeswikiSource[]
+
+  const evenements = db.prepare(`
+    SELECT e.titre, e.date_evenement
+    FROM sujet_evenements se
+    JOIN evenements e ON e.id = se.evenement_id
+    WHERE se.sujet_id = ?
+    ORDER BY COALESCE(e.date_evenement, e.cree_le) DESC
+  `).all(sujet.id) as YeswikiSujetEvenement[]
+
+  const texte = sujetVersYeswiki({
+    titre: sujet.titre,
+    accroche: sujet.accroche ?? null,
+    description_md: sujet.description_md ?? null,
+    sources,
+    evenements,
+  })
+
+  res.type('text/plain; charset=utf-8').send(texte)
 })
 
 // GET /api/sujets/:idOrSlug — détail + sources + événements rattachés

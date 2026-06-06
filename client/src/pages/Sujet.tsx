@@ -91,6 +91,10 @@ export default function Sujet() {
   // Source actuellement promenée (pour le DragOverlay).
   const [sourceEnDrag, setSourceEnDrag] = useState<Source | null>(null)
 
+  // Partage hors appli
+  const [copieLien, setCopieLien] = useState(false)
+  const [copieYeswiki, setCopieYeswiki] = useState<'idle' | 'ok' | 'erreur'>('idle')
+
   // Un petit seuil de déplacement évite que le clic sur « + Rattacher »
   // ou « Détacher » ne déclenche un drag par mégarde.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
@@ -135,6 +139,36 @@ export default function Sujet() {
     // Déposé sur la zone Sources du sujet -> on rattache.
     if (event.over?.id === ZONE_SUJET && source) {
       void rattacher(source.id)
+    }
+  }
+
+  // Lien public absolu vers la page autoportante (hors /api).
+  const lienPublic = sujet ? `${window.location.origin}/partage/sujet/${sujet.slug}` : ''
+
+  async function copierLien() {
+    if (!lienPublic) return
+    try {
+      await navigator.clipboard.writeText(lienPublic)
+      setCopieLien(true)
+      setTimeout(() => setCopieLien(false), 2000)
+    } catch {
+      setCopieLien(false)
+    }
+  }
+
+  async function exporterYeswiki() {
+    if (!sujet) return
+    setCopieYeswiki('idle')
+    try {
+      const res = await fetch(`/api/sujets/${sujet.slug}/yeswiki`)
+      if (!res.ok) throw new Error('export indisponible')
+      const texte = await res.text()
+      await navigator.clipboard.writeText(texte)
+      setCopieYeswiki('ok')
+      setTimeout(() => setCopieYeswiki('idle'), 2500)
+    } catch {
+      setCopieYeswiki('erreur')
+      setTimeout(() => setCopieYeswiki('idle'), 2500)
     }
   }
 
@@ -198,6 +232,58 @@ export default function Sujet() {
           onRattacher={rattacher}
           onDetacher={detacher}
         />
+
+        <section className="sujet-detail-section">
+          <h2>Partager hors appli</h2>
+          {sujet.statut !== 'publie' && (
+            <p className="empty">
+              Le partage public est concu pour un theme publie. Une fois publie, ce theme sera diffusable via une page lisible par tous.
+            </p>
+          )}
+          <div className="sujet-partage">
+            <div className="sujet-partage-bloc">
+              <span className="sujet-field-label">Page publique (Discord, partage direct)</span>
+              <div className="sujet-partage-row">
+                <input
+                  className="sujet-partage-input"
+                  value={lienPublic}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <button type="button" className="btn btn-sm btn-secondary" onClick={copierLien}>
+                  {copieLien ? 'Lien copie' : 'Copier le lien'}
+                </button>
+                <a
+                  className="btn btn-sm btn-secondary sujet-partage-ouvrir"
+                  href={lienPublic}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ouvrir
+                </a>
+              </div>
+              <p className="sujet-partage-meta">
+                Cette page affiche une carte (titre, apercu, image) quand on colle le lien dans Discord.
+              </p>
+            </div>
+
+            <div className="sujet-partage-bloc">
+              <span className="sujet-field-label">Export YesWiki (becs-rouges.fr, rouge-coquelicot.fr)</span>
+              <div className="sujet-partage-row">
+                <button type="button" className="btn btn-sm btn-secondary" onClick={exporterYeswiki}>
+                  {copieYeswiki === 'ok'
+                    ? 'Texte YesWiki copie'
+                    : copieYeswiki === 'erreur'
+                      ? 'Echec, reessayez'
+                      : 'Exporter en YesWiki'}
+                </button>
+              </div>
+              <p className="sujet-partage-meta">
+                Le texte est copie dans le presse-papiers en syntaxe YesWiki, pret a coller dans une page du wiki.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
 
       {/* La carte promenée suit le curseur ; rendu hors flux. */}

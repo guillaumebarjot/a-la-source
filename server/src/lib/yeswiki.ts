@@ -112,3 +112,124 @@ export function debunkageVersYeswiki(data: YeswikiDebunkage): string {
 
   return blocs.join('\n\n') + '\n'
 }
+
+// ---------------------------------------------------------------------------
+// Dossiers / décryptages
+// ---------------------------------------------------------------------------
+
+export interface YeswikiDossier {
+  titre: string
+  a_chaud?: boolean
+  evenement_titre?: string | null
+  evenement_date?: string | null
+  mise_en_perspective_md: string | null
+  contenu_md: string | null
+  sources: YeswikiSource[]
+}
+
+/**
+ * Produit le texte YesWiki complet d'un dossier (ou décryptage à chaud).
+ * Format : titre, evenement (si à chaud), mise en perspective, contenu,
+ * sources, signature.
+ */
+export function dossierVersYeswiki(data: YeswikiDossier): string {
+  const blocs: string[] = []
+
+  blocs.push(`======${data.titre.trim()}======`)
+
+  if (data.a_chaud && data.evenement_titre && data.evenement_titre.trim()) {
+    const date = data.evenement_date && data.evenement_date.trim() ? ` (${data.evenement_date.trim()})` : ''
+    blocs.push(`//Decryptage a chaud : ${data.evenement_titre.trim()}${date}//`)
+  }
+
+  if (data.mise_en_perspective_md && data.mise_en_perspective_md.trim()) {
+    blocs.push('=====Mise en perspective=====')
+    blocs.push(markdownVersYeswiki(data.mise_en_perspective_md.trim()))
+  }
+
+  if (data.contenu_md && data.contenu_md.trim()) {
+    blocs.push('=====Contenu=====')
+    blocs.push(markdownVersYeswiki(data.contenu_md.trim()))
+  }
+
+  const pour = data.sources.filter((s) => s.role === 'pour')
+  const contre = data.sources.filter((s) => s.role === 'contre')
+  const autres = data.sources.filter((s) => s.role !== 'pour' && s.role !== 'contre')
+
+  if (pour.length > 0) {
+    blocs.push('=====Sources qui appuient=====')
+    blocs.push(rendreSources(pour).join('\n'))
+  }
+  if (contre.length > 0) {
+    blocs.push('=====Sources mises en cause=====')
+    blocs.push(rendreSources(contre).join('\n'))
+  }
+  if (autres.length > 0) {
+    blocs.push('=====Sources mobilisees=====')
+    blocs.push(rendreSources(autres).join('\n'))
+  }
+
+  blocs.push('----')
+  blocs.push('**Dossier par Rouge Coquelicot** // education populaire aux medias //')
+
+  return blocs.join('\n\n') + '\n'
+}
+
+// ---------------------------------------------------------------------------
+// Sujets / thèmes
+// ---------------------------------------------------------------------------
+
+export interface YeswikiSujetEvenement {
+  titre: string
+  date_evenement: string | null
+}
+
+export interface YeswikiSujet {
+  titre: string
+  accroche: string | null
+  description_md: string | null
+  sources: YeswikiSource[]
+  evenements: YeswikiSujetEvenement[]
+}
+
+/**
+ * Produit le texte YesWiki complet d'un thème (sujet) publié.
+ * Format : titre, accroche, description, couverture (événements), sources,
+ * signature.
+ */
+export function sujetVersYeswiki(data: YeswikiSujet): string {
+  const blocs: string[] = []
+
+  blocs.push(`======${data.titre.trim()}======`)
+
+  if (data.accroche && data.accroche.trim()) {
+    blocs.push(`//${data.accroche.trim()}//`)
+  }
+
+  if (data.description_md && data.description_md.trim()) {
+    blocs.push('=====Description=====')
+    blocs.push(markdownVersYeswiki(data.description_md.trim()))
+  }
+
+  if (data.evenements.length > 0) {
+    blocs.push('=====Couverture=====')
+    blocs.push(
+      data.evenements
+        .map((e) => {
+          const date = e.date_evenement && e.date_evenement.trim() ? ` (${e.date_evenement.trim()})` : ''
+          return `- **${e.titre.trim()}**${date}`
+        })
+        .join('\n')
+    )
+  }
+
+  if (data.sources.length > 0) {
+    blocs.push('=====Sources=====')
+    blocs.push(rendreSources(data.sources).join('\n'))
+  }
+
+  blocs.push('----')
+  blocs.push('**Theme suivi par Rouge Coquelicot** // education populaire aux medias //')
+
+  return blocs.join('\n\n') + '\n'
+}

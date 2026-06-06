@@ -85,3 +85,67 @@
   margin-bottom: var(--space-xs);
   letter-spacing: 0.3px;
 }
+
+/* ---- Partager hors appli (lien public + export YesWiki), dark-safe ---- */
+
+.sujet-field-label {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.sujet-partage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.sujet-partage-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.sujet-partage-row {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sujet-partage-input {
+  flex: 1;
+  min-width: 200px;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+  box-sizing: border-box;
+  cursor: text;
+}
+
+.sujet-partage-meta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+/* Le bouton « Ouvrir » est un lien stylé en bouton : on neutralise la couleur
+   de lien heritee de .dark a, et on conserve un texte lisible. */
+.sujet-partage-ouvrir,
+.dark .sujet-partage-ouvrir {
+  color: var(--color-text);
+  text-decoration: none;
+}
+.sujet-partage-ouvrir:hover,
+.dark .sujet-partage-ouvrir:hover {
+  color: var(--color-text);
+}

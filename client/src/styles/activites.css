@@ -127,3 +127,116 @@
   font-weight: 600;
 }
 .dark .activite-carte:hover .activite-lien { color: var(--color-accent); }
+
+/* ------------------------------------------------------------------ */
+/* Point d'entree unifie « Creer une activite » — dark-safe.          */
+/* Memes precautions que les cartes du hub : aucun titre/CTA-lien      */
+/* rouge sur fond sombre (.dark a repasse les <a> en couleur accent ; */
+/* on neutralise titres et initiales, l'accent reste reserve au hover).*/
+/* ------------------------------------------------------------------ */
+
+.creer-activite {
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.creer-activite-titre {
+  color: var(--color-text);
+  margin: 0 0 var(--space-xs);
+  font-size: 1.25rem;
+}
+
+.creer-activite-intro {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-lg);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.creer-activite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+
+/* Carte-bouton de creation, neutre en couleur pour contrer .dark a */
+.creer-carte,
+.creer-carte:hover {
+  display: flex;
+  gap: var(--space-md);
+  align-items: stretch;
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.creer-carte:hover {
+  border-color: var(--color-primary);
+}
+
+.creer-carte-visuel {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.creer-carte-initiale {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+/* La carte est un <a> : neutraliser l'initiale en sombre. */
+.dark .creer-carte-initiale,
+.dark .creer-carte-visuel { color: var(--color-text-secondary); }
+
+.creer-carte-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.creer-carte-titre {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+/* En sombre, .dark a repasserait ce titre-lien en rouge : on neutralise. */
+.dark .creer-carte-titre { color: var(--color-text); }
+.dark .creer-carte:hover .creer-carte-titre { color: var(--color-accent); }
+
+.creer-carte-usage {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.creer-carte-cta {
+  margin-top: auto;
+  padding-top: var(--space-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.dark .creer-carte:hover .creer-carte-cta { color: var(--color-accent); }
+
+.activites-section-titre {
+  color: var(--color-text);
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-lg);
+}

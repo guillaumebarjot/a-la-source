@@ -7,6 +7,11 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — « Créer une activité » sur le hub + diffusion publique étendue
+
+- **« Créer une activité »** : section en tête du hub `/activites` avec les 6 formats (atelier, dossier, décryptage à chaud, débunkage, parcours, arpentage), chacun décrit et menant à sa page de création. Point d'entrée unifié.
+- **Diffusion publique + YesWiki étendue** aux **dossiers/décryptages** et aux **thèmes** (sur le modèle du débunk) : pages publiques `GET /partage/dossier/:id` et `GET /partage/sujet/:slug` (OpenGraph pour l'unfurl Discord, rendues si publiées), exports `GET /api/dossiers/:id/yeswiki` et `GET /api/sujets/:idOrSlug/yeswiki`, et section « Partager » dans les pages Dossier et Sujet.
+
 ## 2026-06-06 — Ingestion Discord vers une Inbox à qualifier
 
 - **Inbox à qualifier** : colonne `sources.a_qualifier`. API `GET /sources/inbox`, `POST /sources/:id/qualifier` (→ veille/vivier), `POST /sources/:id/rejeter` (→ archive, non destructif). Page `/inbox` (cartes + Qualifier/Rejeter) et lien discret « Inbox à qualifier (N) » en tête de la Veille.

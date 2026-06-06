@@ -38,8 +38,8 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
 | `/api/dossiers` | dossiers.ts | activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources |
 | `/api/arpentages` | arpentage.ts | activité arpentage : fragments d'un document, attribution, restitutions, synthèse |
-| `/partage/debunkage/:id` | partage.ts | **page HTML publique** (sans login) d'un débunk publié, avec OpenGraph pour partage Discord. Au déploiement : déclarer `/partage/` public dans le SSO YunoHost |
-| `/api/debunkages/:id/yeswiki` | debunkages.ts | export d'un débunk en syntaxe YesWiki (lib `yeswiki.ts`) |
+| `/partage/{debunkage,dossier}/:id`, `/partage/sujet/:slug` | partage.ts | **pages HTML publiques** (sans login) des débunks, dossiers/décryptages et thèmes publiés, avec OpenGraph (unfurl Discord). Au déploiement : déclarer `/partage/` public dans le SSO YunoHost |
+| `/api/{debunkages,dossiers}/:id/yeswiki`, `/api/sujets/:idOrSlug/yeswiki` | (resp. routes) | export en syntaxe YesWiki (lib `yeswiki.ts`) |
 | `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
 | `/api/mecanismes` | mecanismes.ts | 25 mécanismes de référence (fiches pédagogiques) |
 | `/api/contenus` | contenus.ts | pages éditables (clé/valeur) |
