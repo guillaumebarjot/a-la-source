@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-06 — Reprise v3 : conception refonte par sujets + Chantier T
+
+Reprise du développement sur critique des camarades (perçu trop proche d'un Linkwarden). Phase de conception posée dans le vault, puis deux corrections tactiques.
+
+- **Conception v3 (vault, hors repo).** Bascule de la navigation par sujets (façon GroundNews), modèle « socle commun + activités-pipelines », activités d'éduc pop (atelier, dossier, décryptage, parcours, arpentage), multi-utilisateur mono-collectif à attribution durcie. Notes de conception : refonte par sujets, cycle de vie de l'atelier, arpentage.
+- **Paywall : lien original ou PDF.** À la soumission, quand un paywall est détecté, l'étape de prévisualisation propose un accès complet : un lien original accessible (archivé à sa place) ou un PDF de l'article (uploadé comme archive complète).
+  - Backend : `POST /api/sources/:id/archiver` accepte désormais une `url` alternative (archive depuis le lien fourni, contenu réputé complet). Le PDF passe par `POST /api/sources/:id/archive-fichier` (déjà présent).
+  - Client : helper `api.upload` (multipart) ; `SubmitSource.tsx` gagne un bloc de résolution paywall (radio lien / PDF).
+- **Lisibilité de la navigation, clair et sombre.** L'état actif des deux niveaux de nav est unifié sur la pastille rouge de marque (l'actif principal était illisible à 15 % de blanc). En mode sombre, les liens de nav inactifs étaient tous teintés en rouge par la règle générique `.dark a` : neutralisés (blanc 0.82 pour la nav, gris clair pour la sous-nav). Vérifié dans les deux thèmes.
+
 ## 2026-06-05 — Observatoire, propriété des médias (Chantier A)
 
 Refonte de l'Observatoire vers une posture d'éducation populaire (décrire, pas noter), suite à la recherche sur GroundNews et le paysage des outils de notation des médias.

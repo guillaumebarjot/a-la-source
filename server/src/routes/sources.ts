@@ -375,11 +375,16 @@ router.post('/:id/archiver', async (req, res) => {
   const source = db.prepare('SELECT url, paywall FROM sources WHERE id = ?').get(req.params.id) as { url: string; paywall: number } | undefined
   if (!source?.url) { res.status(400).json({ error: 'Pas d\'URL' }); return }
 
-  const article = await extractReadability(source.url)
+  // URL alternative : lien original/accessible fourni par le contributeur quand la source est paywallée.
+  // On archive depuis ce lien ; le contenu obtenu est alors réputé complet (paywall contourné).
+  const altUrl = typeof req.body?.url === 'string' && req.body.url.trim() ? req.body.url.trim() : null
+  const targetUrl = altUrl || source.url
+
+  const article = await extractReadability(targetUrl)
   if (!article) { res.status(422).json({ error: 'Extraction impossible' }); return }
 
   const nbMots = compterMots(article.content)
-  const statut = detecterArchivePartielle(article.textContent, source.paywall)
+  const statut = detecterArchivePartielle(article.textContent, altUrl ? 0 : source.paywall)
 
   // Store extracted keywords
   if (article.motsCles.length > 0) {

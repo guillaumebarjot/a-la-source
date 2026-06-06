@@ -20,6 +20,7 @@ interface PreviewData {
 }
 
 type Step = 'url' | 'preview' | 'done'
+type PaywallMode = 'lien' | 'pdf' | null
 
 export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
   const [url, setUrl] = useState('')
@@ -33,10 +34,22 @@ export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
   const [mediaNom, setMediaNom] = useState('')
   const [auteurNom, setAuteurNom] = useState('')
 
+  // Résolution paywall
+  const [paywallMode, setPaywallMode] = useState<PaywallMode>(null)
+  const [altUrl, setAltUrl] = useState('')
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+
+  function resetPaywall() {
+    setPaywallMode(null)
+    setAltUrl('')
+    setPdfFile(null)
+  }
+
   async function fetchPreview() {
     if (!url) return
     setLoading(true)
     setError('')
+    resetPaywall()
     try {
       const data = await api.post<PreviewData>('/sources/preview-url', { url })
       setPreview(data)
@@ -51,11 +64,26 @@ export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
     }
   }
 
+  // Une résolution paywall est jugée fournie si un lien alternatif non vide ou un PDF est donné.
+  const paywallResolu =
+    (paywallMode === 'lien' && altUrl.trim().length > 0) ||
+    (paywallMode === 'pdf' && pdfFile !== null)
+
   async function handleSubmit() {
     setLoading(true)
     setError('')
     try {
-      await api.post('/sources/from-url', { url })
+      const created = await api.post<{ id: number; paywall: boolean }>('/sources/from-url', { url })
+      // Si paywall et qu'un accès complet est fourni, on archive depuis le lien original ou le PDF.
+      if (preview?.paywall && paywallResolu) {
+        if (paywallMode === 'lien') {
+          await api.post(`/sources/${created.id}/archiver`, { url: altUrl.trim() })
+        } else if (paywallMode === 'pdf' && pdfFile) {
+          const fd = new FormData()
+          fd.append('fichier', pdfFile)
+          await api.upload(`/sources/${created.id}/archive-fichier`, fd)
+        }
+      }
       setStep('done')
       setTimeout(() => {
         onCreated()
@@ -74,6 +102,13 @@ export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
       fetchPreview()
     }
   }
+
+  // Libellé du bouton de soumission, sensible au paywall.
+  const submitLabel = loading
+    ? 'Creation...'
+    : preview?.paywall
+      ? (paywallResolu ? 'Soumettre + Archiver' : 'Soumettre sans archive complete')
+      : 'Soumettre + Archiver'
 
   return (
     <Dialog.Portal>
@@ -130,9 +165,6 @@ export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
                 {preview.date_publication && (
                   <p className="submit-meta">Date : {preview.date_publication}</p>
                 )}
-                {preview.paywall && (
-                  <p className="submit-meta submit-meta--warn">Paywall detecte</p>
-                )}
                 {preview.accroche && (
                   <p className="submit-accroche">{preview.accroche}</p>
                 )}
@@ -145,11 +177,57 @@ export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
                 )}
               </div>
             </div>
+
+            {preview.paywall && (
+              <div className="submit-paywall">
+                <p className="submit-meta submit-meta--warn">
+                  Paywall detecte. L'archive automatique sera partielle. Pour conserver le contenu complet, fournissez un acces :
+                </p>
+                <div className="submit-paywall-modes">
+                  <label className="submit-paywall-choice">
+                    <input
+                      type="radio"
+                      name="paywall-mode"
+                      checked={paywallMode === 'lien'}
+                      onChange={() => setPaywallMode('lien')}
+                    />
+                    Lien original accessible
+                  </label>
+                  <label className="submit-paywall-choice">
+                    <input
+                      type="radio"
+                      name="paywall-mode"
+                      checked={paywallMode === 'pdf'}
+                      onChange={() => setPaywallMode('pdf')}
+                    />
+                    PDF de l'article
+                  </label>
+                </div>
+                {paywallMode === 'lien' && (
+                  <input
+                    type="url"
+                    value={altUrl}
+                    onChange={(e) => setAltUrl(e.target.value)}
+                    placeholder="https://... (archive, reprise, version libre)"
+                    className="submit-url-input"
+                  />
+                )}
+                {paywallMode === 'pdf' && (
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                    className="submit-paywall-file"
+                  />
+                )}
+              </div>
+            )}
+
             {error && <p className="submit-error">{error}</p>}
             <div className="modal-actions">
-              <button onClick={() => setStep('url')} className="btn btn-secondary">Modifier l'URL</button>
+              <button onClick={() => { setStep('url'); resetPaywall() }} className="btn btn-secondary">Modifier l'URL</button>
               <button onClick={handleSubmit} disabled={loading} className="btn btn-primary">
-                {loading ? 'Creation...' : 'Soumettre + Archiver'}
+                {submitLabel}
               </button>
             </div>
           </>
