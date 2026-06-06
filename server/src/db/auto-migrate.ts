@@ -8,6 +8,7 @@
  */
 import db from '../lib/db.js'
 import { seedMediasPropriete } from './seed-medias-propriete.js'
+import { seedSujets } from './seed-sujets.js'
 
 function colonnes(table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(c => c.name)
@@ -60,11 +61,47 @@ export function autoMigrate(): void {
     );
   `)
 
+  // Chantier S — sujets (refonte par sujets, façon GroundNews)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sujets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL,
+      titre TEXT NOT NULL,
+      accroche TEXT,
+      description_md TEXT,
+      image_url TEXT,
+      couleur TEXT,
+      statut TEXT NOT NULL DEFAULT 'propose' CHECK(statut IN ('propose','publie','archive')),
+      provenance TEXT,
+      cree_par INTEGER REFERENCES utilisateurs(id),
+      valide_par INTEGER REFERENCES utilisateurs(id),
+      cree_le DATETIME DEFAULT CURRENT_TIMESTAMP,
+      maj_le DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS sujet_sources (
+      sujet_id INTEGER NOT NULL REFERENCES sujets(id) ON DELETE CASCADE,
+      source_id INTEGER NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
+      PRIMARY KEY (sujet_id, source_id)
+    );
+    CREATE TABLE IF NOT EXISTS sujet_evenements (
+      sujet_id INTEGER NOT NULL REFERENCES sujets(id) ON DELETE CASCADE,
+      evenement_id INTEGER NOT NULL REFERENCES evenements(id) ON DELETE CASCADE,
+      PRIMARY KEY (sujet_id, evenement_id)
+    );
+  `)
+
   // Seed initial de la propriété des médias, une seule fois (si jamais renseignée)
   const n = db.prepare('SELECT COUNT(*) AS c FROM medias WHERE proprietaire IS NOT NULL').get() as { c: number }
   if (n.c === 0) {
     const r = seedMediasPropriete()
     console.log(`  auto-seed propriété médias: ${r.updated} média(s) renseigné(s)`)
+  }
+
+  // Seed initial des sujets amorces (lithium + dossiers locaux Becs Rouges), une seule fois
+  const ns = db.prepare('SELECT COUNT(*) AS c FROM sujets').get() as { c: number }
+  if (ns.c === 0) {
+    const rs = seedSujets()
+    console.log(`  auto-seed sujets: ${rs.inserted} thème(s) créé(s)`)
   }
 
   console.log('Auto-migration: schéma à jour.')

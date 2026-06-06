@@ -13,6 +13,7 @@ import ateliersRouter from './routes/ateliers.js'
 import authRouter from './routes/auth.js'
 import mecanismesRouter from './routes/mecanismes.js'
 import evenementsRouter from './routes/evenements.js'
+import sujetsRouter from './routes/sujets.js'
 import contenusRouter from './routes/contenus.js'
 import parametresRouter from './routes/parametres.js'
 import rechercheRouter from './routes/recherche.js'
@@ -45,6 +46,7 @@ app.use('/api/ateliers', ateliersRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/mecanismes', mecanismesRouter)
 app.use('/api/evenements', evenementsRouter)
+app.use('/api/sujets', sujetsRouter)
 app.use('/api/contenus', contenusRouter)
 app.use('/api/parametres', parametresRouter)
 app.use('/api/recherche', rechercheRouter)

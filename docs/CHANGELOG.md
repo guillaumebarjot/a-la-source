@@ -2,6 +2,15 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-06 — Chantier S : socle des Sujets
+
+Première brique de code de la refonte par sujets (additive, sans risque).
+
+- **Tables `sujets`, `sujet_sources`, `sujet_evenements`.** Le Sujet est l'objet pivot éditorial (thème durable) qui agrège veille (sources) et couverture (événements). Distinct de l'événement (fait ponctuel). Gouvernance : tout membre propose (`statut='propose'`), un·e animateur·ice publie (`statut='publie'`, `valide_par`).
+  - Migration auto au boot (`auto-migrate.ts`) + standalone (`migrate-sujets.ts`).
+  - Seed `seed-sujets.ts` : 8 thèmes amorces (lithium en Alsace + 7 dossiers locaux Becs Rouges validés), provenance tracée.
+  - API `/api/sujets` : liste (avec nb sources/événements), détail (idOrSlug) + sources + événements, créer (membre), éditer, publier (animateur), supprimer (animateur), rattacher/détacher sources et événements.
+
 ## 2026-06-06 — Reprise v3 : conception refonte par sujets + Chantier T
 
 Reprise du développement sur critique des camarades (perçu trop proche d'un Linkwarden). Phase de conception posée dans le vault, puis deux corrections tactiques.

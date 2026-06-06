@@ -33,6 +33,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/commentaires` | commentaires.ts | commentaires/analyses/questions sur les sources |
 | `/api/medias` | medias.ts | liste, détail, stats, matrice média x mécanisme, **indice de confiance** |
 | `/api/ateliers` | ateliers.ts | pipeline préparation + archives ateliers |
+| `/api/sujets` | sujets.ts | sujets (thèmes durables, refonte par sujets) : CRUD, publication, rattachement sources/événements |
 | `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
 | `/api/mecanismes` | mecanismes.ts | 25 mécanismes de référence (fiches pédagogiques) |
 | `/api/contenus` | contenus.ts | pages éditables (clé/valeur) |
