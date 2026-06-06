@@ -4,6 +4,18 @@ import ReactMarkdown from 'react-markdown'
 import { api } from '../api/client'
 import type { Contenu } from '../types'
 
+interface MecanismeExemple {
+  id: number
+  extrait: string | null
+  justification: string | null
+  identifie_le: string | null
+  source_id: number
+  titre: string
+  image_url: string | null
+  media_nom: string | null
+  identifie_par_nom: string | null
+}
+
 interface Mecanisme {
   id: number
   nom: string
@@ -16,6 +28,7 @@ interface Mecanisme {
   categorie_label?: string
   categorie_description?: string
   sources_reference?: string
+  exemples?: MecanismeExemple[]
 }
 
 interface Categorie {
@@ -233,6 +246,32 @@ export default function Mecanismes() {
               <ol className="mecanisme-questions">
                 {questions.map((q, i) => <li key={i}>{q}</li>)}
               </ol>
+            </section>
+          )}
+
+          {fiche.exemples && fiche.exemples.length > 0 && (
+            <section className="mecanisme-section">
+              <h2>Exemples repérés ({fiche.exemples.length})</h2>
+              <p className="mecanisme-exemples-hint">
+                Tirés des analyses faites dans l'outil. Cette section grandit à chaque fois que ce mécanisme est identifié sur une source.
+              </p>
+              <div className="mecanisme-exemples-grid">
+                {fiche.exemples.map((ex) => (
+                  <Link key={ex.id} to={`/lire/${ex.source_id}`} className="mecanisme-exemple-card">
+                    <div className="mecanisme-exemple-visuel">
+                      {ex.image_url
+                        ? <img src={ex.image_url} alt="" loading="lazy" />
+                        : <span className="mecanisme-exemple-initiale">{(ex.media_nom || ex.titre).charAt(0)}</span>}
+                    </div>
+                    <div className="mecanisme-exemple-body">
+                      <h3 className="mecanisme-exemple-titre">{ex.titre}</h3>
+                      {ex.media_nom && <span className="mecanisme-exemple-media">{ex.media_nom}</span>}
+                      {ex.extrait && <blockquote className="mecanisme-exemple-extrait">{ex.extrait}</blockquote>}
+                      {ex.identifie_par_nom && <span className="mecanisme-exemple-par">repéré par {ex.identifie_par_nom}</span>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </section>
           )}
 

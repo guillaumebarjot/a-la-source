@@ -64,13 +64,29 @@ router.get('/categorie/:cat', (req, res) => {
   res.json(mecas)
 })
 
-// GET /api/mecanismes/fiche/:slug — fiche complete d'un mecanisme
+// GET /api/mecanismes/fiche/:slug — fiche complete + exemples reels (doc vivante)
 router.get('/fiche/:slug', (req, res) => {
   const m = db.prepare(`
     SELECT * FROM mecanismes_reference WHERE slug = ?
-  `).get(req.params.slug)
+  `).get(req.params.slug) as { id: number } | undefined
   if (!m) { res.status(404).json({ error: 'Mecanisme introuvable' }); return }
-  res.json(m)
+
+  // Apprendre vivant : les analyses alimentent la fiche en exemples reels (en cartes).
+  const exemples = db.prepare(`
+    SELECT sm.id, sm.extrait, sm.justification, sm.identifie_le,
+           s.id AS source_id, s.titre, s.image_url,
+           md.nom AS media_nom,
+           u.nom AS identifie_par_nom
+    FROM source_mecanismes sm
+    JOIN sources s ON s.id = sm.source_id
+    LEFT JOIN medias md ON md.id = s.media_id
+    LEFT JOIN utilisateurs u ON u.id = sm.identifie_par
+    WHERE sm.mecanisme_id = ?
+    ORDER BY sm.identifie_le DESC
+    LIMIT 12
+  `).all(m.id)
+
+  res.json({ ...m, exemples })
 })
 
 // POST /api/mecanismes/identifier — identifier un mecanisme sur une source
