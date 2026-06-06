@@ -232,10 +232,11 @@ router.post('/from-url', async (req, res) => {
     }
   }
 
-  // 4. Insert source
+  // 4. Insert source. `a_qualifier` (Inbox) et `completude` peuvent être fournis
+  // (ex. veille autonome qui dépose en Inbox à qualifier avec complétude 'libre').
   const result = db.prepare(`
-    INSERT INTO sources (titre, url, auteur_id, media_id, date_publication, paywall, accroche, mots_cles, image_url, soumis_par)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO sources (titre, url, auteur_id, media_id, date_publication, paywall, accroche, mots_cles, image_url, soumis_par, a_qualifier, completude)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     titre, url, auteur_id, media_id,
     og.datePublished || null,
@@ -243,7 +244,9 @@ router.post('/from-url', async (req, res) => {
     accroche,
     og.keywords ? og.keywords.join(', ') : null,
     og.image || null,
-    req.user?.id || null
+    req.user?.id || null,
+    req.body.a_qualifier ? 1 : 0,
+    typeof req.body.completude === 'string' ? req.body.completude : null
   )
   const sourceId = Number(result.lastInsertRowid)
 
