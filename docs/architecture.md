@@ -71,6 +71,10 @@ Refonte v3 (par sujets), tables additives (auto-migrate au boot, idempotent) :
 
 Table `medias` : `id, nom, type, url_site, description` + propriété structurée (Chantier A) `proprietaire, actionnaire_ultime, type_propriete, financement, annee_creation, ligne_revendiquee`. La propriété est désormais requêtable (cartographie « qui possède quoi »), plus seulement en texte libre. Migration `migrate-medias-propriete.ts`, données `seed-medias-propriete.ts` (à valider sur la carte Acrimed). Édition via `PUT /api/medias/:id/propriete`. Affichage dans la fiche média de l'Observatoire (`FichesMedias`). Principe : on décrit la propriété, on ne note pas le média. Cf. note vault `2026-06-05 — Refonte Observatoire et propriété des médias`.
 
+### Inbox à qualifier (ingestion Discord)
+
+`sources.a_qualifier` (flag) marque les sources entrantes en attente de tri. API `GET /api/sources/inbox`, `POST /api/sources/:id/qualifier` (→ veille/vivier), `POST /api/sources/:id/rejeter` (→ archive). Page client `/inbox`.
+
 ### Intégration Discord
 
 `server/src/discord/bot.ts` : soumission de sources depuis Discord (origine `discord`).

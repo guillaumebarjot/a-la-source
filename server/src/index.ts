@@ -23,6 +23,7 @@ import parcoursRouter from './routes/parcours.js'
 import dossiersRouter from './routes/dossiers.js'
 import arpentageRouter from './routes/arpentage.js'
 import partageRouter from './routes/partage.js'
+import { startDiscordBot } from './discord/client.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT = parseInt(process.env.PORT || '3031', 10)
@@ -77,4 +78,13 @@ if (existsSync(clientDist)) {
 
 app.listen(PORT, () => {
   console.log(`A la source v2 — http://localhost:${PORT}`)
+
+  // Ingestion Discord (non bloquante, ne doit jamais casser le boot).
+  try {
+    startDiscordBot().catch((err) => {
+      console.error('Discord: erreur au demarrage de l\'ingestion', err)
+    })
+  } catch (err) {
+    console.error('Discord: erreur au demarrage de l\'ingestion', err)
+  }
 })

@@ -115,6 +115,19 @@ router.get('/ftr-config', (_req, res) => {
   })
 })
 
+// GET /api/sources/inbox — sources entrantes a qualifier (inbox)
+// Placee AVANT la route parametree /:id pour ne pas etre avalee par celle-ci.
+router.get('/inbox', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT s.*, m.nom as media_nom
+    FROM sources s
+    LEFT JOIN medias m ON s.media_id = m.id
+    WHERE s.a_qualifier = 1
+    ORDER BY s.soumis_le DESC
+  `).all()
+  res.json(rows)
+})
+
 // GET /api/sources/:id — detail avec score, tags, mecanismes
 router.get('/:id', (req, res) => {
   const source = db.prepare(`
@@ -476,6 +489,32 @@ router.post('/:id/signaler-archive', (req, res) => {
   res.json({ ok: true })
 })
 
+
+// POST /api/sources/:id/qualifier — sortir une source de l'inbox (a_qualifier = 0).
+// Body optionnel { statut } pour router vers veille | vivier | atelier | archive.
+router.post('/:id/qualifier', (req, res) => {
+  const source = db.prepare('SELECT id FROM sources WHERE id = ?').get(req.params.id) as { id: number } | undefined
+  if (!source) { res.status(404).json({ error: 'Source introuvable' }); return }
+
+  const statutsValides = ['veille', 'vivier', 'atelier', 'archive']
+  const statut = typeof req.body?.statut === 'string' && statutsValides.includes(req.body.statut)
+    ? req.body.statut
+    : 'veille'
+
+  db.prepare('UPDATE sources SET a_qualifier = 0, statut = ? WHERE id = ?').run(statut, req.params.id)
+  res.json({ ok: true, statut })
+})
+
+// POST /api/sources/:id/rejeter — ecarter une source de l'inbox.
+// Choix retenu : non destructif. On sort de l'inbox (a_qualifier = 0) et on classe
+// la source en 'archive' ; rien n'est supprime, la trace est conservee.
+router.post('/:id/rejeter', (req, res) => {
+  const source = db.prepare('SELECT id FROM sources WHERE id = ?').get(req.params.id) as { id: number } | undefined
+  if (!source) { res.status(404).json({ error: 'Source introuvable' }); return }
+
+  db.prepare("UPDATE sources SET a_qualifier = 0, statut = 'archive' WHERE id = ?").run(req.params.id)
+  res.json({ ok: true })
+})
 
 // DELETE /api/sources/:id (animateur/admin only)
 router.delete('/:id', requireRole('animateur', 'admin'), (req, res) => {

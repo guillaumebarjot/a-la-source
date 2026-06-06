@@ -54,6 +54,9 @@ export function autoMigrate(): void {
   ajouterColonne('sources', 'completude', 'TEXT')
   db.exec('CREATE INDEX IF NOT EXISTS idx_sources_evenement ON sources(evenement_id);')
 
+  // Inbox a qualifier — sources entrantes (ex. ingestion Discord) en attente de tri
+  ajouterColonne('sources', 'a_qualifier', 'INTEGER DEFAULT 0')
+
   // Chantier B — profil de transparence des médias
   db.exec(`
     CREATE TABLE IF NOT EXISTS media_transparence (

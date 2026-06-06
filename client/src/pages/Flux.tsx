@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { api } from '../api/client'
 import type { Source, Tag, Media } from '../types'
 import SourceCard from '../components/cards/SourceCard'
 import SubmitSource from '../components/forms/SubmitSource'
+import '../styles/inbox.css'
 
 /* ---------- Periodes temporelles ---------- */
 
@@ -72,6 +74,7 @@ export default function Flux() {
   const [tags, setTags] = useState<Tag[]>([])
   const [medias, setMedias] = useState<Media[]>([])
   const [showSubmit, setShowSubmit] = useState(false)
+  const [inboxCount, setInboxCount] = useState(0)
 
   // Filtres
   const [search, setSearch] = useState('')
@@ -94,6 +97,7 @@ export default function Flux() {
   useEffect(() => {
     api.get<Tag[]>('/tags').then(setTags)
     api.get<Media[]>('/medias').then(setMedias)
+    api.get<Source[]>('/sources/inbox').then((d) => setInboxCount(d.length)).catch(() => setInboxCount(0))
   }, [])
 
   // Tags les plus frequents
@@ -177,6 +181,11 @@ export default function Flux() {
   return (
     <Dialog.Root open={showSubmit} onOpenChange={setShowSubmit}>
     <div className="page-flux">
+      {inboxCount > 0 && (
+        <Link to="/inbox" className="inbox-lien-discret">
+          Inbox a qualifier ({inboxCount})
+        </Link>
+      )}
       {/* Barre de recherche + bouton soumettre */}
       <div className="flux-top">
         <button

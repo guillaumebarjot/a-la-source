@@ -7,6 +7,12 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Ingestion Discord vers une Inbox à qualifier
+
+- **Inbox à qualifier** : colonne `sources.a_qualifier`. API `GET /sources/inbox`, `POST /sources/:id/qualifier` (→ veille/vivier), `POST /sources/:id/rejeter` (→ archive, non destructif). Page `/inbox` (cartes + Qualifier/Rejeter) et lien discret « Inbox à qualifier (N) » en tête de la Veille.
+- **Watcher Discord** (`discord/client.ts`, discord.js 14) : `startDiscordBot()` lancé après le boot, **gated** sur `getDiscordConfig()` et entièrement try/catché (ne casse jamais le démarrage ; sans token : « Discord non configuré, ingestion inactive »). Sur message dans les canaux surveillés, détecte les URLs d'articles et crée une source en inbox (`origine='discord'`, `a_qualifier=1`), anti-doublon.
+- **Activation** : définir `DISCORD_TOKEN` + `DISCORD_CHANNEL_VEILLE` et/ou `DISCORD_GUILD_IDS` (env ou paramètre BDD `discord`).
+
 ## 2026-06-06 — Arpentage, complétude des sources, consolidation nav, refonte « Atelier en cours »
 
 - **Activité Arpentage** (lecture collective fragmentée) : tables `arpentage_pipeline` + `arpentage_fragments` + `arpentage_restitutions`, API `/api/arpentages`. Pages : découpage d'un document en fragments, attribution aux participant·es, restitutions par fragment, synthèse. Ajoutée au hub Activités.

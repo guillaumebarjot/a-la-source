@@ -7,6 +7,7 @@ import Header from './components/layout/Header'
 const Sujets = lazy(() => import('./pages/Sujets'))
 const Sujet = lazy(() => import('./pages/Sujet'))
 const Flux = lazy(() => import('./pages/Flux'))
+const Inbox = lazy(() => import('./pages/Inbox'))
 const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
 const Ateliers = lazy(() => import('./pages/Ateliers'))
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/sujets/:slug" element={<Sujet />} />
             <Route path="/veille" element={<Flux />} />
             <Route path="/flux" element={<Flux />} />
+            <Route path="/inbox" element={<Inbox />} />
             <Route path="/lire/:id" element={<Lire />} />
             <Route path="/observatoire" element={<Observatoire />} />
             <Route path="/observatoire/:section" element={<Observatoire />} />

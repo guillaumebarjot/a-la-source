@@ -1,0 +1,170 @@
+/**
+ * Styles Inbox a qualifier — dark-safe.
+ *
+ * Sources entrantes (ingestion Discord) en attente de tri. Chaque source est
+ * une carte image + titre. Tokens --color-* uniquement ; titres-liens neutralises
+ * contre .dark a (jamais de rouge sur fond sombre).
+ */
+
+.inbox-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.inbox-header {
+  margin-bottom: var(--space-xl);
+}
+
+.inbox-header h1 {
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+.inbox-intro {
+  color: var(--color-text-secondary);
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+.inbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+/* Carte (image + titre), neutre en couleur */
+.inbox-carte {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  color: var(--color-text);
+}
+
+.inbox-carte-image {
+  display: block;
+  aspect-ratio: 16 / 9;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.inbox-carte-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inbox-carte-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  flex: 1;
+}
+
+/* Titre-lien neutralise contre .dark a */
+.inbox-carte-titre,
+.inbox-carte-titre:hover {
+  color: var(--color-text);
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.inbox-carte-titre:hover {
+  text-decoration: underline;
+}
+/* En sombre, .dark a (plus specifique) repassait ce titre-lien en rouge : on neutralise. */
+.dark .inbox-carte-titre,
+.dark .inbox-carte-titre:hover { color: var(--color-text); }
+
+.inbox-carte-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.inbox-carte-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.inbox-carte-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: auto;
+  padding-top: var(--space-sm);
+}
+
+.inbox-btn {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.inbox-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.inbox-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.inbox-btn--qualifier {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.inbox-btn--qualifier:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+/* Etat vide soigne */
+.inbox-vide {
+  text-align: center;
+  padding: var(--space-xl);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.inbox-vide h2 {
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+/* Lien discret depuis la veille vers l'inbox */
+.inbox-lien-discret,
+.inbox-lien-discret:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.inbox-lien-discret:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
