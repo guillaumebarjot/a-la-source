@@ -78,8 +78,11 @@ export default function Header() {
         </div>
       </div>
       <nav className="header-nav">
-        <NavLink to="/flux" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Flux
+        <NavLink to="/sujets" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Sujets
+        </NavLink>
+        <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Veille
         </NavLink>
         <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Observatoire

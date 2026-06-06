@@ -4,6 +4,8 @@ import { useAuth } from './store/useAuth'
 import { useUI } from './store/useUI'
 import Header from './components/layout/Header'
 
+const Sujets = lazy(() => import('./pages/Sujets'))
+const Sujet = lazy(() => import('./pages/Sujet'))
 const Flux = lazy(() => import('./pages/Flux'))
 const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
@@ -27,9 +29,11 @@ export default function App() {
       <main className="main-content">
         <Suspense fallback={<div className="loading">Chargement...</div>}>
           <Routes>
-            <Route path="/" element={<Navigate to="/flux" replace />} />
+            <Route path="/" element={<Navigate to="/sujets" replace />} />
+            <Route path="/sujets" element={<Sujets />} />
+            <Route path="/sujets/:slug" element={<Sujet />} />
+            <Route path="/veille" element={<Flux />} />
             <Route path="/flux" element={<Flux />} />
-            <Route path="/veille" element={<Navigate to="/flux" replace />} />
             <Route path="/lire/:id" element={<Lire />} />
             <Route path="/observatoire" element={<Observatoire />} />
             <Route path="/observatoire/:section" element={<Observatoire />} />

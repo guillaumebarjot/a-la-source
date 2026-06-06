@@ -84,6 +84,40 @@ export interface EvenementDetail extends Evenement {
   sources: EvenementSource[]
 }
 
+export interface Sujet {
+  id: number
+  slug: string
+  titre: string
+  accroche: string | null
+  description_md: string | null
+  image_url: string | null
+  couleur: string | null
+  statut: 'propose' | 'publie' | 'archive'
+  provenance: string | null
+  cree_par: number | null
+  valide_par: number | null
+  cree_le: string
+  maj_le: string
+  nb_sources?: number
+  nb_evenements?: number
+}
+
+export interface SujetSource {
+  id: number
+  titre: string
+  url: string | null
+  accroche: string | null
+  image_url: string | null
+  date_publication: string | null
+  media_nom: string | null
+  type_propriete: string | null
+}
+
+export interface SujetDetail extends Sujet {
+  sources: SujetSource[]
+  evenements: Evenement[]
+}
+
 export interface MecanismeReference {
   id: number
   nom: string
