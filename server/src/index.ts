@@ -21,6 +21,7 @@ import becsrougesRouter from './routes/becsrouges.js'
 import debunkagesRouter from './routes/debunkages.js'
 import parcoursRouter from './routes/parcours.js'
 import dossiersRouter from './routes/dossiers.js'
+import arpentageRouter from './routes/arpentage.js'
 import partageRouter from './routes/partage.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -58,6 +59,7 @@ app.use('/api/becs-rouges', becsrougesRouter)
 app.use('/api/debunkages', debunkagesRouter)
 app.use('/api/parcours', parcoursRouter)
 app.use('/api/dossiers', dossiersRouter)
+app.use('/api/arpentages', arpentageRouter)
 
 // Diffusion publique HORS APPLI (pages HTML autoportantes, OpenGraph pour Discord).
 // Montee AVANT le catch-all React pour ne pas etre avalee par le fallback SPA.

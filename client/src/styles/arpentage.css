@@ -1,0 +1,303 @@
+/**
+ * Styles Arpentage — dark-safe.
+ *
+ * Tous les textes utilisent les tokens (--color-text / --color-text-secondary)
+ * pour rester lisibles en sombre. Piege connu : en sombre, .dark a peint tous
+ * les liens en rouge ; on neutralise donc explicitement la couleur des
+ * titres-liens (= var(--color-text)). Jamais de texte rouge sur fond sombre.
+ */
+
+.arp-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.arp-header {
+  margin-bottom: var(--space-xl);
+}
+
+.arp-header h1 {
+  color: var(--color-text);
+  margin: 0 0 var(--space-sm);
+}
+
+.arp-intro {
+  color: var(--color-text-secondary);
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+/* ---- Barre d'outils ---- */
+
+.arp-toolbar {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.arp-count {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ---- Liste : grille de cartes ---- */
+
+.arp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.arp-card,
+.arp-card:hover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.arp-card:hover {
+  border-color: var(--color-primary);
+}
+
+.arp-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.arp-card-titre {
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.arp-card-sub {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.arp-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  align-items: center;
+}
+
+/* ---- Badges de statut ---- */
+
+.arp-badge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+}
+
+.arp-badge.publie {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+/* ---- Sections ---- */
+
+.arp-section {
+  margin-bottom: var(--space-xl);
+}
+
+.arp-section h2 {
+  color: var(--color-text);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.arp-field-label {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.arp-textarea,
+.arp-input,
+.arp-select {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.arp-textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.arp-textarea-lg {
+  min-height: 200px;
+}
+
+.arp-row {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.arp-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--space-md);
+}
+
+.arp-empty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.arp-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+}
+
+/* Titre-lien neutre, jamais rouge en sombre */
+.arp-titre-lien {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.dark .arp-titre-lien { color: var(--color-text); }
+.dark .arp-titre-lien:hover { color: var(--color-accent); }
+
+/* ---- Fragments ---- */
+
+.arp-fragments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.arp-fragment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.arp-fragment-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.arp-fragment-titre {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.arp-fragment-ref {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.arp-fragment-contenu {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ---- Restitutions ---- */
+
+.arp-restitutions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-md);
+}
+
+.arp-restitution {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.arp-restitution-par {
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.arp-restitution-bloc {
+  color: var(--color-text);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.arp-restitution-bloc strong {
+  color: var(--color-text-secondary);
+}
+
+.arp-restitution-citation {
+  color: var(--color-text);
+  font-style: italic;
+  border-left: 3px solid var(--color-accent);
+  padding-left: var(--space-md);
+  margin: 0;
+}
+
+.arp-restitution-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  border-top: 1px dashed var(--color-border);
+  padding-top: var(--space-md);
+}

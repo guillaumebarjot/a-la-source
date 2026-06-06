@@ -37,6 +37,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/debunkages` | debunkages.ts | activité débunkage (adhérent) : démonstration, sources pour/contre, liens de posts réseaux, publier |
 | `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
 | `/api/dossiers` | dossiers.ts | activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources |
+| `/api/arpentages` | arpentage.ts | activité arpentage : fragments d'un document, attribution, restitutions, synthèse |
 | `/partage/debunkage/:id` | partage.ts | **page HTML publique** (sans login) d'un débunk publié, avec OpenGraph pour partage Discord. Au déploiement : déclarer `/partage/` public dans le SSO YunoHost |
 | `/api/debunkages/:id/yeswiki` | debunkages.ts | export d'un débunk en syntaxe YesWiki (lib `yeswiki.ts`) |
 | `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
@@ -64,7 +65,9 @@ Refonte v3 (par sujets), tables additives (auto-migrate au boot, idempotent) :
 - `sujets` + `sujet_sources` + `sujet_evenements` : le Sujet, thème durable, objet pivot éditorial (création membre, publication animateur). Seed : lithium en Alsace + 7 dossiers locaux Becs Rouges.
 - `activites` (socle commun des activités d'éducation populaire) + `activite_sources` (avec `role` pour/contre) + extensions par type : `atelier_pipeline` (backfill des ateliers), `debunkage_pipeline` + `debunkage_posts`, `dossier_contenu` (dossier + décryptage à chaud).
 - `parcours` + `parcours_questions` + `parcours_sessions` + `parcours_reponses` : cursus Apprendre (quiz de repérage des mécanismes, score). Parcours « Découverte des mécanismes » auto-généré depuis `source_mecanismes`.
-- Migrations : `migrate-sujets.ts`, `migrate-activites.ts`, `migrate-debunkage.ts`, `migrate-parcours.ts` ; seed `seed-sujets.ts`.
+- `dossier_contenu` (dossier + décryptage à chaud) ; `arpentage_pipeline` + `arpentage_fragments` + `arpentage_restitutions` (lecture collective fragmentée).
+- `sources.completude` : `libre` / `partiel` / `integral_offline` (intégralité consultée hors-ligne, ex. Europresse/BnF, sans copie du texte).
+- Migrations : `migrate-sujets.ts`, `migrate-activites.ts`, `migrate-debunkage.ts`, `migrate-parcours.ts`, `migrate-dossiers.ts`, `migrate-arpentage.ts` ; seed `seed-sujets.ts`.
 
 Table `medias` : `id, nom, type, url_site, description` + propriété structurée (Chantier A) `proprietaire, actionnaire_ultime, type_propriete, financement, annee_creation, ligne_revendiquee`. La propriété est désormais requêtable (cartographie « qui possède quoi »), plus seulement en texte libre. Migration `migrate-medias-propriete.ts`, données `seed-medias-propriete.ts` (à valider sur la carte Acrimed). Édition via `PUT /api/medias/:id/propriete`. Affichage dans la fiche média de l'Observatoire (`FichesMedias`). Principe : on décrit la propriété, on ne note pas le média. Cf. note vault `2026-06-05 — Refonte Observatoire et propriété des médias`.
 
@@ -87,6 +90,7 @@ SPA React 19, react-router-dom 7, pages en `lazy()`. State global zustand (`stor
 | `/parcours[/:id]` | Parcours, ParcoursSession | cursus Apprendre : quiz de repérage des mécanismes |
 | `/activites` | Activites | hub : toutes les activités d'éducation populaire (ateliers, dossiers, débunkages, parcours) |
 | `/dossiers[/:id]` | Dossiers, Dossier | activité dossier / décryptage à chaud |
+| `/arpentages[/:id]` | Arpentages, Arpentage | activité arpentage (lecture collective fragmentée) |
 | `/lire/:id` | Lire | reader + sidebar d'analyse (cœur) |
 | `/observatoire[/:section]` | Observatoire | visualisations : mécanismes, matrice média x mécanisme, confiance, fiches médias |
 | `/ateliers[/:section]` | Ateliers | pipeline de préparation + archives |

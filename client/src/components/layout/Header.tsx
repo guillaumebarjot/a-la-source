@@ -9,6 +9,12 @@ interface SubNavItem {
 }
 
 const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
+  '/activites': [
+    { label: 'Ateliers', to: '/ateliers' },
+    { label: 'Dossiers', to: '/dossiers' },
+    { label: 'Debunkages', to: '/debunkages' },
+    { label: 'Parcours', to: '/parcours' },
+  ],
   '/observatoire': [
     { label: 'Mecanismes', to: '/observatoire/mecanismes' },
     { label: 'Medias', to: '/observatoire/medias' },
@@ -99,14 +105,8 @@ export default function Header() {
         <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Veille
         </NavLink>
-        <NavLink to="/debunkages" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Debunkages
-        </NavLink>
         <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Observatoire
-        </NavLink>
-        <NavLink to="/ateliers" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Ateliers
         </NavLink>
         <NavLink to="/archiver" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Archiver

@@ -54,6 +54,13 @@ const CARTES: CarteActivite[] = [
     to: '/parcours',
     ill: 'P',
   },
+  {
+    cle: 'arpentages',
+    titre: 'Arpentages',
+    accroche: "Une lecture collective fragmentee : on decoupe un document, chacun lit un morceau, on synthetise ensemble.",
+    to: '/arpentages',
+    ill: 'R',
+  },
 ]
 
 export default function Activites() {
@@ -62,17 +69,19 @@ export default function Activites() {
 
   useEffect(() => {
     const charger = async () => {
-      const [ateliers, dossiers, debunkages, parcours] = await Promise.all([
+      const [ateliers, dossiers, debunkages, parcours, arpentages] = await Promise.all([
         api.get<unknown[]>('/ateliers').catch(() => []),
         api.get<DossierListItem[]>('/dossiers').catch(() => []),
         api.get<unknown[]>('/debunkages').catch(() => []),
         api.get<unknown[]>('/parcours').catch(() => []),
+        api.get<unknown[]>('/arpentages').catch(() => []),
       ])
       setEtat({
         ateliers: { nb: ateliers.length },
         dossiers: { nb: dossiers.length, nbChaud: dossiers.filter((d) => !!d.a_chaud).length },
         debunkages: { nb: debunkages.length },
         parcours: { nb: parcours.length },
+        arpentages: { nb: arpentages.length },
       })
       setLoading(false)
     }

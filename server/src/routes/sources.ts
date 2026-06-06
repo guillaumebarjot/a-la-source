@@ -354,7 +354,7 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/sources/:id — modifier statut ou champs
 router.patch('/:id', (req, res) => {
-  const allowed = ['titre', 'url', 'type_source', 'date_publication', 'paywall', 'accroche', 'statut', 'image_url', 'duree_estimee', 'viralite_qualitative', 'viralite_chiffre', 'timing_override']
+  const allowed = ['titre', 'url', 'type_source', 'date_publication', 'paywall', 'accroche', 'statut', 'image_url', 'duree_estimee', 'viralite_qualitative', 'viralite_chiffre', 'timing_override', 'completude']
   const updates: string[] = []
   const params: unknown[] = []
 

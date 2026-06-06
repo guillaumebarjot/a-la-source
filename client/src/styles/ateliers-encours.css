@@ -1,0 +1,389 @@
+/* ===========================================================================
+ * Sous-vue « ATELIER EN COURS » de « À la source ».
+ *
+ * Table de pilotage : un écran cadré, clair, visuel. La source est une carte
+ * (image + titre) qu'on promène ; pas de grand écran à scroller.
+ *
+ * DARK-SAFE : tout sur tokens --color-* / --rc-*. Jamais de texte rouge sur
+ * fond sombre (les titres-liens restent en var(--color-text), on neutralise
+ * via .dark .classe au besoin).
+ * =========================================================================== */
+
+.encours-vue {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* ---- État vide ---- */
+.encours-vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.encours-vide-titre {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--color-text);
+  margin: 0;
+}
+.encours-vide-aide {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+/* ---- Onglets de sélection (plusieurs ateliers) ---- */
+.encours-onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+}
+.encours-onglet {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.encours-onglet:hover { border-color: var(--color-primary); }
+.encours-onglet--actif {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.encours-onglet-num { font-weight: 700; }
+.encours-onglet-date {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+.encours-statut-pastille {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--rc-gris-300);
+}
+.encours-statut-pastille--pret { background: var(--rc-orange); }
+.encours-statut-pastille--en_cours { background: var(--rc-vert); }
+.encours-statut-pastille--preparation { background: var(--rc-bleu); }
+
+/* ---- Grille de pilotage ---- */
+.encours-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-areas:
+    "fiche projection"
+    "corpus corpus"
+    "synthese synthese";
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .encours-grille {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "fiche"
+      "projection"
+      "corpus"
+      "synthese";
+  }
+}
+
+/* ---- Carte d'identité de l'atelier ---- */
+.encours-fiche {
+  grid-area: fiche;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-lg);
+}
+.encours-fiche-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.encours-fiche-num {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+.encours-statut {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  color: #fff;
+  white-space: nowrap;
+}
+.encours-statut--preparation { background: var(--rc-bleu); }
+.encours-statut--pret { background: var(--rc-orange); }
+.encours-statut--en_cours { background: var(--rc-vert); }
+.encours-statut--termine { background: var(--rc-gris-500); }
+
+.encours-faits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm) var(--space-md);
+  margin: 0 0 var(--space-md);
+}
+.encours-fait { margin: 0; }
+.encours-fait dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.15rem;
+}
+.encours-fait dd {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* ---- Transitions de statut ---- */
+.encours-transitions {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-md);
+}
+.encours-transitions-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+.encours-transitions-pas {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+.encours-pas {
+  flex: 1 1 auto;
+  min-width: 84px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.encours-pas:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+.encours-pas:disabled { cursor: default; }
+.encours-pas--fait {
+  border-color: var(--rc-vert);
+  color: var(--rc-vert);
+  background: var(--color-surface);
+}
+.encours-pas--actif {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.encours-pas--fin {
+  border-style: dashed;
+}
+.encours-pas--fin:hover:not(:disabled) {
+  background: var(--rc-vert);
+  border-color: var(--rc-vert);
+  color: #fff;
+}
+
+/* ---- Bloc projection ---- */
+.encours-projection {
+  grid-area: projection;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-lg);
+  justify-content: center;
+}
+.encours-lancer {
+  display: block;
+  text-align: center;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.encours-lancer:hover {
+  background: var(--color-primary-hover);
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+/* En sombre, .dark a teinte les liens : ce gros bouton garde son texte blanc. */
+.dark .encours-lancer,
+.dark .encours-lancer:hover,
+.dark .encours-lancer:visited { color: #fff; }
+.encours-imprimable { text-align: center; }
+.encours-projection-vide {
+  color: var(--color-text-secondary);
+  margin: 0;
+  text-align: center;
+}
+
+/* ---- Corpus en cartes ---- */
+.encours-corpus { grid-area: corpus; }
+.encours-corpus-tete {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+.encours-corpus-tete h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--color-text);
+}
+.encours-corpus-compte {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.encours-corpus-vide,
+.encours-bloc-vide {
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+.encours-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+
+/* ---- Synthèse ---- */
+.encours-synthese {
+  grid-area: synthese;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-lg);
+}
+.encours-synthese-tete { margin-bottom: var(--space-md); }
+.encours-synthese-tete h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--color-text);
+}
+.encours-synthese-aide {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.encours-synthese-blocs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+@media (max-width: 640px) {
+  .encours-synthese-blocs { grid-template-columns: 1fr; }
+}
+.encours-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.encours-bloc--meca { grid-column: 1 / -1; }
+.encours-bloc-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+}
+.encours-bloc textarea,
+.encours-bloc input {
+  width: 100%;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  resize: vertical;
+}
+.encours-bloc textarea:focus,
+.encours-bloc input:focus {
+  outline: 2px solid var(--rc-lavande);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+.encours-bloc--nb input { max-width: 140px; }
+
+/* Mécanismes : puces cliquables groupées par catégorie */
+.encours-meca-cat { margin-bottom: var(--space-sm); }
+.encours-meca-cat-titre {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.3rem;
+}
+.encours-meca-puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+.encours-puce {
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.encours-puce:hover { border-color: var(--color-primary); }
+.encours-puce--coche {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.encours-synthese-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-md);
+}
+.encours-enregistre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--rc-vert);
+}

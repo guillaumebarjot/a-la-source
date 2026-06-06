@@ -23,6 +23,8 @@ const ParcoursSession = lazy(() => import('./pages/ParcoursSession'))
 const Activites = lazy(() => import('./pages/Activites'))
 const Dossiers = lazy(() => import('./pages/Dossiers'))
 const Dossier = lazy(() => import('./pages/Dossier'))
+const Arpentages = lazy(() => import('./pages/Arpentages'))
+const Arpentage = lazy(() => import('./pages/Arpentage'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
@@ -51,6 +53,9 @@ export default function App() {
             <Route path="/activites" element={<Activites />} />
             <Route path="/dossiers" element={<Dossiers />} />
             <Route path="/dossiers/:id" element={<Dossier />} />
+            {/* Arpentages (lecture collective fragmentee) */}
+            <Route path="/arpentages" element={<Arpentages />} />
+            <Route path="/arpentages/:id" element={<Arpentage />} />
             <Route path="/ateliers" element={<Ateliers />} />
             <Route path="/ateliers/:section" element={<Ateliers />} />
             <Route path="/archiver" element={<Archiver />} />

@@ -25,6 +25,7 @@ import { useAuth } from '../store/useAuth'
 import SourceCard from '../components/cards/SourceCard'
 import type { Source, Atelier, AtelierDetail, Tag } from '../types'
 import '../styles/ateliers-prep.css'
+import '../styles/ateliers-encours.css'
 import '../styles/slider-saisie.css'
 
 /* ---------- Types ---------- */
@@ -85,6 +86,9 @@ export default function Ateliers() {
   // Atelier actuellement en preparation (s'il y en a plusieurs, on choisit lequel).
   const [prepAtelierId, setPrepAtelierId] = useState<number | null>(null)
 
+  // Atelier actuellement piloté dans la sous-vue « en cours » (sélection indépendante).
+  const [pilotAtelierId, setPilotAtelierId] = useState<number | null>(null)
+
   /* ---------- Fetch ---------- */
 
   const fetchData = useCallback(async () => {
@@ -115,6 +119,16 @@ export default function Ateliers() {
     const stillThere = ateliersActifs.some(a => a.id === prepAtelierId)
     if (!stillThere) setPrepAtelierId(ateliersActifs[0].id)
   }, [ateliersActifs, prepAtelierId])
+
+  // Idem pour l'atelier piloté en sous-vue « en cours ».
+  useEffect(() => {
+    if (ateliersActifs.length === 0) {
+      if (pilotAtelierId !== null) setPilotAtelierId(null)
+      return
+    }
+    const stillThere = ateliersActifs.some(a => a.id === pilotAtelierId)
+    if (!stillThere) setPilotAtelierId(ateliersActifs[0].id)
+  }, [ateliersActifs, pilotAtelierId])
 
   /* ---------- Filtres vivier ---------- */
 
@@ -158,8 +172,18 @@ export default function Ateliers() {
     await fetchData()
   }
 
+  const changerStatut = async (atelierId: number, statut: string) => {
+    await api.patch(`/ateliers/${atelierId}`, { statut })
+    await fetchData()
+  }
+
   const terminerAtelier = async (atelierId: number) => {
     await api.patch(`/ateliers/${atelierId}`, { statut: 'termine' })
+    await fetchData()
+  }
+
+  const enregistrerSynthese = async (atelierId: number, fields: Record<string, unknown>) => {
+    await api.post(`/ateliers/${atelierId}/synthese`, fields)
     await fetchData()
   }
 
@@ -327,23 +351,15 @@ export default function Ateliers() {
 
       {/* ===== EN COURS ===== */}
       {section === 'en-cours' && (
-        <section className="atelier-section">
-          <h2>Atelier en cours</h2>
-
-          {ateliersActifs.length === 0 && (
-            <p className="empty">Aucun atelier en cours. <Link to="/ateliers/preparation">Preparez-en un d'abord.</Link></p>
-          )}
-
-          {ateliersActifs.map(a => (
-            <AtelierEnCoursCard
-              key={a.id}
-              atelier={a}
-              isFacilitateur={isFacilitateur}
-              onSave={(fields) => sauvegarderAtelier(a, fields)}
-              onTerminer={() => terminerAtelier(a.id)}
-            />
-          ))}
-        </section>
+        <EnCoursTableau
+          ateliers={ateliersActifs}
+          pilotAtelierId={pilotAtelierId}
+          isFacilitateur={isFacilitateur}
+          onChangeAtelier={setPilotAtelierId}
+          onChangeStatut={changerStatut}
+          onSaveSynthese={enregistrerSynthese}
+          onTerminer={terminerAtelier}
+        />
       )}
 
       {/* ===== ARCHIVES ===== */}
@@ -761,80 +777,367 @@ function PreparationBoard({
   )
 }
 
-function AtelierEnCoursCard({ atelier, isFacilitateur, onSave, onTerminer }: {
-  atelier: AtelierDetail
+/* ===========================================================================
+ * EN COURS : table de pilotage de l'atelier prêt / en cours.
+ *
+ *  - Sélecteur d'atelier (onglets) si plusieurs ateliers actifs.
+ *  - Carte d'identité de l'atelier piloté : numéro, date, lieu, statut,
+ *    nb de sources, nb de participants, transitions de statut.
+ *  - Gros bouton « Lancer la projection » vers /projection/:id (page séparée).
+ *  - Corpus en cartes (image + titre) via SourceCard, en mode « carte nue »
+ *    (hideAttribution) pour ne pas biaiser le regard pendant l'atelier.
+ *  - Synthèse compacte (mécanismes cochés, ce qui a surpris, questions
+ *    restantes, nb participants) via POST /ateliers/:id/synthese.
+ *
+ * Aucun endpoint inventé : transitions via PATCH /ateliers/:id { statut },
+ * synthèse via POST /ateliers/:id/synthese, clôture via { statut: 'termine' }.
+ * =========================================================================== */
+
+interface MecanismeRef {
+  id: number
+  nom: string
+  categorie: string | null
+  categorie_label: string | null
+}
+
+const STATUT_LABELS: Record<string, string> = {
+  preparation: 'En préparation',
+  pret: 'Prêt',
+  en_cours: 'En cours',
+  termine: 'Terminé',
+}
+
+function EnCoursTableau({
+  ateliers, pilotAtelierId, isFacilitateur,
+  onChangeAtelier, onChangeStatut, onSaveSynthese, onTerminer,
+}: {
+  ateliers: AtelierDetail[]
+  pilotAtelierId: number | null
   isFacilitateur: boolean
-  onSave: (fields: Record<string, unknown>) => void
-  onTerminer: () => void
+  onChangeAtelier: (id: number) => void
+  onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
+  onSaveSynthese: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
+  onTerminer: (atelierId: number) => Promise<void> | void
 }) {
-  const [nbParticipants, setNbParticipants] = useState(atelier.nb_participants?.toString() || '')
-  const [compteRendu, setCompteRendu] = useState(atelier.compte_rendu || '')
-  const [observations, setObservations] = useState(atelier.observations || '')
+  if (ateliers.length === 0) {
+    return (
+      <section className="atelier-section encours-vue">
+        <h2>Atelier en cours</h2>
+        <div className="encours-vide">
+          <p className="encours-vide-titre">Aucun atelier prêt à piloter.</p>
+          <p className="encours-vide-aide">
+            Composez un corpus de sources, puis revenez ici pour mener l'atelier.
+          </p>
+          <Link to="/ateliers/preparation" className="btn btn-primary">Aller à la préparation</Link>
+        </div>
+      </section>
+    )
+  }
+
+  const atelier = ateliers.find(a => a.id === pilotAtelierId) ?? ateliers[0]
 
   return (
-    <div className="atelier-en-cours-card">
-      <div className="atelier-en-cours-header">
-        <h3>Atelier #{atelier.numero}</h3>
-        <div className="atelier-en-cours-meta">
-          {atelier.date_atelier && <span>{new Date(atelier.date_atelier).toLocaleDateString('fr-FR')}</span>}
-          {atelier.heure && <span>{atelier.heure}</span>}
-          {atelier.lieu && <span>{atelier.lieu}</span>}
+    <section className="atelier-section encours-vue">
+      <h2>Atelier en cours</h2>
+
+      {ateliers.length > 1 && (
+        <div className="encours-onglets" role="tablist" aria-label="Ateliers à piloter">
+          {ateliers.map(a => (
+            <button
+              key={a.id}
+              type="button"
+              role="tab"
+              aria-selected={a.id === atelier.id}
+              className={`encours-onglet${a.id === atelier.id ? ' encours-onglet--actif' : ''}`}
+              onClick={() => onChangeAtelier(a.id)}
+            >
+              <span className="encours-onglet-num">#{a.numero}</span>
+              <span className={`encours-statut-pastille encours-statut-pastille--${a.statut}`} />
+              {a.date_atelier && (
+                <span className="encours-onglet-date">
+                  {new Date(a.date_atelier).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
+      )}
+
+      <EnCoursPilote
+        key={atelier.id}
+        atelier={atelier}
+        isFacilitateur={isFacilitateur}
+        onChangeStatut={onChangeStatut}
+        onSaveSynthese={onSaveSynthese}
+        onTerminer={onTerminer}
+      />
+    </section>
+  )
+}
+
+function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese, onTerminer }: {
+  atelier: AtelierDetail
+  isFacilitateur: boolean
+  onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
+  onSaveSynthese: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
+  onTerminer: (atelierId: number) => Promise<void> | void
+}) {
+  const nbSources = atelier.sources.length
+  const projectionDispo = nbSources > 0
+
+  return (
+    <div className="encours-grille">
+      {/* ---- Carte d'identité de l'atelier ---- */}
+      <div className="encours-fiche">
+        <div className="encours-fiche-tete">
+          <span className="encours-fiche-num">Atelier #{atelier.numero}</span>
+          <span className={`encours-statut encours-statut--${atelier.statut}`}>
+            {STATUT_LABELS[atelier.statut] ?? atelier.statut}
+          </span>
+        </div>
+
+        <dl className="encours-faits">
+          <div className="encours-fait">
+            <dt>Date</dt>
+            <dd>{atelier.date_atelier
+              ? new Date(atelier.date_atelier).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+              : 'à fixer'}{atelier.heure ? ` · ${atelier.heure}` : ''}</dd>
+          </div>
+          <div className="encours-fait">
+            <dt>Lieu</dt>
+            <dd>{atelier.lieu || 'à préciser'}</dd>
+          </div>
+          <div className="encours-fait">
+            <dt>Sources</dt>
+            <dd>{nbSources}</dd>
+          </div>
+          <div className="encours-fait">
+            <dt>Participant·es</dt>
+            <dd>{atelier.nb_participants ?? '—'}</dd>
+          </div>
+        </dl>
+
+        {isFacilitateur && (
+          <div className="encours-transitions">
+            <span className="encours-transitions-label">Avancement</span>
+            <div className="encours-transitions-pas">
+              <StatutPas
+                actif={atelier.statut === 'pret'}
+                fait={atelier.statut === 'en_cours' || atelier.statut === 'termine'}
+                label="Prêt"
+                onClick={atelier.statut !== 'pret' ? () => onChangeStatut(atelier.id, 'pret') : undefined}
+              />
+              <StatutPas
+                actif={atelier.statut === 'en_cours'}
+                fait={atelier.statut === 'termine'}
+                label="En cours"
+                onClick={atelier.statut !== 'en_cours' ? () => onChangeStatut(atelier.id, 'en_cours') : undefined}
+              />
+              <StatutPas
+                actif={false}
+                fait={false}
+                label="Terminé"
+                onClick={() => onTerminer(atelier.id)}
+                variante="fin"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {atelier.sources.length > 0 && (
-        <div className="atelier-sources-resume">
-          <h4>Sources ({atelier.sources.length})</h4>
-          {atelier.sources.map((s, i) => (
-            <div key={s.id} className="atelier-source-mini">
-              <span>{i + 1}.</span>
-              <Link to={`/lire/${s.id}`}>{s.titre}</Link>
-            </div>
-          ))}
-          <div className="atelier-actions-inline">
-            <Link to={`/projection/${atelier.id}`} className="btn btn-primary">
+      {/* ---- Accès projection ---- */}
+      <div className="encours-projection">
+        {projectionDispo ? (
+          <>
+            <Link to={`/projection/${atelier.id}`} className="encours-lancer">
               Lancer la projection
             </Link>
-            <a href={`/api/ateliers/${atelier.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+            <a
+              href={`/api/ateliers/${atelier.id}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary encours-imprimable"
+            >
               Version imprimable
             </a>
-          </div>
+          </>
+        ) : (
+          <p className="encours-projection-vide">
+            Aucune source dans le corpus. <Link to="/ateliers/preparation">Complétez la préparation</Link> avant de projeter.
+          </p>
+        )}
+      </div>
+
+      {/* ---- Corpus en cartes ---- */}
+      <div className="encours-corpus">
+        <div className="encours-corpus-tete">
+          <h3>Corpus à promener</h3>
+          <span className="encours-corpus-compte">{nbSources} source{nbSources > 1 ? 's' : ''}</span>
         </div>
-      )}
+        {nbSources === 0 ? (
+          <p className="encours-corpus-vide">Le corpus est vide.</p>
+        ) : (
+          <div className="encours-cartes">
+            {atelier.sources.map((s) => (
+              <SourceCard key={s.id} source={s} hideAttribution />
+            ))}
+          </div>
+        )}
+      </div>
 
+      {/* ---- Synthèse ---- */}
       {isFacilitateur && (
-        <>
-          <div className="atelier-form-grid">
-            <label>
-              <span>Participant·es</span>
-              <input type="number" min={1} value={nbParticipants} onChange={(e) => setNbParticipants(e.target.value)} />
-            </label>
-          </div>
-
-          <label className="atelier-field-large">
-            <span>Compte-rendu</span>
-            <textarea value={compteRendu} onChange={(e) => setCompteRendu(e.target.value)} placeholder="Resume du deroulement..." rows={5} />
-          </label>
-
-          <label className="atelier-field-large">
-            <span>Observations</span>
-            <textarea value={observations} onChange={(e) => setObservations(e.target.value)} placeholder="Dynamique de groupe, surprises..." rows={4} />
-          </label>
-
-          <div className="atelier-actions">
-            <button className="btn btn-primary" onClick={() => onSave({
-              nb_participants: nbParticipants ? parseInt(nbParticipants) : null,
-              compte_rendu: compteRendu || null,
-              observations: observations || null,
-            })} type="button">
-              Sauvegarder
-            </button>
-            <button className="btn btn-success" onClick={onTerminer} type="button">
-              Terminer l'atelier
-            </button>
-          </div>
-        </>
+        <EnCoursSynthese atelier={atelier} onSave={onSaveSynthese} />
       )}
+    </div>
+  )
+}
+
+function StatutPas({ label, actif, fait, onClick, variante }: {
+  label: string
+  actif: boolean
+  fait: boolean
+  onClick?: () => void
+  variante?: 'fin'
+}) {
+  let cls = 'encours-pas'
+  if (actif) cls += ' encours-pas--actif'
+  if (fait) cls += ' encours-pas--fait'
+  if (variante === 'fin') cls += ' encours-pas--fin'
+  return (
+    <button type="button" className={cls} onClick={onClick} disabled={!onClick}>
+      {label}
+    </button>
+  )
+}
+
+function EnCoursSynthese({ atelier, onSave }: {
+  atelier: AtelierDetail
+  onSave: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
+}) {
+  const [refs, setRefs] = useState<MecanismeRef[]>([])
+  const [selection, setSelection] = useState<Set<number>>(
+    () => new Set((atelier.mecanismes_identifies ?? []).map(m => m.mecanisme_id))
+  )
+  const [surprise, setSurprise] = useState(atelier.observations_surprise || '')
+  const [questions, setQuestions] = useState(atelier.questions_restantes || '')
+  const [nbParticipants, setNbParticipants] = useState(atelier.nb_participants?.toString() || '')
+  const [enregistre, setEnregistre] = useState(false)
+
+  useEffect(() => {
+    let actif = true
+    api.get<MecanismeRef[]>('/mecanismes')
+      .then(d => { if (actif) setRefs(d) })
+      .catch(() => { /* la sélection reste vide, le reste de la synthèse fonctionne */ })
+    return () => { actif = false }
+  }, [])
+
+  // Regroupe les mécanismes par catégorie pour une grille compacte.
+  const parCategorie = useMemo(() => {
+    const m = new Map<string, MecanismeRef[]>()
+    for (const r of refs) {
+      const cle = r.categorie_label || 'Autres'
+      const liste = m.get(cle) || []
+      liste.push(r)
+      m.set(cle, liste)
+    }
+    return [...m.entries()]
+  }, [refs])
+
+  const basculer = (id: number) => {
+    setSelection(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+    setEnregistre(false)
+  }
+
+  const enregistrer = async () => {
+    await onSave(atelier.id, {
+      mecanisme_ids: [...selection],
+      observations_surprise: surprise || null,
+      questions_restantes: questions || null,
+      nb_participants: nbParticipants ? parseInt(nbParticipants, 10) : null,
+    })
+    setEnregistre(true)
+  }
+
+  return (
+    <div className="encours-synthese">
+      <div className="encours-synthese-tete">
+        <h3>Synthèse de l'atelier</h3>
+        <p className="encours-synthese-aide">À remplir pendant ou juste après l'atelier.</p>
+      </div>
+
+      <div className="encours-synthese-blocs">
+        <div className="encours-bloc encours-bloc--meca">
+          <span className="encours-bloc-label">Mécanismes identifiés par le groupe</span>
+          {parCategorie.length === 0 ? (
+            <p className="encours-bloc-vide">Liste des mécanismes indisponible.</p>
+          ) : (
+            parCategorie.map(([cat, liste]) => (
+              <div key={cat} className="encours-meca-cat">
+                <span className="encours-meca-cat-titre">{cat}</span>
+                <div className="encours-meca-puces">
+                  {liste.map(m => {
+                    const coche = selection.has(m.id)
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className={`encours-puce${coche ? ' encours-puce--coche' : ''}`}
+                        aria-pressed={coche}
+                        onClick={() => basculer(m.id)}
+                      >
+                        {m.nom}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <label className="encours-bloc">
+          <span className="encours-bloc-label">Ce qui a surpris</span>
+          <textarea
+            value={surprise}
+            onChange={(e) => { setSurprise(e.target.value); setEnregistre(false) }}
+            placeholder="Réactions inattendues, basculements de regard..."
+            rows={3}
+          />
+        </label>
+
+        <label className="encours-bloc">
+          <span className="encours-bloc-label">Questions restantes</span>
+          <textarea
+            value={questions}
+            onChange={(e) => { setQuestions(e.target.value); setEnregistre(false) }}
+            placeholder="Ce qui reste à creuser, à prolonger..."
+            rows={3}
+          />
+        </label>
+
+        <label className="encours-bloc encours-bloc--nb">
+          <span className="encours-bloc-label">Nombre de participant·es</span>
+          <input
+            type="number"
+            min={1}
+            value={nbParticipants}
+            onChange={(e) => { setNbParticipants(e.target.value); setEnregistre(false) }}
+          />
+        </label>
+      </div>
+
+      <div className="encours-synthese-actions">
+        <button className="btn btn-primary" type="button" onClick={enregistrer}>
+          Enregistrer la synthèse
+        </button>
+        {enregistre && <span className="encours-enregistre">Synthèse enregistrée.</span>}
+      </div>
     </div>
   )
 }

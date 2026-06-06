@@ -13,6 +13,7 @@ export interface Source {
   soumis_par: number | null
   soumis_le: string
   statut: 'veille' | 'vivier' | 'atelier' | 'archive'
+  completude?: 'libre' | 'partiel' | 'integral_offline' | null
   // Joined
   media_nom?: string
   auteur_nom?: string

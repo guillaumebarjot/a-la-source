@@ -7,6 +7,13 @@ Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.
 - **Chantier N (refonte par sujets, frontend).** Page d'accueil **Sujets** (grille de cartes-thèmes depuis `/api/sujets`), page **Sujet** (détail : couverture + sources). Navigation : « Sujets » en tête, « Flux » renommé « Veille ». Routes : `/` redirige vers `/sujets`. CSS en tokens de thème (lisible clair et sombre par construction).
 
+## 2026-06-06 — Arpentage, complétude des sources, consolidation nav, refonte « Atelier en cours »
+
+- **Activité Arpentage** (lecture collective fragmentée) : tables `arpentage_pipeline` + `arpentage_fragments` + `arpentage_restitutions`, API `/api/arpentages`. Pages : découpage d'un document en fragments, attribution aux participant·es, restitutions par fragment, synthèse. Ajoutée au hub Activités.
+- **Marqueur de complétude des sources** : colonne `sources.completude` (`libre` / `partiel` / `integral_offline`). Badge discret sur la carte (masqué en carte nue d'atelier, epoché), sélecteur dans le panneau métadonnées. Sécurise la veille (texte intégral en accès libre vs partiel vs consulté hors-ligne type Europresse/BnF).
+- **Consolidation de la navigation** : menu principal ramené de 10 à 8 entrées (Ateliers et Débunkages retirés du haut, accessibles via le hub Activités + une sous-nav `/activites`).
+- **Refonte « Atelier en cours »** : table de pilotage sur un écran (carte d'identité, transitions de statut prêt→en cours→terminé, gros bouton Projection, corpus en cartes nues, synthèse compacte branchée sur `/synthese`).
+
 ## 2026-06-06 — Diffusion d'un débunk hors appli (page publique + YesWiki)
 
 Partager un débunkage publié sans se connecter à l'appli.

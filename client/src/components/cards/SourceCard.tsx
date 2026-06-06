@@ -2,6 +2,13 @@ import { Link } from 'react-router-dom'
 import { Unlock, Lock, FileWarning, FileCheck, File, Star, Target, MessageCircle } from 'lucide-react'
 import type { Source } from '../../types'
 import '../../styles/attribution.css'
+import '../../styles/completude.css'
+
+const COMPLETUDE_LABELS: Record<string, string> = {
+  libre: 'Texte intégral',
+  partiel: 'Partiel',
+  integral_offline: 'Intégral (hors-ligne)',
+}
 
 interface ScoreOverlay {
   scoreTotal: number
@@ -59,6 +66,15 @@ export default function SourceCard({ source, score, showFraicheur, action, ateli
         <div className="source-card-meta">
           {source.media_nom && <span className="source-card-media">{source.media_nom}</span>}
           {source.type_source && <span className="source-card-type">{source.type_source}</span>}
+          {/* Carte nue (atelier/projection) : on masque le marqueur pour ne pas biaiser. */}
+          {!hideAttribution && source.completude && COMPLETUDE_LABELS[source.completude] && (
+            <span
+              className={`badge-completude badge-completude--${source.completude}`}
+              title="Complétude de la source"
+            >
+              {COMPLETUDE_LABELS[source.completude]}
+            </span>
+          )}
         </div>
         {source.accroche && <p className="source-card-accroche">{source.accroche}</p>}
 

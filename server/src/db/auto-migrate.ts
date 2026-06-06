@@ -13,6 +13,7 @@ import { migrateActivites } from './migrate-activites.js'
 import { migrateDebunkage } from './migrate-debunkage.js'
 import { migrateParcours } from './migrate-parcours.js'
 import { migrateDossiers } from './migrate-dossiers.js'
+import { migrateArpentage } from './migrate-arpentage.js'
 
 function colonnes(table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(c => c.name)
@@ -47,6 +48,10 @@ export function autoMigrate(): void {
     );
   `)
   ajouterColonne('sources', 'evenement_id', 'INTEGER REFERENCES evenements(id)')
+  // Marqueur de completude de la source : 'libre' (texte integral en acces libre),
+  // 'partiel' (archive partielle / paywall), 'integral_offline' (integralite consultee
+  // hors-ligne, ex. Europresse/BnF, sans copie du texte). NULL = non renseigne.
+  ajouterColonne('sources', 'completude', 'TEXT')
   db.exec('CREATE INDEX IF NOT EXISTS idx_sources_evenement ON sources(evenement_id);')
 
   // Chantier B — profil de transparence des médias
@@ -120,6 +125,9 @@ export function autoMigrate(): void {
 
   // Extension Dossier (contenu de fond + flag à chaud / lien événement pour les décryptages)
   migrateDossiers()
+
+  // Arpentage (lecture collective fragmentee)
+  migrateArpentage()
 
   console.log('Auto-migration: schéma à jour.')
 }
