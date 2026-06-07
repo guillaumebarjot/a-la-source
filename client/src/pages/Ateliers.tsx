@@ -65,6 +65,35 @@ interface VivierSource extends Source {
 // « décrire, ne pas noter »). Il reste proposé comme tri optionnel.
 type TriVivier = 'recence' | 'fraicheur' | 'score'
 
+// Profil de diversité d'un corpus (méthode de sélection « décrire, ne pas noter »).
+// On ne note pas une source : on décrit le corpus par ses axes de diversité.
+interface AxeDiversite {
+  cle: string
+  label: string
+  distinct: number
+  total: number
+  cible: number
+  atteint: boolean
+  distribution: { valeur: string; n: number }[]
+}
+interface AlerteCorpus {
+  axe: string
+  message: string
+}
+interface SuggestionDiversite {
+  axe: string
+  raison: string
+  source_ids: number[]
+}
+interface ProfilDiversite {
+  nbSources: number
+  axes: AxeDiversite[]
+  duree: { total: number; enZoneAtelier: number; repartition: { timing: string; n: number }[] }
+  alertes: AlerteCorpus[]
+  completude: { total: number; pretes: number }
+  suggestions: SuggestionDiversite[]
+}
+
 /* ---------- Composant ---------- */
 
 export default function Ateliers() {
@@ -560,6 +589,146 @@ function PrepColonneCorpus({ sources, ordre, isFacilitateur, enCoursDeDrag, onRe
   )
 }
 
+/* ===========================================================================
+ * PROFIL DE DIVERSITE du corpus (methode de selection « decrire, ne pas noter »).
+ *
+ * On ne note pas une source. On decrit le corpus par ses axes de diversite
+ * (medias, propriete, types, sujets, mecanismes), avec des jauges sobres, des
+ * alertes douces (observations factuelles) et des suggestions de complement.
+ * Outil de COULISSE animateur : il ne fuite jamais vers la projection (epoche).
+ * =========================================================================== */
+
+function JaugeAxe({ axe }: { axe: AxeDiversite }) {
+  const ratio = axe.cible > 0 ? Math.min(1, axe.distinct / axe.cible) : 1
+  return (
+    <div className="prep-divers-ligne">
+      <span className="prep-divers-label">{axe.label}</span>
+      <span className="prep-divers-jauge" aria-hidden="true">
+        <span
+          className={`prep-divers-jauge-fill${axe.atteint ? ' prep-divers-jauge-fill--ok' : ''}`}
+          style={{ width: `${Math.round(ratio * 100)}%` }}
+        />
+      </span>
+      <span className="prep-divers-chiffre">
+        {axe.distinct} distinct{axe.distinct > 1 ? 's' : ''}
+        {axe.atteint ? ' ✔' : ` / ${axe.cible}`}
+      </span>
+    </div>
+  )
+}
+
+function ProfilDiversitePanneau({
+  atelierId, sourcesKey, vivierParId, isFacilitateur, onAjouter,
+}: {
+  atelierId: number
+  sourcesKey: string
+  vivierParId: Map<number, VivierSource>
+  isFacilitateur: boolean
+  onAjouter: (sourceId: number) => void
+}) {
+  const [profil, setProfil] = useState<ProfilDiversite | null>(null)
+  const [ouvert, setOuvert] = useState(true)
+  const [avecSuggestions, setAvecSuggestions] = useState(false)
+
+  useEffect(() => {
+    let annule = false
+    const q = avecSuggestions ? '?suggestions=1' : ''
+    api.get<ProfilDiversite>(`/ateliers/${atelierId}/diversite${q}`)
+      .then((p) => { if (!annule) setProfil(p) })
+      .catch(() => { if (!annule) setProfil(null) })
+    return () => { annule = true }
+    // Recalcul a chaque changement de corpus (sourcesKey) ou d'option suggestions.
+  }, [atelierId, sourcesKey, avecSuggestions])
+
+  if (!profil) return null
+
+  return (
+    <section className="prep-divers">
+      <header className="prep-divers-head">
+        <button
+          type="button"
+          className="prep-divers-toggle"
+          onClick={() => setOuvert((o) => !o)}
+          aria-expanded={ouvert}
+        >
+          {ouvert ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          <span>Profil du corpus ({profil.nbSources} source{profil.nbSources > 1 ? 's' : ''})</span>
+        </button>
+        <span className="prep-divers-completude">
+          {profil.completude.pretes}/{profil.completude.total} prête{profil.completude.pretes > 1 ? 's' : ''} à projeter
+        </span>
+      </header>
+
+      {ouvert && (
+        <div className="prep-divers-corps">
+          <p className="prep-divers-intro">
+            On décrit la diversité du corpus, on ne note pas les sources. Les cibles sont
+            indicatives : à vous d'arbitrer.
+          </p>
+
+          <div className="prep-divers-axes">
+            {profil.axes.map((a) => <JaugeAxe key={a.cle} axe={a} />)}
+            <div className="prep-divers-ligne prep-divers-ligne--duree">
+              <span className="prep-divers-label">Durée</span>
+              <span className="prep-divers-chiffre">
+                {profil.duree.enZoneAtelier} en zone atelier (5-10 min) sur {profil.duree.total}
+              </span>
+            </div>
+          </div>
+
+          {profil.alertes.length > 0 && (
+            <ul className="prep-divers-alertes">
+              {profil.alertes.map((al, i) => (
+                <li key={i} className="prep-divers-alerte">{al.message}</li>
+              ))}
+            </ul>
+          )}
+
+          {isFacilitateur && (
+            <div className="prep-divers-suggest">
+              <label className="prep-divers-suggest-toggle">
+                <input
+                  type="checkbox"
+                  checked={avecSuggestions}
+                  onChange={(e) => setAvecSuggestions(e.target.checked)}
+                />
+                Suggérer des sources pour diversifier
+              </label>
+              {avecSuggestions && profil.suggestions.length === 0 && (
+                <p className="prep-divers-suggest-vide">Aucune suggestion : le vivier ne comble pas les axes faibles.</p>
+              )}
+              {avecSuggestions && profil.suggestions.map((sug) => (
+                <div key={sug.axe} className="prep-divers-suggest-bloc">
+                  <p className="prep-divers-suggest-raison">{sug.raison}</p>
+                  <div className="prep-divers-suggest-cartes">
+                    {sug.source_ids.map((sid) => {
+                      const s = vivierParId.get(sid)
+                      if (!s) return null
+                      return (
+                        <div key={sid} className="prep-divers-suggest-carte">
+                          <span className="prep-divers-suggest-titre">{s.titre}</span>
+                          {s.media_nom && <span className="prep-divers-suggest-media">{s.media_nom}</span>}
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            onClick={() => onAjouter(sid)}
+                          >
+                            + Retenir
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function PreparationBoard({
   ateliers, vivier, prepAtelierId, isFacilitateur, tri, qualityOnly,
   onChangeAtelier, onChangeTri, onChangeQualityOnly, onAjouter, onRetirer, onSave,
@@ -613,6 +782,10 @@ function PreparationBoard({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
   const dejaRetenues = useMemo(() => new Set(atelier.sources.map(s => s.id)), [atelier.sources])
+
+  // Index du vivier par id : sert au panneau de diversite a resoudre les
+  // suggestions (ids -> carte) sans nouvel appel.
+  const vivierParId = useMemo(() => new Map(vivier.map(s => [s.id, s])), [vivier])
 
   function onDragStart(event: DragStartEvent) {
     const id = String(event.active.id)
@@ -706,6 +879,15 @@ function PreparationBoard({
           </>
         )}
       </div>
+
+      {/* ----- Profil de diversite du corpus (methode de selection) ----- */}
+      <ProfilDiversitePanneau
+        atelierId={atelier.id}
+        sourcesKey={sourcesKey}
+        vivierParId={vivierParId}
+        isFacilitateur={isFacilitateur}
+        onAjouter={(sid) => { if (!dejaRetenues.has(sid)) void onAjouter(atelier.id, sid) }}
+      />
 
       {/* ----- Tableau 2 colonnes ----- */}
       <div className="prep-board">

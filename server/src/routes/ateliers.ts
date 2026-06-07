@@ -2,6 +2,7 @@ import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
 import { calculerScoreSource } from '../lib/score.js'
+import { profilDiversiteCorpus, suggestionsDiversite } from '../lib/diversite.js'
 
 const router = Router()
 
@@ -215,6 +216,28 @@ router.delete('/:id/sources/:sourceId', requireRole('animateur', 'admin'), (req,
     'DELETE FROM activite_sources WHERE activite_id = ? AND source_id = ?'
   ).run(req.params.id, req.params.sourceId)
   res.json({ ok: true })
+})
+
+// GET /api/ateliers/:id/diversite — profil de diversite du corpus + suggestions
+//
+// Methode de selection « decrire, ne pas noter » : on ne renvoie PAS un score de
+// l'atelier, mais le PROFIL DE DIVERSITE de son corpus (axes factuels, alertes
+// douces, completude) et des SUGGESTIONS de complement (cartes du vivier qui
+// comblent un axe faible). Lecture seule, aucun effet de bord. Voir lib/diversite.ts.
+router.get('/:id/diversite', (req, res) => {
+  const atelier = db.prepare("SELECT id FROM activites WHERE id = ? AND type = 'atelier'").get(req.params.id)
+  if (!atelier) { res.status(404).json({ error: 'Atelier introuvable' }); return }
+
+  const corpus = db.prepare(
+    'SELECT source_id FROM activite_sources WHERE activite_id = ? ORDER BY ordre ASC'
+  ).all(req.params.id) as { source_id: number }[]
+  const corpusIds = corpus.map(r => r.source_id)
+
+  const profil = profilDiversiteCorpus(corpusIds)
+  const avecSuggestions = String(req.query.suggestions ?? '') === '1'
+  const suggestions = avecSuggestions ? suggestionsDiversite(corpusIds) : []
+
+  res.json({ ...profil, suggestions })
 })
 
 // PATCH /api/ateliers/:id/sources/order — reorder sources

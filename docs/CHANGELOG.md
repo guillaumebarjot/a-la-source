@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-07 — Méthode de sélection des sources : le profil de diversité du corpus
+
+On « refait la notation » de la sélection d'atelier sans réintroduire de verdict. La qualité d'un atelier est une **propriété d'ensemble** (diversité, contraste), pas une somme de notes de sources. On décrit le **corpus**, on ne note pas les sources. Note de conception dans le vault (« À la source — Conception — Méthode de sélection des sources »).
+
+- **`server/src/lib/diversite.ts`** (nouveau). `profilDiversiteCorpus(sourceIds)` : fonction pure (lecture seule) qui décrit un corpus par axes factuels (médias, type de propriété, type de source, sujets, mécanismes) + profil de durée (zone atelier 5-10 min) + complétude agrégée + **alertes douces** (observations, jamais des fautes). `suggestionsDiversite(corpusIds)` : propose des cartes du vivier comblant un axe faible (valeur absente du corpus), sans rien imposer. Cibles paramétrables (table `parametres`, clé `diversite_cibles`).
+- **`GET /api/ateliers/:id/diversite`** (+ `?suggestions=1`) : renvoie le profil du corpus de l'atelier et, en option, les suggestions de complément. Aucun effet de bord.
+- **Préparation (`Ateliers.tsx`)** : panneau « Profil du corpus » au-dessus du tableau 2 colonnes. Jauges sobres par axe (nb de valeurs distinctes vs cible indicative), alertes douces, complétude « N/M prêtes à projeter », et suggestions de diversification (cartes à retenir). Recalcul à chaque ajout/retrait. Aucun gros nombre-verdict. Tokens de thème (dark-safe).
+- **`lib/score.ts` conservé** (tri optionnel + rétrocompat), non supprimé, mais relégué : la sélection passe désormais par le profil de diversité. Aucun signal d'écho social (lectures, commentaires, viralité) n'entre dans la sélection (respect anticipé de l'epoché). Le panneau est un outil de coulisse animateur : il ne fuite jamais vers la projection (carte nue inchangée).
+- Typecheck client + serveur OK.
+
 ## 2026-06-07 — Vivier : « décrire, ne pas noter » (facettes au lieu du score-verdict)
 
 Le vivier rejoint la doctrine de l'Observatoire et de l'atelier : on décrit les sources par des **faits**, on ne les note pas par un score-verdict.
