@@ -31,7 +31,9 @@ npm run dev       # lance server + client en parallele
 
 ## Schema BDD
 
-Le schema est dans `server/src/db/schema.sql`. Les migrations dans `server/src/db/migrations/`.
+Le schema initial est dans `server/src/db/schema.sql`. Les evolutions sont des scripts `migrate-*.ts` (a plat dans `server/src/db/`, ex. `migrate-activites.ts`), appliques au demarrage de maniere idempotente par `auto-migrate.ts`. Les seeds sont des `seed-*.ts`.
+
+Socle des activites : la table `activites` (socle commun) + une extension par type (`atelier_pipeline`, `debunkage_pipeline`, `dossier_contenu`, `arpentage_pipeline`). Le parcours vit en tables propres (`parcours*`). Voir `docs/architecture.md`.
 
 ## Roles
 

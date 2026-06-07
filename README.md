@@ -18,7 +18,25 @@ Les ateliers « A la source » existent depuis 2024 au sein de Rouge Coquelicot.
 
 ## Ce que permet l'application
 
-### Veille collaborative (Flux)
+> **Refonte v3, par sujets.** L'entree du produit est le **Sujet** (theme durable, ex. le lithium en Alsace), pas le flux de liens. La page d'accueil est la grille des Sujets ; la veille collaborative (« Veille ») devient un **substrat secondaire** qui alimente sujets et activites. Autour des donnees communes (sources, evenements, medias, mecanismes, sujets) se branche une famille d'**activites** d'education populaire.
+
+### Sujets (accueil)
+
+- Theme durable, objet pivot editorial : couverture multisource, evenements, sources rattachees par glisser-deposer
+- Creation par les membres, publication par les animateur·ices
+- Page publique partageable (OpenGraph) + export YesWiki
+
+### Activites d'education populaire
+
+Un **socle commun** (table `activites`) avec un pipeline par type. 6 types : **atelier, dossier, decryptage (a chaud), debunkage, parcours, arpentage**. Le hub `/activites` les reunit avec une entree « Creer une activite ».
+
+- **Atelier** : vivier de sources, preparation, projection plein ecran, synthese, export PDF. La bascule sur le socle `activites` est terminee.
+- **Dossier / decryptage** : mise en perspective et contenu redige ; le decryptage est un dossier « a chaud » rattache a un evenement.
+- **Debunkage** : demonstration, sources pour/contre, liens de posts reseaux.
+- **Parcours** : cursus Apprendre, quiz de reperage des mecanismes sur cartes-sources nues (score).
+- **Arpentage** : lecture collective fragmentee d'un document, attribution, restitutions, synthese.
+
+### Veille collaborative (substrat)
 
 - **Soumission URL-first** : coller une URL, tout le reste est auto-fetche (titre, auteur, media, mots-cles, image, accroche, archive)
 - Vignettes enrichies avec badges (paywall, archive locale, evaluations, commentaires)
@@ -39,19 +57,12 @@ Les ateliers « A la source » existent depuis 2024 au sein de Rouge Coquelicot.
 
 ### Observatoire
 
-- Timeline des mecanismes identifies
 - Matrice media × mecanisme (heatmap)
 - Indice de confiance par media (calcul automatique)
-- Fiches medias detaillees (proprietaire, ligne editoriale, stats)
-- Top sources les plus evaluees
+- Fiches medias detaillees + propriete structuree, requetable (qui possede quoi)
+- Couverture multisource d'un sujet, top sources les plus evaluees
 
-### Pipeline atelier
-
-- **Vivier** : sources proposees, triees par date, filtrables par score (60% pedagogie / 40% echo)
-- **Selection** : l'animateur·ice compose la shortlist
-- **Preparation** : questions guidees, mecanismes pressentis, duree par source
-- **Atelier en cours** : projection plein ecran, saisie du compte-rendu
-- **Export PDF** : version imprimable de l'atelier (page de selection + sources + analyses)
+> **Doctrine « decrire, ne pas noter ».** On decrit les sources et les medias par des **faits** (facettes factuelles), on ne les note pas par un score-verdict. Au vivier, le tri par defaut est la recence ; le score reste fourni pour un tri optionnel mais n'est plus presente comme un verdict. En atelier et en parcours, la source est presentee « a nu » (epoche : image + titre, sans indice du mecanisme) pour ne pas biaiser le groupe, garanti aussi cote API.
 
 ### Archivage anti-linkrot
 
@@ -71,10 +82,14 @@ Les ateliers « A la source » existent depuis 2024 au sein de Rouge Coquelicot.
 - **Manuel de deconstruction mediatique** : guide complet pour les facilitateur·ices — biais cognitifs (Kahneman S1/S2, ancrage, cadrage), mecaniques de fabrication (titraille, chapo, angle), economie de l'attention, grille d'analyse imprimable, glossaire, references academiques
 - Contenu stocke en base (anti link-rot), rendu en markdown cote client
 
-### Integration Discord (prevue)
+### Diffusion hors appli
 
-- Copie rapide pour partage dans un canal Discord
-- Bot de notification (a venir)
+- **Pages publiques OpenGraph** (`/partage/debunkage|dossier/:id`, `/partage/sujet/:slug`) : pages autoportantes partageables sur Discord (carte « unfurlee »), rendues si l'objet est publie
+- **Export YesWiki** des debunkages, dossiers et sujets : a coller sur becs-rouges.fr / rouge-coquelicot.fr
+
+### Integration Discord
+
+- **Ingestion Discord → Inbox** : un message poste dans un canal surveille cree une source en **Inbox a qualifier** (origine `discord`), triee ensuite dans l'appli. Le bot est **gated sur le token** : sans `DISCORD_TOKEN`, l'ingestion est simplement inactive et le demarrage n'est jamais casse.
 
 ---
 
@@ -135,21 +150,22 @@ a-la-source/
 ├── server/          ← API Express + TypeScript
 │   └── src/
 │       ├── index.ts
-│       ├── routes/  (sources, tags, evaluations, ateliers, auth, medias, mecanismes, contenus)
-│       ├── lib/     (db, auth, score, readability, opengraph, ftr-site-config)
-│       └── db/      (schema, seed, migrations)
+│       ├── routes/  (sources, sujets, ateliers, debunkages, dossiers, arpentage,
+│       │            parcours, medias, mecanismes, evenements, partage, tags,
+│       │            evaluations, commentaires, recherche, becsrouges, auth,
+│       │            contenus, parametres)
+│       ├── lib/     (db, auth, score, readability, opengraph, ftr-site-config, yeswiki)
+│       ├── discord/ (bot, client : ingestion Discord → Inbox, gated sur token)
+│       └── db/      (schema, seed-*, migrate-* dont migrate-activites, auto-migrate)
 ├── client/          ← React 19 + Vite 6 + TypeScript
 │   └── src/
-│       ├── pages/   (Flux, Lire, Observatoire, Ateliers, Archiver, MonEspace, Apprendre)
-│       ├── components/
-│       │   ├── layout/    (Header, SubNav)
-│       │   ├── reader/    (Reader, MarkdownReader, PdfReader, ReadabilityReader)
-│       │   ├── sidebar/   (MetadataPanel, TagsPanel, MecanismesPanel, EvaluationPanel, CommentairesPanel)
-│       │   ├── cards/     (SourceCard)
-│       │   └── forms/     (SubmitSource, EvaluerForm)
+│       ├── pages/   (Sujets, Sujet, Flux, Inbox, Activites, Ateliers, Dossiers,
+│       │            Debunkages, Arpentages, Parcours, Lire, Observatoire,
+│       │            Archiver, MonEspace, Mecanismes, Projection, AdminParametrage)
+│       ├── components/  (layout, reader, sidebar, cards, forms)
 │       ├── store/   (Zustand : useAuth, useUI)
 │       └── api/     (client type-safe)
-├── db/              ← SQLite (WAL mode)
+├── db/              ← SQLite + image-cache
 └── uploads/         ← Copies locales (PDF, markdown)
 ```
 
@@ -175,12 +191,12 @@ L'interface s'organise en 3 niveaux de header :
 ┌─────────────────────────────────────────────────────────────┐
 │ H0 — Bandeau Rouge Coquelicot (logo + titre)                │
 ├─────────────────────────────────────────────────────────────┤
-│ H1 — Navigation principale                                   │
-│   Flux | Observatoire | Ateliers | Archiver | Apprendre      │
-│   | Mon espace | [Admin]                                      │
+│ H1 — Navigation principale (refonte v3, Sujets en tete)      │
+│   Sujets | Activites | Veille | Observatoire | Archiver      │
+│   | Apprendre | Mon espace | [Admin]                          │
 ├─────────────────────────────────────────────────────────────┤
 │ H2 — Sous-navigation contextuelle (selon la page)            │
-│   ex: Mecanismes | Medias | Fiches medias | Sources          │
+│   ex: Mecanismes | Medias | Fiches medias | Couverture       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
