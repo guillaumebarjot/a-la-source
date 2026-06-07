@@ -2,6 +2,7 @@ node_modules/
 dist/
 client/dist-node/
 *.tsbuildinfo
+db/*.db
 db/*.db-shm
 db/*.db-wal
 db/image-cache/
