@@ -4,12 +4,10 @@
  * Ignore les doublons (INSERT OR IGNORE avec UNIQUE sur nom).
  */
 import Database from 'better-sqlite3'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { DB_PATH } from './dbPath.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const dbPath = join(__dirname, '..', '..', '..', 'db', 'a-la-source.db')
-const db = new Database(dbPath)
+// Base UNIQUE et canonique (OneDrive) via dbPath. Seed idempotent (INSERT OR IGNORE).
+const db = new Database(DB_PATH)
 
 interface MediaEntry {
   nom: string

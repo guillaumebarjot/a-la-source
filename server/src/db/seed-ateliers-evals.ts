@@ -3,12 +3,11 @@
  * Run: npx tsx server/src/db/seed-ateliers-evals.ts
  */
 import Database from 'better-sqlite3'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { DB_PATH } from './dbPath.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const dbPath = join(__dirname, '..', '..', '..', 'db', 'a-la-source.db')
-const db = new Database(dbPath)
+// Base UNIQUE et canonique (OneDrive) via dbPath. Donnees de DEMO (ateliers,
+// evaluations) : a lancer deliberement ; idempotent sur les numeros d'atelier seeds.
+const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
 
 // -- Helpers --

@@ -2,9 +2,12 @@ import Database from 'better-sqlite3'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { DB_PATH } from './dbPath.js'
 
+// Base UNIQUE et canonique (OneDrive) via dbPath. Ce seed est entierement
+// idempotent (schema en IF NOT EXISTS, inserts en OR IGNORE) : il peut etre
+// relance sans risque sur la base existante, il ne fait qu'y garantir le socle.
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const DB_PATH = join(__dirname, '..', '..', '..', 'db', 'a-la-source.db')
 
 const db = new Database(DB_PATH)
 db.pragma('journal_mode = WAL')
@@ -44,8 +47,9 @@ insertUser.run('JonLuk', 'membre')
 insertUser.run('Aurelie', 'membre')
 
 // Seed contenus
+// OR IGNORE (et non REPLACE) : ne jamais ecraser un contenu deja edite.
 const insertContenu = db.prepare(
-  'INSERT OR REPLACE INTO contenus (cle, titre, contenu) VALUES (?, ?, ?)'
+  'INSERT OR IGNORE INTO contenus (cle, titre, contenu) VALUES (?, ?, ?)'
 )
 insertContenu.run('accueil', 'Bienvenue', `# A la source
 

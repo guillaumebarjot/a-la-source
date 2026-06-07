@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-07 — Une seule base : chemin centralisé + schema.sql v3
+
+Fin de l'ambiguïté « deux bases ». La base est canonique et unique : celle d'OneDrive (`00_PERSO/A la source/a-la-source.db`). Le code vit dans le repo git ; la donnée dans OneDrive.
+
+- **Copie figée supprimée** : `db/a-la-source.db` (vestige du 05/06, suivi par git, 18 Mo) retirée du dépôt ; `db/*.db` ajouté au `.gitignore`. La structure `db/image-cache/` est préservée via un `.gitkeep`.
+- **Résolution unique du chemin** : nouveau `server/src/db/dbPath.ts` (exporte `DB_PATH`, détection plateforme PRO/PERSO, surcharges `ONEDRIVE_ROOT` / `A_LA_SOURCE_DB`). `lib/db.ts` et les scripts seed s'y réfèrent désormais, pour qu'aucune base divergente ne puisse renaître dans le repo.
+- **Seeds rebranchés et idempotents** : `seed.ts` (init-db), `seed-medias.ts`, `seed-ateliers-evals.ts` visent la base canonique. `seed.ts` passe ses `contenus` en `INSERT OR IGNORE` (ne jamais écraser un contenu édité) : il est relançable sans risque.
+- **`schema.sql` régénéré en v3** depuis la base réelle (44 tables, FTS, index), idempotent (`IF NOT EXISTS`). L'ancien `schema.sql` était resté en v2. Au runtime, `auto-migrate.ts` applique en plus les évolutions additives à chaque boot.
+- Les migrations historiques one-off (`migrate-phase*`, `migrate-v1`, `migrate-mecanismes*`, `migrate-ateliers-v2`) restent des artefacts inertes (déjà appliqués) et ne sont pas rebranchées, pour ne pas risquer de rejouer une vieille migration sur la base unique.
+
 ## 2026-06-07 — Méthode de sélection des sources : le profil de diversité du corpus
 
 On « refait la notation » de la sélection d'atelier sans réintroduire de verdict. La qualité d'un atelier est une **propriété d'ensemble** (diversité, contraste), pas une somme de notes de sources. On décrit le **corpus**, on ne note pas les sources. Note de conception dans le vault (« À la source — Conception — Méthode de sélection des sources »).
