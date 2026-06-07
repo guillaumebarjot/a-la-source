@@ -77,8 +77,12 @@
 .dark .header-band { background: #731018; }
 .dark .header-nav { background: #111; }
 .dark .badge-tag { background: var(--rc-gris-700); color: var(--rc-gris-300); }
-.dark a { color: #E0444F; }
-.dark a:hover { color: #F06070; }
+/* Liens de prose en sombre : on prend l'accent sanctionné (#F25D68), qui passe
+   le seuil AA (>= 4.5:1) sur le fond #1A1A2E, là où l'ancien #E0444F restait
+   sous le seuil (~4.15:1). Les titres/cartes structurels sont neutralisés
+   ailleurs par les garde-fous .dark .*-titre. */
+.dark a { color: var(--color-accent); }
+.dark a:hover { color: #FF7A84; }
 /* Garde-fou : un titre de carte (ou une carte-lien) est un titre, pas un lien de
    contenu. Il NE doit JAMAIS être rouge sur fond sombre. On force la couleur de
    texte normale, le rouge de .dark a reste pour les vrais liens de prose. */
@@ -91,6 +95,30 @@
 .dark .source-card-title:hover,
 .dark .couverture-card-titre:hover,
 .dark .sujet-card-titre:hover { color: var(--color-accent); }
+
+/* Garde-fou couleur d'accent texte : --color-primary vaut #D91E2E (crimson),
+   contraste insuffisant (< 4.5:1) sur le fond sombre #1A1A2E. Partout où ce
+   crimson sert de couleur de TEXTE (chiffres, titres de section, intitulés),
+   on le remplace en sombre par --color-accent (#F25D68), lisible et dark-safe.
+   Les fonds restent en --color-primary (texte blanc dessus, déjà OK). */
+.dark .score-total,
+.dark .stat-number,
+.dark .vivier-score,
+.dark .vivier-card-score,
+.dark .selection-num,
+.dark .preparation-num,
+.dark .obs-top-rank,
+.dark .chaine-card-nom,
+.dark .historique-section h4,
+.dark .historique-sources h4,
+.dark .historique-mecanismes h4,
+.dark .atelier-new-form h3,
+.dark .mecanisme-categorie-card h2,
+.dark .mecanisme-categorie-count,
+.dark .mecanisme-card-large h2,
+.dark .mecanisme-card h3,
+.dark .mecanisme-section h2,
+.dark .mecanisme-exemples-bloc h3 { color: var(--color-accent); }
 
 /* Reset */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -259,8 +287,17 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   color: var(--color-text);
 }
 .source-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); text-decoration: none; }
-.source-card-image { height: 8.75rem; overflow: hidden; background: var(--rc-gris-100); }
+.source-card-image { height: 8.75rem; overflow: hidden; background: var(--rc-gris-100); display: flex; align-items: center; justify-content: center; }
 .source-card-image img { width: 100%; height: 100%; object-fit: cover; }
+/* Repli sobre quand la source n'a pas d'illustration : initiale neutre,
+   surface tramée, dark-safe (jamais de pastille rouge). */
+.source-card-image-fallback {
+  font-family: var(--font-display); font-size: 2.5rem; font-weight: 700;
+  color: var(--color-text-secondary); opacity: 0.5;
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
+}
 .source-card-body { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-xs); }
 .source-card-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; }
 .source-card-meta { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
@@ -884,6 +921,19 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   border-top: 1px solid var(--color-border);
   padding-top: var(--space-sm);
 }
+
+/* Légendes Recharts : par défaut le libellé reprend la couleur de la série,
+   ce qui produit du texte rouge (crimson) illisible sur fond sombre. On force
+   un libellé neutre lisible ; la pastille colorée de la légende, elle, garde
+   la couleur de la série (l'encodage data-viz est préservé). */
+.recharts-legend-item-text { color: var(--color-text) !important; }
+.recharts-default-tooltip {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+.recharts-tooltip-item { color: var(--color-text) !important; }
+.recharts-cartesian-axis-tick-value { fill: var(--color-text-secondary); }
 
 /* =============================================================================
    Page Archiver
@@ -1845,12 +1895,20 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .sujet-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); text-decoration: none; }
 .sujet-card-visuel {
   height: 7rem;
-  background: var(--color-primary);
+  /* Repli sobre (sans image) : surface neutre tramée plutôt qu'une pastille
+     rouge pleine. Dark-safe (tokens). Si une couleur de sujet est fournie en
+     inline, elle prime et le fallback ci-dessous est masqué par l'image. */
+  background:
+    linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
+  border-bottom: 1px solid var(--color-border);
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
 .sujet-card-visuel img { width: 100%; height: 100%; object-fit: cover; }
-.sujet-card-initiale { font-family: var(--font-display); font-size: 2.5rem; color: #fff; opacity: 0.9; }
+.sujet-card-initiale {
+  font-family: var(--font-display); font-size: 2.25rem; font-weight: 700;
+  color: var(--color-text-secondary); opacity: 0.65;
+}
 .sujet-card-body { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-xs); }
 .sujet-card-titre { font-size: 1.05rem; font-weight: 600; color: var(--color-text); margin: 0; }
 .sujet-card-accroche { font-size: 0.85rem; color: var(--color-text-secondary); margin: 0; }
@@ -1882,9 +1940,9 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   text-decoration: none;
 }
 .sujet-source-card:hover { box-shadow: var(--shadow-sm); text-decoration: none; }
-.sujet-source-visuel { height: 5rem; background: var(--color-primary); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.sujet-source-visuel { height: 5rem; background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .sujet-source-visuel img { width: 100%; height: 100%; object-fit: cover; }
-.sujet-source-initiale { font-family: var(--font-display); font-size: 1.6rem; color: #fff; opacity: 0.9; }
+.sujet-source-initiale { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--color-text-secondary); opacity: 0.65; }
 .sujet-source-body { padding: var(--space-sm); }
 .sujet-source-titre { font-size: 0.9rem; font-weight: 600; color: var(--color-text); margin: 0 0 2px; }
 .sujet-source-media { font-size: 0.75rem; color: var(--color-text-secondary); display: block; }
@@ -1905,9 +1963,9 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   border-radius: var(--radius-sm); overflow: hidden; text-decoration: none;
 }
 .mecanisme-exemple-card:hover { box-shadow: var(--shadow-sm); text-decoration: none; }
-.mecanisme-exemple-visuel { height: 4.5rem; background: var(--color-primary); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.mecanisme-exemple-visuel { height: 4.5rem; background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .mecanisme-exemple-visuel img { width: 100%; height: 100%; object-fit: cover; }
-.mecanisme-exemple-initiale { font-family: var(--font-display); font-size: 1.4rem; color: #fff; opacity: 0.9; }
+.mecanisme-exemple-initiale { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; color: var(--color-text-secondary); opacity: 0.65; }
 .mecanisme-exemple-body { padding: var(--space-sm); display: flex; flex-direction: column; gap: 2px; }
 .mecanisme-exemple-titre { font-size: 0.85rem; font-weight: 600; color: var(--color-text); margin: 0; }
 .mecanisme-exemple-media { font-size: 0.72rem; color: var(--color-text-secondary); }
