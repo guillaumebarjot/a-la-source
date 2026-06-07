@@ -23,7 +23,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import SourceCard from '../components/cards/SourceCard'
-import type { Source, Atelier, AtelierDetail, Tag } from '../types'
+import type { Source, Atelier, AtelierDetail, Tag, Facettes } from '../types'
 import '../styles/ateliers-prep.css'
 import '../styles/ateliers-encours.css'
 import '../styles/slider-saisie.css'
@@ -55,10 +55,15 @@ interface QualityGate {
 
 interface VivierSource extends Source {
   score: ScoreComplet
+  facettes: Facettes
   tags: Tag[]
   atelier_badges: AtelierBadge[]
   quality_gate: QualityGate
 }
+
+// Tris factuels du vivier (le score n'est plus le tri par défaut, doctrine
+// « décrire, ne pas noter »). Il reste proposé comme tri optionnel.
+type TriVivier = 'recence' | 'fraicheur' | 'score'
 
 /* ---------- Composant ---------- */
 
@@ -73,8 +78,9 @@ export default function Ateliers() {
   const [ateliersTermines, setAteliersTermines] = useState<Atelier[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Filtres vivier
-  const [scoreMin, setScoreMin] = useState(0)
+  // Filtres vivier : tri factuel par défaut (récence), quality gate = checklist
+  // de complétude (évaluée / archivée / accroche), pas un score.
+  const [tri, setTri] = useState<TriVivier>('recence')
   const [qualityOnly, setQualityOnly] = useState(false)
 
   // Atelier creation form
@@ -133,14 +139,18 @@ export default function Ateliers() {
   /* ---------- Filtres vivier ---------- */
 
   const vivierFiltre = useMemo(() => {
-    return vivier
-      .filter((s) => {
-        if (scoreMin > 0 && s.score.scoreTotal < scoreMin) return false
-        if (qualityOnly && !s.quality_gate.ok) return false
-        return true
-      })
-      .sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
-  }, [vivier, scoreMin, qualityOnly])
+    const filtre = vivier.filter((s) => !qualityOnly || s.quality_gate.ok)
+    const trie = [...filtre]
+    if (tri === 'fraicheur') {
+      trie.sort((a, b) => (b.facettes?.fraicheur ?? 0) - (a.facettes?.fraicheur ?? 0))
+    } else if (tri === 'score') {
+      trie.sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
+    } else {
+      // Récence : source la plus récemment soumise d'abord (aligné sur le serveur).
+      trie.sort((a, b) => String(b.soumis_le ?? '').localeCompare(String(a.soumis_le ?? '')))
+    }
+    return trie
+  }, [vivier, tri, qualityOnly])
 
   /* ---------- Actions ---------- */
 
@@ -210,30 +220,19 @@ export default function Ateliers() {
           </header>
 
           <p className="section-intro">
-            Sources evaluees et archivees, pretes pour les ateliers.
-            {!qualityOnly && ' Activez le filtre "pret" pour ne voir que les sources qui passent la quality gate.'}
+            Sources soumises au vivier : on les <strong>décrit</strong> par des faits
+            (fraîcheur, copie locale, complétude, mécanismes pressentis), on ne les note pas.
+            {!qualityOnly && ' Activez « prêtes pour atelier » pour ne garder que les sources évaluées, archivées et accrochées.'}
           </p>
 
           <div className="vivier-controles">
-            <label className="vivier-score-filter">
-              Score min : <strong>{scoreMin}</strong>/100
-              <span className="slider-saisie">
-                <input
-                  type="range" min={0} max={100} step={5}
-                  value={scoreMin}
-                  onChange={(e) => setScoreMin(Number(e.target.value))}
-                />
-                <input
-                  type="number" min={0} max={100} step={5}
-                  value={scoreMin}
-                  onChange={(e) => {
-                    const n = Number(e.target.value)
-                    if (Number.isNaN(n)) return
-                    setScoreMin(Math.min(100, Math.max(0, n)))
-                  }}
-                  aria-label="Score minimum"
-                />
-              </span>
+            <label className="vivier-tri">
+              Trier par
+              <select value={tri} onChange={(e) => setTri(e.target.value as TriVivier)} aria-label="Trier le vivier">
+                <option value="recence">Récence (soumission)</option>
+                <option value="fraicheur">Fraîcheur (ancienneté)</option>
+                <option value="score">Score animateur (optionnel)</option>
+              </select>
             </label>
             <label className="vivier-quality-filter">
               <input
@@ -241,7 +240,7 @@ export default function Ateliers() {
                 checked={qualityOnly}
                 onChange={(e) => setQualityOnly(e.target.checked)}
               />
-              Pret pour atelier uniquement
+              Prêtes pour atelier uniquement
             </label>
           </div>
 
@@ -251,12 +250,7 @@ export default function Ateliers() {
               <SourceCard
                 key={s.id}
                 source={s}
-                score={{
-                  scoreTotal: s.score.scoreTotal,
-                  timing: s.score.timing,
-                  fraicheur: s.score.fraicheur,
-                  nbEvaluations: s.score.nbEvaluations,
-                }}
+                facettes={s.facettes}
                 showFraicheur={true}
                 atelierBadges={s.atelier_badges}
                 action={isFacilitateur && ateliersActifs.length > 0 ? (
@@ -336,10 +330,10 @@ export default function Ateliers() {
               vivier={vivierFiltre}
               prepAtelierId={prepAtelierId}
               isFacilitateur={isFacilitateur}
-              scoreMin={scoreMin}
+              tri={tri}
               qualityOnly={qualityOnly}
               onChangeAtelier={setPrepAtelierId}
-              onChangeScoreMin={setScoreMin}
+              onChangeTri={setTri}
               onChangeQualityOnly={setQualityOnly}
               onAjouter={ajouterSource}
               onRetirer={retirerSource}
@@ -466,7 +460,9 @@ function PrepCarteVivier({ source, dejaRetenue, enDrag, onAjouter }: {
           )}
         </div>
       </div>
-      <span className="prep-carte-score" title="Score animateur">{source.score.scoreTotal}</span>
+      <span className="prep-carte-facette" title="Fraîcheur — ancienneté relative de la source">
+        {(source.facettes.fraicheur * 100).toFixed(0)} %
+      </span>
     </div>
   )
 }
@@ -565,17 +561,17 @@ function PrepColonneCorpus({ sources, ordre, isFacilitateur, enCoursDeDrag, onRe
 }
 
 function PreparationBoard({
-  ateliers, vivier, prepAtelierId, isFacilitateur, scoreMin, qualityOnly,
-  onChangeAtelier, onChangeScoreMin, onChangeQualityOnly, onAjouter, onRetirer, onSave,
+  ateliers, vivier, prepAtelierId, isFacilitateur, tri, qualityOnly,
+  onChangeAtelier, onChangeTri, onChangeQualityOnly, onAjouter, onRetirer, onSave,
 }: {
   ateliers: AtelierDetail[]
   vivier: VivierSource[]
   prepAtelierId: number | null
   isFacilitateur: boolean
-  scoreMin: number
+  tri: TriVivier
   qualityOnly: boolean
   onChangeAtelier: (id: number) => void
-  onChangeScoreMin: (n: number) => void
+  onChangeTri: (t: TriVivier) => void
   onChangeQualityOnly: (b: boolean) => void
   onAjouter: (atelierId: number, sourceId: number) => Promise<void> | void
   onRetirer: (atelierId: number, sourceId: number) => Promise<void> | void
@@ -720,13 +716,13 @@ function PreparationBoard({
             <span className="prep-count">{vivier.length} candidate{vivier.length > 1 ? 's' : ''}</span>
           </div>
           <div className="prep-vivier-filtres">
-            <label>
-              Score min
-              <input
-                type="number" min={0} max={100} step={5}
-                value={scoreMin}
-                onChange={(e) => onChangeScoreMin(Number(e.target.value))}
-              />
+            <label className="vivier-tri">
+              Trier par
+              <select value={tri} onChange={(e) => onChangeTri(e.target.value as TriVivier)} aria-label="Trier le vivier">
+                <option value="recence">Récence</option>
+                <option value="fraicheur">Fraîcheur</option>
+                <option value="score">Score (optionnel)</option>
+              </select>
             </label>
             <label>
               <input
@@ -734,7 +730,7 @@ function PreparationBoard({
                 checked={qualityOnly}
                 onChange={(e) => onChangeQualityOnly(e.target.checked)}
               />
-              Pret uniquement
+              Prêtes uniquement
             </label>
           </div>
           <div className="prep-colonne-liste">

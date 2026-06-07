@@ -153,8 +153,8 @@
   align-items: center;
 }
 
-/* Pastille de score (contexte animateur : score visible, c'est voulu). */
-.prep-carte-score {
+/* Facette factuelle (décrire, ne pas noter) : fraîcheur discrète, pas un verdict. */
+.prep-carte-facette {
   flex: 0 0 auto;
   align-self: flex-start;
   min-width: 34px;
@@ -163,9 +163,9 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   text-align: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
 }
 
 .prep-carte-poignee {

@@ -81,22 +81,46 @@ router.get('/vivier', (_req, res) => {
     }))
 
     const hasEvaluation = score.nbEvaluations >= 1
-    const hasArchive = db.prepare(
-      'SELECT 1 FROM archives WHERE source_id = ? LIMIT 1'
-    ).get(sid)
+    // Archive la plus recente : on en retient le statut (complete / partielle / echouee)
+    // pour decrire factuellement la completude de la copie locale.
+    const archiveRow = db.prepare(
+      'SELECT statut FROM archives WHERE source_id = ? ORDER BY cree_le DESC LIMIT 1'
+    ).get(sid) as { statut: string | null } | undefined
+    const hasArchive = !!archiveRow
+    const archiveStatut = archiveRow?.statut ?? null
     const hasAccroche = !!(s.accroche as string | null)
-    const qualityGateOk = hasEvaluation && !!hasArchive && hasAccroche
+    const qualityGateOk = hasEvaluation && hasArchive && hasAccroche
+
+    // Mecanismes pressentis / identifies sur la source (facette descriptive,
+    // pas un verdict) : on compte les mecanismes distincts rattaches.
+    const mecaRow = db.prepare(
+      'SELECT COUNT(DISTINCT mecanisme_id) AS nb FROM source_mecanismes WHERE source_id = ?'
+    ).get(sid) as { nb: number }
+    const nbMecanismes = mecaRow?.nb ?? 0
 
     return {
       ...s,
       tags,
       score,
+      // Facettes descriptives (principe « decrire, ne pas noter ») : on expose
+      // des faits, jamais un score-verdict. Le bloc `score` reste fourni pour
+      // un tri optionnel et la retrocompatibilite, mais n'est plus presente.
+      facettes: {
+        nbEvaluations: score.nbEvaluations,
+        archiveStatut,                 // null | 'complete' | 'partielle' | 'echouee'
+        completude: (s.completude as string | null) ?? null, // libre | partiel | integral_offline
+        datePublication: (s.date_publication as string | null) ?? null,
+        nbMecanismes,
+        fraicheur: score.fraicheur,    // 0..1, ancienneté relative
+      },
       atelier_badges: atelierBadges,
-      quality_gate: { ok: qualityGateOk, hasEvaluation, hasArchive: !!hasArchive, hasAccroche },
+      quality_gate: { ok: qualityGateOk, hasEvaluation, hasArchive, hasAccroche },
     }
   })
 
-  result.sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
+  // Tri par defaut factuel : la requete ordonne deja par soumis_le DESC
+  // (source la plus recemment soumise d'abord). Le client propose ensuite ses
+  // propres tris factuels ; le score n'est plus le tri par defaut.
   res.json(result)
 })
 

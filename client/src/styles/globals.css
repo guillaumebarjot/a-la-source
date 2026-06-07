@@ -1114,6 +1114,30 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .score-overlay-value { font-weight: 700; font-size: 1rem; font-family: var(--font-display); }
 .score-overlay-fraicheur { font-size: 0.7rem; opacity: 0.85; }
 
+/* Facette factuelle du vivier (décrire, ne pas noter) : fraîcheur discrète,
+   pas un verdict. Surface neutre lisible en clair et sombre (jamais de rouge). */
+.source-card-facette-overlay {
+  position: absolute; top: var(--space-sm); right: var(--space-sm);
+  display: inline-flex; align-items: center; gap: 4px; z-index: 2;
+  padding: 3px 7px; border-radius: 6px;
+  background: var(--color-surface); color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  font-size: 0.72rem; font-weight: 600; line-height: 1;
+}
+
+/* Sélecteur de tri du vivier */
+.vivier-tri {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  font-size: 0.85rem; color: var(--color-text-secondary);
+}
+.vivier-tri select {
+  padding: 0.3rem 0.5rem; border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 6px);
+  background: var(--color-surface); color: var(--color-text);
+  font-size: 0.85rem;
+}
+.vivier-tri select:focus { outline: none; border-color: var(--color-accent, var(--color-primary)); }
+
 /* Vivier filter chips */
 .vivier-timing-chips {
   display: flex; gap: var(--space-xs); flex-wrap: wrap;

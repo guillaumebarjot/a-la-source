@@ -2,6 +2,15 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-07 — Vivier : « décrire, ne pas noter » (facettes au lieu du score-verdict)
+
+Le vivier rejoint la doctrine de l'Observatoire et de l'atelier : on décrit les sources par des **faits**, on ne les note pas par un score-verdict.
+
+- **API `/ateliers/vivier`** : ajout d'un bloc `facettes` factuel par source (`nbEvaluations`, `archiveStatut`, `completude`, `datePublication`, `nbMecanismes`, `fraicheur`). Tri par défaut = **récence de soumission** (`ORDER BY soumis_le DESC`), plus le score. Le bloc `score` reste fourni pour un **tri optionnel** et la rétrocompatibilité, il n'est plus présenté.
+- **`SourceCard`** : nouvelle prop `facettes`. En contexte vivier, l'overlay du gros score-verdict est remplacé par une **facette discrète** (fraîcheur, ancienneté relative) ; badges factuels en pied (nombre d'évaluations, nombre de mécanismes pressentis). La carte nue d'atelier (epoché) est inchangée.
+- **Vivier (`Ateliers.tsx`)** : le filtre « score min » disparaît au profit d'un **sélecteur de tri** (Récence / Fraîcheur / Score optionnel). La checklist « prêtes pour atelier » (évaluée + archivée + accroche) est conservée : c'est une **complétude factuelle**, pas un score. Même traitement dans le tableau de préparation 2 colonnes (carte de prépa : fraîcheur, plus le score).
+- Garde-fous tenus : zéro texte rouge sur fond sombre (vérifié, 43/43 cartes), CSS en tokens de thème (dark-safe), typecheck client + serveur OK.
+
 ## 2026-06-06 — Lisibilité sombre + Chantier N (pages Sujets)
 
 - **Correctif lisibilité (important).** Les titres de cartes (qui sont des liens) s'affichaient en **rouge sur fond sombre** en mode sombre, à cause de la règle globale `.dark a` qui peint tous les liens en rouge. Garde-fou posé : les **liens structurels** (titres de cartes, cartes-liens) prennent la couleur de texte normale en sombre ; le rouge reste pour les vrais liens de prose. Vérifié : zéro texte rouge sur fond sombre sur toute la page.

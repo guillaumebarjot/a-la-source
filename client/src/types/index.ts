@@ -184,6 +184,18 @@ export interface ScoreResult {
   nbEvaluations: number
 }
 
+// Facettes descriptives du vivier (doctrine « décrire, ne pas noter ») :
+// des faits exposés, jamais un score-verdict. Le score reste disponible
+// comme tri optionnel, il n'est plus la présentation par défaut.
+export interface Facettes {
+  nbEvaluations: number
+  archiveStatut: 'complete' | 'partielle' | 'echouee' | null
+  completude: 'libre' | 'partiel' | 'integral_offline' | null
+  datePublication: string | null
+  nbMecanismes: number
+  fraicheur: number
+}
+
 export interface Atelier {
   id: number
   numero: number

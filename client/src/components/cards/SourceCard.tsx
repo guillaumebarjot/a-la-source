@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Unlock, Lock, FileWarning, FileCheck, File, Star, Target, MessageCircle } from 'lucide-react'
-import type { Source } from '../../types'
+import { Unlock, Lock, FileWarning, FileCheck, File, Star, Target, MessageCircle, Layers, Clock } from 'lucide-react'
+import type { Source, Facettes } from '../../types'
 import '../../styles/attribution.css'
 import '../../styles/completude.css'
 
@@ -26,6 +26,8 @@ interface AtelierBadge {
 interface Props {
   source: Source
   score?: ScoreOverlay
+  /* Vivier (doctrine « décrire, ne pas noter ») : facettes factuelles au lieu du score-verdict. */
+  facettes?: Facettes
   showFraicheur?: boolean
   action?: React.ReactNode
   atelierBadges?: AtelierBadge[]
@@ -33,10 +35,12 @@ interface Props {
   hideAttribution?: boolean
 }
 
-export default function SourceCard({ source, score, showFraicheur, action, atelierBadges, hideAttribution }: Props) {
+export default function SourceCard({ source, score, facettes, showFraicheur, action, atelierBadges, hideAttribution }: Props) {
   const imgSrc = source.image_url || (source as unknown as Record<string, unknown>).og_image as string | undefined
   const hasArchive = !!source.has_archive
   const isPaywall = source.paywall === 1
+  // Nombre d'évaluations : facette factuelle, peu importe sa source (facettes ou score).
+  const nbEvaluations = facettes?.nbEvaluations ?? score?.nbEvaluations ?? 0
 
   // Atelier badges: "retenue #N" for active, "utilisee #N" for terminated
   const retenues = atelierBadges?.filter(b => b.statut !== 'termine') || []
@@ -58,6 +62,14 @@ export default function SourceCard({ source, score, showFraicheur, action, ateli
           {showFraicheur && score.fraicheur != null && (
             <span className="score-overlay-fraicheur">{(score.fraicheur * 100).toFixed(0)}%</span>
           )}
+        </div>
+      )}
+
+      {/* Facette factuelle (décrire, ne pas noter) : fraîcheur, jamais un score-verdict. */}
+      {!score && facettes && facettes.fraicheur != null && (
+        <div className="source-card-facette-overlay" title="Fraîcheur — ancienneté relative de la source">
+          <Clock size={12} />
+          <span>{(facettes.fraicheur * 100).toFixed(0)} %</span>
         </div>
       )}
 
@@ -124,9 +136,14 @@ export default function SourceCard({ source, score, showFraicheur, action, ateli
             {!hasArchive && !isPaywall && (
               <span className="badge-icon badge-icon--muted" title="Pas de copie locale"><File size={14} /></span>
             )}
-            {score && (
-              <span className="badge-icon" title={`${score.nbEvaluations} evaluation(s)`}>
-                <Star size={14} />{score.nbEvaluations}
+            {nbEvaluations > 0 && (
+              <span className="badge-icon" title={`${nbEvaluations} évaluation(s)`}>
+                <Star size={14} />{nbEvaluations}
+              </span>
+            )}
+            {facettes && facettes.nbMecanismes > 0 && (
+              <span className="badge-icon" title={`${facettes.nbMecanismes} mécanisme(s) pressenti(s)`}>
+                <Layers size={14} />{facettes.nbMecanismes}
               </span>
             )}
             {(source.nb_ateliers ?? 0) > 0 && !atelierBadges && (
