@@ -49,11 +49,14 @@ export default function SourceCard({ source, score, facettes, showFraicheur, act
 
   return (
     <div className={`source-card${isUsed ? ' source-card--used' : ''}`}>
-      {imgSrc && (
-        <Link to={`/lire/${source.id}`} className="source-card-image">
-          <img src={imgSrc} alt="" loading="lazy" />
-        </Link>
-      )}
+      {/* « La source est une carte qu'on promène » : l'image est toujours
+          présente. À défaut d'illustration, un placeholder sobre (initiale du
+          média), dark-safe. */}
+      <Link to={`/lire/${source.id}`} className="source-card-image" aria-hidden="true" tabIndex={-1}>
+        {imgSrc
+          ? <img src={imgSrc} alt="" loading="lazy" />
+          : <span className="source-card-image-fallback">{(source.media_nom || source.titre || '?').charAt(0)}</span>}
+      </Link>
 
       {score && (
         <div className="source-card-score-overlay">

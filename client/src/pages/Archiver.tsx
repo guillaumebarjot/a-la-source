@@ -241,7 +241,7 @@ function SectionContribuer() {
             {sourceTitre ? (
               <div className="archiver-source-selected">
                 <span>{sourceTitre}</span>
-                <button type="button" className="btn-icon-sm" onClick={() => { setSourceId(''); setSourceTitre('') }}>×</button>
+                <button type="button" className="btn-icon-sm" aria-label="Retirer la source sélectionnée" title="Retirer" onClick={() => { setSourceId(''); setSourceTitre('') }}>×</button>
               </div>
             ) : (
               <div className="archiver-source-search">

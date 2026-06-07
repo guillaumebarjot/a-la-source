@@ -84,7 +84,13 @@ export default function Header() {
           </div>
         </div>
         <div className="header-right">
-          <button className="btn-icon" onClick={toggleDarkMode} title="Theme">
+          <button
+            className="btn-icon"
+            onClick={toggleDarkMode}
+            title={darkMode ? 'Passer en thème clair' : 'Passer en thème sombre'}
+            aria-label={darkMode ? 'Passer en thème clair' : 'Passer en thème sombre'}
+            aria-pressed={darkMode}
+          >
             {darkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           {user && <span className="header-user">{user.nom}</span>}
