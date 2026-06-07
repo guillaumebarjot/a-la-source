@@ -153,7 +153,11 @@ function cmdVivier(): { response: string; expectsReply: boolean } {
 
 function cmdAtelier(): { response: string; expectsReply: boolean } {
   const atelier = db.prepare(`
-    SELECT * FROM ateliers WHERE statut IN ('preparation', 'pret') ORDER BY date_atelier ASC LIMIT 1
+    SELECT p.numero, p.date_atelier, p.lieu, a.statut
+    FROM activites a
+    JOIN atelier_pipeline p ON p.activite_id = a.id
+    WHERE a.type = 'atelier' AND a.statut IN ('preparation', 'pret')
+    ORDER BY p.date_atelier ASC LIMIT 1
   `).get() as { numero: number; date_atelier: string; lieu: string; statut: string } | undefined
 
   if (!atelier) return { response: 'Aucun atelier programme pour le moment.', expectsReply: false }

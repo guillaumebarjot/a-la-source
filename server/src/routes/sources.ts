@@ -34,7 +34,9 @@ router.get('/', (req, res) => {
       (SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) > 0 as has_archive,
       (SELECT ar2.statut FROM archives ar2 WHERE ar2.source_id = s.id ORDER BY ar2.cree_le DESC LIMIT 1) as archive_statut,
       (SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) as nb_commentaires,
-      (SELECT COUNT(*) FROM atelier_sources ats WHERE ats.source_id = s.id) as nb_ateliers
+      (SELECT COUNT(*) FROM activite_sources asrc
+         JOIN activites act ON act.id = asrc.activite_id AND act.type = 'atelier'
+       WHERE asrc.source_id = s.id) as nb_ateliers
     FROM sources s
     LEFT JOIN medias m ON s.media_id = m.id
     LEFT JOIN auteurs a ON s.auteur_id = a.id
