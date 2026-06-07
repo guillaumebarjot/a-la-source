@@ -348,3 +348,152 @@
   background: var(--color-bg);
   color: var(--color-text);
 }
+
+/* ===========================================================================
+ * Profil de diversité du corpus (méthode de sélection « décrire, ne pas noter »).
+ * Sobre, factuel, dark-safe (tokens de thème). Aucun gros nombre-verdict :
+ * des jauges de remplissage + le compte en clair. Outil de coulisse animateur.
+ * =========================================================================== */
+.prep-divers {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  margin-bottom: var(--space-md);
+  overflow: hidden;
+}
+.prep-divers-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+.prep-divers-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0;
+}
+.prep-divers-completude {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.prep-divers-corps {
+  padding: var(--space-md);
+}
+.prep-divers-intro {
+  margin: 0 0 var(--space-md);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.prep-divers-axes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.prep-divers-ligne {
+  display: grid;
+  grid-template-columns: 9rem 1fr auto;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.prep-divers-ligne--duree {
+  grid-template-columns: 9rem 1fr;
+}
+.prep-divers-label {
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+.prep-divers-jauge {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+.prep-divers-jauge-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-text-secondary);
+  transition: width 0.2s ease;
+}
+.prep-divers-jauge-fill--ok {
+  background: var(--color-primary);
+}
+.prep-divers-chiffre {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.prep-divers-alertes {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.prep-divers-alerte {
+  font-size: 0.85rem;
+  color: var(--color-text);
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 3px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+.prep-divers-suggest {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+.prep-divers-suggest-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.88rem;
+  color: var(--color-text);
+}
+.prep-divers-suggest-vide {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+.prep-divers-suggest-bloc {
+  margin-top: var(--space-sm);
+}
+.prep-divers-suggest-raison {
+  margin: 0 0 var(--space-xs);
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+.prep-divers-suggest-cartes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.prep-divers-suggest-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  max-width: 16rem;
+}
+.prep-divers-suggest-titre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.prep-divers-suggest-media {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
