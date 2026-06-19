@@ -1,7 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Sun, Moon } from 'lucide-react'
 import { useAuth } from '../../store/useAuth'
-import { useUI } from '../../store/useUI'
 
 interface SubNavItem {
   label: string
@@ -68,7 +66,6 @@ function getSubNavItems(pathname: string): SubNavItem[] | null {
 
 export default function Header() {
   const user = useAuth((s) => s.user)
-  const { darkMode, toggleDarkMode } = useUI()
   const isAdmin = user?.role === 'admin'
   const location = useLocation()
   const subNavItems = getSubNavItems(location.pathname)
@@ -84,15 +81,6 @@ export default function Header() {
           </div>
         </div>
         <div className="header-right">
-          <button
-            className="btn-icon"
-            onClick={toggleDarkMode}
-            title={darkMode ? 'Passer en thème clair' : 'Passer en thème sombre'}
-            aria-label={darkMode ? 'Passer en thème clair' : 'Passer en thème sombre'}
-            aria-pressed={darkMode}
-          >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
           {user && <span className="header-user">{user.nom}</span>}
         </div>
       </div>

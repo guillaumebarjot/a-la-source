@@ -9,7 +9,9 @@ interface UIState {
 
 export const useUI = create<UIState>((set) => ({
   sidebarOpen: true,
-  darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+  // Mode clair forcé partout (jamais de thème sombre, même si l'OS est en sombre) :
+  // l'app sert en atelier et en projection, le sombre nuit à la lisibilité.
+  darkMode: false,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-  toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
+  toggleDarkMode: () => set(() => ({ darkMode: false })),
 }))

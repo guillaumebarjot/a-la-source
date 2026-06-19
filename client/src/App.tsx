@@ -1,7 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './store/useAuth'
-import { useUI } from './store/useUI'
 import Header from './components/layout/Header'
 
 const Sujets = lazy(() => import('./pages/Sujets'))
@@ -29,12 +28,12 @@ const Arpentage = lazy(() => import('./pages/Arpentage'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
-  const darkMode = useUI((s) => s.darkMode)
 
   useEffect(() => { fetchUser() }, [fetchUser])
 
+  // Mode clair forcé : la classe `.dark` n'est jamais appliquée (cf. store/useUI).
   return (
-    <div className={`app ${darkMode ? 'dark' : ''}`}>
+    <div className="app">
       <Header />
       <main className="main-content">
         <Suspense fallback={<div className="loading">Chargement...</div>}>
