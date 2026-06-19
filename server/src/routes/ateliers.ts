@@ -126,9 +126,14 @@ router.get('/vivier', (_req, res) => {
 })
 
 // Sources d'un atelier (corpus), forme identique à l'ancienne (avec ordre).
+// On expose aussi has_archive + archive_statut pour que les cartes (SourceCard)
+// indiquent correctement la présence d'une copie locale (sinon « Pas de copie
+// locale » s'affiche à tort sur des sources pourtant archivées).
 function sourcesAtelier(activiteId: string | number) {
   return db.prepare(`
-    SELECT s.*, m.nom as media_nom, asrc.ordre
+    SELECT s.*, m.nom as media_nom, asrc.ordre,
+      EXISTS(SELECT 1 FROM archives a WHERE a.source_id = s.id) AS has_archive,
+      (SELECT a.statut FROM archives a WHERE a.source_id = s.id ORDER BY a.cree_le DESC LIMIT 1) AS archive_statut
     FROM activite_sources asrc
     JOIN sources s ON s.id = asrc.source_id
     LEFT JOIN medias m ON s.media_id = m.id
