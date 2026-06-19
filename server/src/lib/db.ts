@@ -11,7 +11,11 @@ if (!existsSync(DB_PATH)) {
 }
 
 const db: DatabaseType = new Database(DB_PATH)
-db.pragma('journal_mode = WAL')
+// Base canonique sur OneDrive : le mode WAL y est incompatible (les sidecars -wal/-shm
+// sont desynchronises par la synchro cloud => "database disk image is malformed" et
+// regressions de donnees). On force le mode DELETE (journal rollback classique), comme
+// pour les autres bases OneDrive du vault. Ne JAMAIS repasser en WAL ici.
+db.pragma('journal_mode = DELETE')
 db.pragma('foreign_keys = ON')
 
 export default db
