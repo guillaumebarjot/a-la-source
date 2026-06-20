@@ -33,13 +33,17 @@ function nettoyerUrl(brut: string): string {
  * Si on retrouve le membre par son pseudo et que son discord_id n'est pas encore
  * connu, on le memorise (l'id Discord est stable, le pseudo peut changer).
  */
-function trouverMembreDiscord(discordId: string, pseudo: string): number | null {
+function trouverMembreDiscord(discordId: string, noms: string[]): number | null {
   let u = db.prepare('SELECT id FROM utilisateurs WHERE discord_id = ? AND actif = 1')
     .get(discordId) as { id: number } | undefined
   if (u) return u.id
-  if (pseudo) {
-    u = db.prepare('SELECT id FROM utilisateurs WHERE discord_pseudo = ? AND actif = 1')
-      .get(pseudo) as { id: number } | undefined
+  // On rapproche par n'importe lequel des noms Discord (handle, nom global, surnom
+  // de serveur), insensible a la casse : un membre peut renseigner son pseudo de
+  // l'app avec son @handle (ex. hydro_looney) ou son nom affiche (ex. Guillaume).
+  const candidats = Array.from(new Set(noms.map((n) => n.trim().toLowerCase()).filter(Boolean)))
+  for (const nom of candidats) {
+    u = db.prepare('SELECT id FROM utilisateurs WHERE LOWER(discord_pseudo) = ? AND actif = 1')
+      .get(nom) as { id: number } | undefined
     if (u) {
       try { db.prepare('UPDATE utilisateurs SET discord_id = ? WHERE id = ? AND (discord_id IS NULL OR discord_id = "")').run(discordId, u.id) } catch { /* best-effort */ }
       return u.id
@@ -136,10 +140,13 @@ export async function startDiscordBot(): Promise<void> {
         if (!matches) return
 
         // Attribution : rapproche l'auteur Discord d'un compte membre (sinon NULL).
-        const soumisPar = trouverMembreDiscord(
-          message.author?.id || '',
+        // On essaie le handle, le nom global et le surnom de serveur.
+        const soumisPar = trouverMembreDiscord(message.author?.id || '', [
           message.author?.username || '',
-        )
+          message.author?.globalName || '',
+          message.member?.nickname || '',
+          message.member?.displayName || '',
+        ])
 
         const urls = Array.from(new Set(matches.map(nettoyerUrl).filter(Boolean)))
         for (const url of urls) {
