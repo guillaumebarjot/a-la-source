@@ -19,7 +19,10 @@ services:
       # Discord (ingestion) : renseigner via /srv/a-la-source/.env ou ici.
       # DISCORD_TOKEN: ""
     volumes:
-      - ./data/a-la-source.db:/data/a-la-source.db        # base, lecture-ecriture
+      # On monte des REPERTOIRES (pas le fichier .db seul) : une base SQLite en
+      # ecriture cree des fichiers journaux a cote (journal DELETE), ce qui casse
+      # avec un bind-mount de fichier unique.
+      - ./data/db:/data                                   # base + journal, lecture-ecriture
       - ./data/uploads:/app/uploads                       # fichiers televerses
       - ./data/image-cache:/app/db/image-cache            # cache d'images des sources
     networks:
