@@ -38,9 +38,13 @@ function lireIdentite(req: Request): string | undefined {
   return undefined
 }
 
-// Role issu du SSO. NPM pose x-alasource-role (anti-usurpation : il ecrase toute valeur
-// envoyee par le client). A defaut, on le derive des groupes Authentik (X-authentik-groups,
-// separateur | ou ,). Les groupes sont la source de verite de l'infra.
+// Role issu du SSO. On le derive des groupes Authentik reels (X-authentik-groups,
+// separateur | ou ,), poses par NPM depuis la sous-requete d'auth (anti-usurpation).
+// Un en-tete x-alasource-role explicite, s'il est pose, a la priorite.
+// Groupes PIAF : admins / sso-admins (superuser Guillaume), rc-admins (admins Rouge
+// Coquelicot) ouvrent le role admin ; rc-membres et les autres entrent en membre.
+// Le role animateur n'est pas porte par un groupe : il s'attribue dans l'app (un
+// admin promeut un membre via PATCH /api/auth/users/:id).
 function roleDepuisSso(req: Request): Role {
   const headerRole = (req.headers['x-alasource-role'] as string | undefined)?.trim()
   if (headerRole === 'admin' || headerRole === 'animateur' || headerRole === 'membre') {
@@ -48,9 +52,9 @@ function roleDepuisSso(req: Request): Role {
   }
   const brut = (req.headers['x-authentik-groups'] as string | undefined) || ''
   const groupes = brut.split(/[|,]/).map((g) => g.trim().toLowerCase()).filter(Boolean)
-  if (groupes.includes('admins')) return 'admin'
-  if (groupes.includes('piafs')) return 'animateur'
-  // membres-rc, ou tout compte ayant franchi le forward-auth (acces entierement filtre par groupe)
+  if (groupes.some((g) => g === 'admins' || g === 'sso-admins' || g === 'rc-admins')) {
+    return 'admin'
+  }
   return 'membre'
 }
 
