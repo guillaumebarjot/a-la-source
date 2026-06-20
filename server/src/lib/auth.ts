@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
 import db from './db.js'
 
+export type Role = 'membre' | 'animateur' | 'admin'
+
 export interface AuthUser {
   id: number
   nom: string
-  role: 'membre' | 'animateur' | 'admin'
+  role: Role
 }
 
 declare global {
@@ -15,36 +17,73 @@ declare global {
   }
 }
 
-export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  // YunoHost SSO: Remote-User header
+// Hierarchie des roles : un palier plus haut inclut les droits des paliers du dessous.
+const RANG: Record<Role, number> = { membre: 0, animateur: 1, admin: 2 }
+
+function plusHaut(a: Role, b: Role): Role {
+  return RANG[a] >= RANG[b] ? a : b
+}
+
+// Identite : en prod, derriere Authentik forward-auth, NPM transmet l'identite reelle
+// dans X-authentik-username. On garde Remote-User (ancien SSO YunoHost) en repli, puis
+// le parametre ?_user en developpement uniquement.
+function lireIdentite(req: Request): string | undefined {
+  const authentik = req.headers['x-authentik-username'] as string | undefined
+  if (authentik) return authentik
   const remoteUser = req.headers['remote-user'] as string | undefined
-
-  // Dev fallback: query param (development only)
-  let username: string | undefined
-  if (remoteUser) {
-    username = remoteUser
-  } else if (process.env.NODE_ENV !== 'production') {
-    username = (req.query._user as string) || 'HydroLooney'
+  if (remoteUser) return remoteUser
+  if (process.env.NODE_ENV !== 'production') {
+    return (req.query._user as string) || 'HydroLooney'
   }
+  return undefined
+}
 
+// Role issu du SSO. NPM pose x-alasource-role (anti-usurpation : il ecrase toute valeur
+// envoyee par le client). A defaut, on le derive des groupes Authentik (X-authentik-groups,
+// separateur | ou ,). Les groupes sont la source de verite de l'infra.
+function roleDepuisSso(req: Request): Role {
+  const headerRole = (req.headers['x-alasource-role'] as string | undefined)?.trim()
+  if (headerRole === 'admin' || headerRole === 'animateur' || headerRole === 'membre') {
+    return headerRole
+  }
+  const brut = (req.headers['x-authentik-groups'] as string | undefined) || ''
+  const groupes = brut.split(/[|,]/).map((g) => g.trim().toLowerCase()).filter(Boolean)
+  if (groupes.includes('admins')) return 'admin'
+  if (groupes.includes('piafs')) return 'animateur'
+  // membres-rc, ou tout compte ayant franchi le forward-auth (acces entierement filtre par groupe)
+  return 'membre'
+}
+
+export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  const username = lireIdentite(req)
   if (!username) {
     next()
     return
   }
+
+  const ssoRole = roleDepuisSso(req)
 
   const row = db.prepare(
     'SELECT id, nom, role FROM utilisateurs WHERE nom = ? AND actif = 1'
   ).get(username) as AuthUser | undefined
 
   if (row) {
-    req.user = row
+    // Le role applicatif (modifiable en base par un admin, ex. promotion en animateur)
+    // ne peut pas descendre sous celui que le SSO accorde : Guillaume (groupe admins)
+    // reste admin quoi qu'il arrive, et un membre promu animateur le reste.
+    req.user = { ...row, role: plusHaut(row.role, ssoRole) }
   } else {
-    // Auto-create user on first login (YNH SSO)
+    // Auto-creation au premier passage SSO, avec le role accorde par les groupes.
     const result = db.prepare(
-      'INSERT OR IGNORE INTO utilisateurs (nom) VALUES (?)'
-    ).run(username)
+      'INSERT OR IGNORE INTO utilisateurs (nom, role) VALUES (?, ?)'
+    ).run(username, ssoRole)
     if (result.changes > 0) {
-      req.user = { id: Number(result.lastInsertRowid), nom: username, role: 'membre' }
+      req.user = { id: Number(result.lastInsertRowid), nom: username, role: ssoRole }
+    } else {
+      const again = db.prepare(
+        'SELECT id, nom, role FROM utilisateurs WHERE nom = ? AND actif = 1'
+      ).get(username) as AuthUser | undefined
+      if (again) req.user = { ...again, role: plusHaut(again.role, ssoRole) }
     }
   }
 

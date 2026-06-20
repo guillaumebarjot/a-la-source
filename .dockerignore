@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+**/dist
+client/dist-node
+*.tsbuildinfo
+.git
+.gitignore
+*.db
+*.db-shm
+*.db-wal
+db/*.db
+db/image-cache
+uploads
+.env
+*.log
+.DS_Store
+docs/screenshots

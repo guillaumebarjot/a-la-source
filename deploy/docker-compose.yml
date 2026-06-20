@@ -1,0 +1,33 @@
+# Reference du compose de production. Le fichier reellement utilise vit sur Bomp4rd
+# dans /srv/a-la-source/docker-compose.yml (un cran au-dessus de app/). Conserve ici
+# pour la tracabilite et la reproductibilite du deploiement.
+#
+# Particularite vs Prisme : « A la source » ECRIT dans sa base (vivier, evaluations,
+# activites, lectures). La base est donc montee en lecture-ecriture (journal DELETE,
+# pas WAL, pour rester sain hors WAL). uploads/ et image-cache/ sont persistes.
+
+services:
+  a-la-source:
+    build: ./app
+    image: a-la-source:local
+    container_name: a-la-source
+    restart: unless-stopped
+    environment:
+      NODE_ENV: "production"
+      PORT: "3033"
+      A_LA_SOURCE_DB: "/data/a-la-source.db"
+      # Discord (ingestion) : renseigner via /srv/a-la-source/.env ou ici.
+      # DISCORD_TOKEN: ""
+    volumes:
+      - ./data/a-la-source.db:/data/a-la-source.db        # base, lecture-ecriture
+      - ./data/uploads:/app/uploads                       # fichiers televerses
+      - ./data/image-cache:/app/db/image-cache            # cache d'images des sources
+    networks:
+      - web
+    # Port de test, a retirer apres cablage NPM :
+    # ports:
+    #   - "127.0.0.1:13033:3033"
+
+networks:
+  web:
+    external: true
