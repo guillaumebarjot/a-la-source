@@ -224,8 +224,8 @@ export async function traiterMessage(opts: {
     lierMessageSource(messageId, r.sourceId, channelId)
     if (courante == null) courante = r.sourceId
     lignes.push(r.nouveau
-      ? `📥 Ajouté à À la source : ${lienApp(r.sourceId)}`
-      : `↩️ Déjà dans À la source : ${lienApp(r.sourceId)}`)
+      ? `📥 Ajouté à la veille. 👉 Lire et commenter sur À la source : ${lienApp(r.sourceId)}`
+      : `↩️ Déjà sur À la source. 👉 Lire et commenter : ${lienApp(r.sourceId)}`)
   }
 
   // 2. Liens PDF directs
@@ -238,7 +238,7 @@ export async function traiterMessage(opts: {
       lierMessageSource(messageId, r.sourceId, channelId)
     }
     if (await attacherPdf(courante, url, soumisPar)) {
-      lignes.push(`📎 PDF intégral attaché → ${lienApp(courante)}`)
+      lignes.push(`📎 PDF intégral joint. 👉 Lire et commenter sur À la source : ${lienApp(courante)}`)
     }
   }
 
@@ -250,7 +250,7 @@ export async function traiterMessage(opts: {
     if (!estPdf && !estRis) continue
     if (courante == null) continue // PJ sans source rattachable : ignoree (l'appelant gere les reponses)
     if (estPdf && await attacherPdf(courante, pj.url, soumisPar)) {
-      lignes.push(`📎 PDF intégral attaché → ${lienApp(courante)}`)
+      lignes.push(`📎 PDF intégral joint. 👉 Lire et commenter sur À la source : ${lienApp(courante)}`)
     } else if (estRis && await importerRis(courante, pj.url)) {
       lignes.push(`🏷️ Métadonnées RIS importées → ${lienApp(courante)}`)
     }
