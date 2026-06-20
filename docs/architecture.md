@@ -5,7 +5,7 @@
 
 ## Vue d'ensemble
 
-Monorepo npm workspaces (`server/`, `client/`). Outil web d'éducation populaire aux médias de Rouge Coquelicot. Auto-hébergé sur YunoHost.
+Monorepo npm workspaces (`server/`, `client/`). Outil web d'éducation populaire aux médias de Rouge Coquelicot. Déployé en conteneur Docker sur l'infra PIAF (serveur Bomp4rd), derrière Authentik forward-auth.
 
 **Refonte v3, par sujets.** L'entrée du produit est désormais le **Sujet** (thème durable, ex. lithium en Alsace), pas le flux de liens. La page d'accueil est `/sujets` ; la veille collaborative (ex `/flux`, renommée « Veille ») devient un **substrat secondaire** qui alimente les sujets et les activités. Autour des données communes (sources, événements, médias, mécanismes, sujets), une famille d'**activités** d'éducation populaire (atelier, dossier, décryptage, débunkage, parcours, arpentage) se branche, chacune posée comme un pipeline-outil sur ce socle.
 
@@ -40,7 +40,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
 | `/api/dossiers` | dossiers.ts | activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources |
 | `/api/arpentages` | arpentage.ts | activité arpentage : fragments d'un document, attribution, restitutions, synthèse |
-| `/partage/{debunkage,dossier}/:id`, `/partage/sujet/:slug` | partage.ts | **pages HTML publiques** (sans login) des débunks, dossiers/décryptages et thèmes publiés, avec OpenGraph (unfurl Discord). Au déploiement : déclarer `/partage/` public dans le SSO YunoHost |
+| `/partage/{debunkage,dossier}/:id`, `/partage/sujet/:slug` | partage.ts | **pages HTML publiques** (sans login) des débunks, dossiers/décryptages et thèmes publiés, avec OpenGraph (unfurl Discord). Pour les rouvrir sans SSO : exception sans auth sur `/partage/` dans l'hôte NPM |
 | `/api/{debunkages,dossiers}/:id/yeswiki`, `/api/sujets/:idOrSlug/yeswiki` | (resp. routes) | export en syntaxe YesWiki (lib `yeswiki.ts`) |
 | `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
 | `/api/mecanismes` | mecanismes.ts | 25 mécanismes de référence (fiches pédagogiques) |
@@ -52,7 +52,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 ### Bibliothèques (`server/src/lib/`)
 
 - `db.ts` : connexion better-sqlite3.
-- `auth.ts` : middleware d'authentification.
+- `auth.ts` : middleware d'authentification (Authentik forward-auth : lit `X-authentik-username` / `X-authentik-groups`, repli `Remote-User` puis `?_user=` en dev ; rôle dérivé des groupes, élevable en base).
 - `readability.ts` + `opengraph.ts` : extraction d'articles (Mozilla Readability, OpenGraph).
 - `ftr-site-config.ts` : règles FullTextRSS par site (65 sites configurés).
 - `score.ts` : calcul du score atelier (écho/pédagogie/fraîcheur/timing) et de la confiance média.
@@ -147,7 +147,7 @@ Redirections de compatibilité : `/`→`/sujets`, `/decrypter`→`/observatoire`
 
 Deux canaux pour partager le contenu publié sans connexion à l'appli (route `partage.ts`, montée avant le fallback SPA) :
 
-- **Pages publiques OpenGraph** : `GET /partage/debunkage/:id`, `GET /partage/dossier/:id`, `GET /partage/sujet/:slug`. Pages HTML autoportantes (CSS inline, aucune dépendance React), balises OpenGraph + `twitter:card` (titre, description, url, image de la 1re source) pour l'unfurl Discord. Rendues seulement si l'objet est publié, sinon page « non disponible ». **Au déploiement YunoHost : déclarer `/partage/` en accès public** (`skipped_uris` du SSO), sans quoi le SSO intercepte la requête.
+- **Pages publiques OpenGraph** : `GET /partage/debunkage/:id`, `GET /partage/dossier/:id`, `GET /partage/sujet/:slug`. Pages HTML autoportantes (CSS inline, aucune dépendance React), balises OpenGraph + `twitter:card` (titre, description, url, image de la 1re source) pour l'unfurl Discord. Rendues seulement si l'objet est publié, sinon page « non disponible ». **Pour les rouvrir sans SSO : ajouter une exception sans auth sur `/partage/` dans l'hôte NPM** (équivalent des `skipped_uris` de l'ancien SSO), sans quoi Authentik intercepte la requête.
 - **Exports YesWiki** : `GET /api/debunkages/:id/yeswiki`, `GET /api/dossiers/:id/yeswiki`, `GET /api/sujets/:idOrSlug/yeswiki` (lib `yeswiki.ts`). Conversion en syntaxe YesWiki à coller dans becs-rouges.fr / rouge-coquelicot.fr.
 
 ## Modules fonctionnels (rappel produit)
@@ -162,4 +162,4 @@ Deux canaux pour partager le contenu publié sans connexion à l'appli (route `p
 
 ## Déploiement
 
-YunoHost. En production, le serveur Express sert le build React (`client/dist`). Voir `docs/deploiement.md`.
+Conteneur Docker sur l'infra PIAF (serveur Bomp4rd), `alasource.barjot.net`, derrière Authentik forward-auth (via NPM), port interne 3033. En production, le serveur Express sert le build React (`client/dist`). Voir `docs/deploiement.md`.

@@ -90,35 +90,42 @@ Etablie depuis les `requireRole(...)` reels du code.
 
 ## 4. Risques et durcissement
 
-1. **Confiance dans `Remote-User`.** Si Node etait joignable directement (hors
-   proxy SSO), un header `Remote-User` force usurperait n'importe quelle
-   identite. **En prod, Node doit n'ecouter que sur `127.0.0.1`** et n'etre
-   atteignable que derriere nginx/SSO YunoHost. A verifier au point commun.
+1. **Confiance dans les en-tetes d'identite.** Les en-tetes `X-authentik-*` (et
+   le repli `Remote-User`) ne sont fiables que parce que **NPM les pose lui-meme**
+   apres la sous-requete forward-auth et **ecrase toute valeur envoyee par le
+   client**. Le conteneur ne doit etre joignable **que** via NPM (reseau Docker
+   `web`, jamais expose en direct), sans quoi un en-tete force usurperait une
+   identite. Le repli `?_user=` est strictement reserve au dev (`NODE_ENV !==
+   'production'`).
 
 2. **Base de travail sur OneDrive ARTELIA (compte professionnel).** Les donnees
    de l'association vivent, en dev, sur l'espace cloud d'un employeur
    (`server/src/db/dbPath.ts`). C'est un risque de gouvernance/confidentialite.
-   - La **prod** doit utiliser une base LOCALE au serveur YunoHost, jamais
-     OneDrive.
+   - En **prod**, la base est LOCALE au serveur (volume `/data`, via
+     `A_LA_SOURCE_DB`), jamais OneDrive.
    - OneDrive = poste de dev de Guillaume uniquement. A clarifier et, a terme,
      a sortir d'un espace professionnel.
 
-3. **Pas de journal d'attribution de role.** Acceptable a 3 comptes ; a prevoir
-   si la base d'utilisateurs grandit.
+3. **Pas de journal d'attribution de role.** Acceptable a quelques comptes ; a
+   prevoir si la base d'utilisateurs grandit.
 
 ---
 
-## 5. Modele recommande
+## 5. Modele en place : Authentik forward-auth (PIAF)
 
-- **Option A - SSO YunoHost natif (recommandee maintenant).** Statu quo
-  ameliore : on garde `Remote-User`, on durcit le binding Node (127.0.0.1), on
-  declare `/partage/` public, on documente la matrice ci-dessus. Zero code a
-  ajouter.
+L'application est adossee au **SSO commun Authentik** de l'infra PIAF, en
+forward-auth via NPM (cf. section 1 et `docs/deploiement.md`). L'identite est
+unifiee avec les autres outils de l'infra, sans mot de passe a gerer cote app.
 
-- **Option B - adosser a Authentik (cible si A la source rejoint le SSO commun
-  PIAF).** Unifie l'identite avec les autres outils, au prix d'un couplage et
-  d'un travail d'integration (delegation OIDC cote YunoHost, ou OIDC direct
-  cote appli). A decider au point commun.
-
-Decision a prendre avec Guillaume. Tant qu'A la source reste autonome sur son
-YunoHost, l'Option A suffit.
+- **Acces** gouverne par les bindings du blueprint Authentik `alasource` :
+  groupes `rc-membres`, `rc-admins`, `piafs`, `admins` autorises a franchir le
+  forward-auth.
+- **Roles** derives des groupes : `admins` / `sso-admins` / `rc-admins` ouvrent
+  `admin` ; tout autre compte ayant franchi le SSO entre `membre`. Le role en
+  base peut **elever** un compte (ex. `animateur`), jamais l'abaisser : le role
+  effectif est le plus haut des deux. Le role `animateur` est donc attribue **en
+  base** (par un admin, via `PATCH /api/auth/users/:id`).
+- **Repli** : `Remote-User` (compatibilite ancien SSO) puis `?_user=Nom` en dev
+  uniquement.
+- **Pages `/partage/*`** : publiques par conception (OpenGraph). Pour les rouvrir
+  sans SSO, declarer une exception sur `/partage/` dans l'hote NPM.

@@ -15,8 +15,11 @@ par `server/src/db/auto-migrate.ts` (idempotent). Etat verifie le 11/06/2026
 ## Familles de tables
 
 ### Utilisateurs et lecture
-- `utilisateurs` : `nom` (= identifiant SSO YunoHost), `role`
-  (`membre`/`animateur`/`admin`), `actif`. Voir `docs/acces-identite.md`.
+- `utilisateurs` : `nom` (= identifiant SSO Authentik, repli `Remote-User`),
+  `role` (`membre`/`animateur`/`admin`), `actif`, et l'identite Discord
+  `discord_pseudo` (pseudo editable depuis Mon espace) et `discord_id`
+  (identifiant stable, sert au rapprochement auteur Discord ↔ membre par le bot
+  d'ingestion). Voir `docs/acces-identite.md`.
 - `lectures` : etat de lecture par (source, utilisateur) :
   `a_lire`/`lu`/`recommande`, avec `recommande_a` pour les recommandations.
 
@@ -79,6 +82,12 @@ Tables legacy conservees (avant la bascule sur le socle) :
   `parcours_sessions` (tentative d'un utilisateur), `parcours_reponses`
   (reponse par question, correct ou non).
 
+### Integration Discord
+- `discord_messages` : mapping message Discord ↔ source. Permet au bot de
+  rattacher les **editions** et **reponses** Discord a la bonne source (texte en
+  commentaire, version sans paywall ajoutee en lien alternatif), et la dedup par
+  message en plus de la dedup par URL.
+
 ### Divers
 - `contenus` : contenus editoriaux stockes en base (manuel, fiches), rendus en
   markdown cote client (anti link-rot).
@@ -101,5 +110,6 @@ Mode WAL : copie a chaud possible.
 cp a-la-source.db backup-$(date +%Y%m%d).db
 ```
 
-En prod, la base doit etre LOCALE au serveur YunoHost (pas OneDrive). Voir
-`docs/acces-identite.md`, section risques.
+En prod, la base est LOCALE au serveur (volume `/data` du conteneur, via
+`A_LA_SOURCE_DB`), jamais OneDrive. Voir `docs/acces-identite.md`, section
+risques.

@@ -89,7 +89,16 @@ Un **socle commun** (table `activites`) avec un pipeline par type. 6 types : **a
 
 ### Integration Discord
 
-- **Ingestion Discord → Inbox** : un message poste dans un canal surveille cree une source en **Inbox a qualifier** (origine `discord`), triee ensuite dans l'appli. Le bot est **gated sur le token** : sans `DISCORD_TOKEN`, l'ingestion est simplement inactive et le demarrage n'est jamais casse.
+- **Ingestion Discord → Inbox** : un message poste dans un canal surveille cree une source en **Inbox a qualifier** (origine `discord`), triee ensuite dans l'appli. Le bot **repond** avec le lien vers l'article dans l'app, credite la source au bon membre (rapprochement par `discord_id`, sinon pseudo Discord), gere les **PDF Europresse joints** (copie integrale hors-ligne lisible dans l'app) et les fichiers `.ris` (metadonnees). Le bot est **gated sur le token** : sans `DISCORD_TOKEN`, l'ingestion est simplement inactive et le demarrage n'est jamais casse.
+- **Ajout manuel** : poster un lien (avec texte en plus = commentaire), une version sans paywall par edition, repondre ou editer un message Discord rattache a la bonne source.
+- **Consultation** : `!source`/`!fiche <id>` (fiche d'une source), `!texte <id>` (texte integral en blocs), `!editcom <id> <texte>` (editer un commentaire), `!vivier`/`!atelier`/`!analyser`, `!aide`/`!manuel`/`!guide` (le manuel). Chaque reponse invite a « faire encore mieux dans l'app ».
+- **Notifications App → Discord** : a la publication d'un sujet, d'un dossier/decryptage ou d'un debunkage, un message est poste dans le salon dedie via `DISCORD_WEBHOOK_URL` (sans bot, garde anti-doublon).
+
+### Espace personnel
+
+- **Mon compte** : identite SSO, role, **pseudo Discord** editable.
+- **Mes contributions** : sources proposees, evaluations, mecanismes, commentaires, activites creees ou animees, sujets crees.
+- **Mes lectures** et recommandations recues, chaines partenaires suivies.
 
 ---
 
@@ -138,8 +147,13 @@ En developpement, le client Vite tourne sur le port 5173 avec proxy vers le serv
 
 | Variable | Defaut | Description |
 |----------|--------|-------------|
-| `PORT` | 3031 | Port du serveur |
+| `PORT` | 3031 (dev) / 3033 (conteneur) | Port du serveur |
 | `NODE_ENV` | development | `production` active le serve statique |
+| `A_LA_SOURCE_DB` | (auto) | Chemin de la base SQLite (en prod : `/data/a-la-source.db`) |
+| `PUBLIC_BASE_URL` | — | URL publique de l'app (`https://alasource.barjot.net`), pour les liens et l'unfurl |
+| `DISCORD_TOKEN` | — | Token du bot Discord ; sans lui l'ingestion et les commandes sont inactives |
+| `DISCORD_WEBHOOK_URL` | — | Webhook du salon de diffusion (notifications App → Discord, sans bot) |
+| `DISCORD_CHANNEL_VEILLE` | — | Identifiant du canal Discord surveille pour l'ingestion |
 
 ---
 
@@ -155,7 +169,7 @@ a-la-source/
 │       │            evaluations, commentaires, recherche, becsrouges, auth,
 │       │            contenus, parametres)
 │       ├── lib/     (db, auth, score, readability, opengraph, ftr-site-config, yeswiki)
-│       ├── discord/ (bot, client : ingestion Discord → Inbox, gated sur token)
+│       ├── discord/ (bot, client, ingestion, notify : ingestion + commandes + notifications, gated sur token)
 │       └── db/      (schema, seed-*, migrate-* dont migrate-activites, auto-migrate)
 ├── client/          ← React 19 + Vite 6 + TypeScript
 │   └── src/
@@ -178,8 +192,8 @@ a-la-source/
 | Backend | Express + better-sqlite3 | Simple, performant, < 100 users |
 | BDD | SQLite WAL | Zero config, backup triviale |
 | Archivage | Readability + jsdom + FTR | Extraction intelligente par site |
-| Auth | SSO YunoHost (header Remote-User) | Zero mot de passe a gerer |
-| Deploy | YunoHost | Autoheberge, un seul process |
+| Auth | Authentik forward-auth (PIAF) | Zero mot de passe a gerer |
+| Deploy | Conteneur Docker (infra PIAF, Bomp4rd) | Autoheberge, un seul process |
 
 ---
 
@@ -202,13 +216,26 @@ L'interface s'organise en 3 niveaux de header :
 
 ---
 
-## Deploiement YunoHost
+## Deploiement (infra PIAF, Docker + Authentik)
 
-L'application est concue pour etre deployee sur YunoHost :
-- Authentification par SSO (header `Remote-User`)
-- Un seul process Node.js, un seul port
-- Base SQLite locale (pas de SGBD externe)
-- Build statique servi par Express en production
+En production, l'application tourne dans un **conteneur Docker** sur l'infra PIAF
+(serveur **Bomp4rd**), sur le modele de Prisme :
+- Servie sur `alasource.barjot.net`, derriere **Authentik forward-auth** (via NPM) ; aucun mot de passe a gerer.
+- Conteneur `a-la-source` sur le reseau Docker `web`, **port interne 3033** (un seul process Node.js qui sert l'API et le build client).
+- Base SQLite montee en lecture-ecriture (`A_LA_SOURCE_DB=/data/a-la-source.db`), volumes `uploads/` et `image-cache/`.
+- Secrets (token et webhook Discord) dans `/srv/a-la-source/.env`.
+
+Mise a jour depuis le poste de dev :
+
+```bash
+# Pousser le code vers le serveur (pas de .git distant)
+git archive HEAD | tar -x -C /srv/a-la-source/app
+
+# Rebuild et relance du conteneur
+docker compose build && docker compose up -d
+```
+
+Voir `docs/deploiement.md` pour le detail (Dockerfile, compose, NPM, forward-auth).
 
 ---
 

@@ -6,18 +6,30 @@ Un atelier « A la source » est un moment d'education populaire ou un groupe se
 
 ## Avant l'atelier
 
+> **Doctrine « decrire, ne pas noter ».** On ne trie pas les sources par un
+> score-verdict. On **decrit** chaque source par des faits (facettes : fraicheur,
+> completude, mecanismes pressentis, evaluations), et surtout on **decrit le
+> corpus** dans son ensemble : un bon atelier est une propriete d'ensemble
+> (diversite, contraste), pas une somme de bonnes notes.
+
 ### Preparer le vivier
 
 1. Consulter la page **Ateliers** → onglet Vivier
-2. Les sources y sont classees par score pedagogique /100
-3. Filtrer par indice timing (A = 3-8 min, ideal pour un atelier d'1h)
-4. Verifier que la source est archivee (badge vert « Archive »)
+2. Les sources sont triees par **recence** par defaut (le score reste un tri
+   optionnel, jamais un verdict). On lit leurs **facettes factuelles**.
+3. Reperer le profil de duree (zone atelier confortable : 5-10 min)
+4. Verifier que la source est archivee (badge « Archive »)
 
-### Selectionner la source
+### Selectionner la source (et composer le corpus)
 
-- Privilegier les sources avec un score eleve et un timing A ou B
-- Verifier la fraicheur : une source trop ancienne perd en pertinence
-- S'assurer que plusieurs mecanismes sont deja identifies par la communaute
+- Composer le corpus en **glisser-deposer** : vivier a gauche, corpus a droite.
+- S'appuyer sur le panneau **« Profil du corpus »** : il decrit la **diversite**
+  de l'ensemble (medias, type de propriete, type de source, sujets, mecanismes),
+  signale les axes faibles par des **alertes douces** et propose des sources de
+  diversification. Aucun gros nombre-verdict.
+- Verifier la **completude** : « pretes a projeter » = evaluee + archivee +
+  accroche (une completude factuelle, pas une note).
+- Verifier la fraicheur : une source trop ancienne perd en pertinence.
 
 ### Preparer la seance
 
@@ -73,15 +85,27 @@ Un guide complet est disponible dans l'application (page **Apprendre** → ongle
 - L'economie de l'attention (agenda setting, modele publicitaire, paywall)
 - Une grille d'analyse imprimable pour les ateliers
 
-## Les 10 mecanismes de reference
+## Les 25 mecanismes de reference
 
-1. **Effet de cadrage** — presenter l'information sous un angle qui oriente l'interpretation
-2. **Chiffre-paravent** — utiliser un chiffre vrai mais decontextualise pour appuyer un propos
-3. **Argument d'autorite** — invoquer un·e expert·e ou une institution pour couper le debat
-4. **Appel a l'emotion** — provoquer une reaction emotionnelle qui court-circuite la reflexion
-5. **Faux dilemme** — presenter seulement deux options comme si aucune autre n'existait
-6. **Cherry-picking** — selectionner les faits qui arrangent, ignorer les autres
-7. **Generalisation abusive** — tirer une conclusion generale a partir d'un cas particulier
-8. **Homme de paille** — deformer la position adverse pour la rendre plus facile a attaquer
-9. **Pente glissante** — enchainer des consequences improbables pour effrayer
-10. **Fausse equivalence** — mettre sur le meme plan deux choses de poids tres differents
+L'application embarque un catalogue de **25 mecanismes informationnels** de
+reference, classes en familles, chacun avec une fiche detaillee (definition,
+exemples reels tires des analyses, questions guidees). On les **decrit** et on
+apprend a les **reperer ensemble** ; on ne note pas les sources. Le catalogue
+complet est dans **Apprendre → Catalogue**.
+
+Quelques familles et mecanismes representatifs :
+
+- **Cadrage et mise en scene** : effet de cadrage, titre-appat, euphemisme,
+  glissement semantique, decontextualisation, omission.
+- **Raisonnement et argumentation (sophismes)** : faux dilemme, homme de paille,
+  pente glissante, fausse equivalence, whataboutisme, inversion de la charge de
+  la preuve, appel a la tradition, naturalisation.
+- **Manipulation des chiffres** : chiffre-paravent, fausse causalite (correlation
+  / causalite), biais de survie, performativite de l'indicateur.
+- **Ressorts emotionnels et discursifs** : appel a l'emotion, appel a la peur,
+  amalgame, personnalisation, effet de repetition.
+- **Selection et consensus** : cherry-picking, generalisation abusive, faux
+  consensus, argument d'autorite, fenetre d'Overton.
+
+> La liste vivante (avec les exemples reperes au fil des ateliers) est toujours
+> celle de l'app, pas ce memo : Apprendre → Catalogue fait foi.

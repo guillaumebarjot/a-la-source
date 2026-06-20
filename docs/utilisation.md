@@ -4,23 +4,40 @@
 
 « A la source » est un outil collaboratif d'education populaire aux medias, porte par Rouge Coquelicot. Il permet de collecter des sources mediatiques, d'identifier les mecanismes informationnels a l'oeuvre, et de preparer des ateliers de decryptage collectif.
 
-## Parcours type
+## Parcours type (refonte v3, par sujets)
 
-1. **Flux** — Decouvrir les dernieres sources partagees par la communaute
-2. **Lire** — Lire en detail une source, identifier des mecanismes, evaluer
-3. **Vivier** — Les meilleures sources remontent dans le pipeline atelier
-4. **Atelier** — Le·la facilitateur·ice compose une shortlist, le groupe choisit et decortique
+1. **Sujets** — Page d'accueil : explorer les themes durables (couverture multisource)
+2. **Veille** — Le substrat : decouvrir et soumettre des sources partagees par la communaute
+3. **Lire** — Lire en detail une source, identifier des mecanismes, evaluer
+4. **Activites** — Le hub : preparer un atelier, un dossier, un debunkage, un arpentage…
+
+## Navigation
+
+Le menu de tete comporte 8 entrees, **Sujets en premier**, la Veille reléguée en substrat :
+
+```
+Sujets | Activites | Veille | Observatoire | Archiver | Apprendre | Mon espace | [Admin]
+```
 
 ## Pages de l'application
 
-### Flux (`/flux`)
+### Sujets (`/sujets`)
 
-Page d'accueil. Affiche toutes les sources soumises par la communaute, triees par date (les plus recentes en premier). Les sources anciennes s'estompent progressivement (fraicheur visuelle).
+Page d'accueil (`/` y redirige). Grille des **Sujets** (themes durables, ex. le lithium en Alsace), l'objet pivot editorial. Chaque carte mene a la page du sujet : couverture multisource par evenement, sources rattachees (par glisser-deposer), section « Partager » (page publique OpenGraph + export YesWiki). Tout membre cree un sujet ; un·e animateur·ice le publie.
+
+### Veille (`/veille`)
+
+Le **substrat** de la veille collaborative (anciennement « Flux »). Affiche les sources soumises par la communaute, triees par recence (les plus recentes en premier). Les sources anciennes s'estompent progressivement (fraicheur visuelle).
 
 **Actions possibles** :
-- Filtrer par tag, type de source, ou media
-- Soumettre une nouvelle source (bouton « + Soumettre source »)
+- Filtrer par tag, type de source, media, et **commentees / non commentees**
+- Soumettre une nouvelle source (coller une URL, tout le reste est auto-fetche)
 - Cliquer sur une carte pour acceder a la page Lire
+- Acceder a l'**Inbox a qualifier** via le lien discret en tete
+
+### Inbox a qualifier (`/inbox`)
+
+Les sources entrantes en attente de tri, notamment celles **ingerees depuis Discord** (origine `discord`). Pour chaque carte : **Qualifier** (→ veille / vivier) ou **Rejeter** (→ archive, non destructif).
 
 ### Lire (`/lire/:id`)
 
@@ -49,14 +66,18 @@ Visualisations et statistiques sur l'ensemble des sources analysees. 4 onglets :
 - **Fiches medias** : fiches detaillees (proprietaire, ligne editoriale, stats)
 - **Sources** : top sources les plus evaluees
 
+### Activites (`/activites`)
+
+Le **hub** des activites d'education populaire, posees sur un socle commun. Section « Creer une activite » en tete avec les 6 formats : **atelier, dossier, decryptage (a chaud), debunkage, parcours, arpentage**. Compteurs et acces a chaque famille.
+
 ### Ateliers (`/ateliers`)
 
 Pipeline de preparation et gestion des ateliers. 4 onglets :
 
-- **Vivier** : sources proposees, triees par score /100 (60% pedagogie + 40% echo), avec quality gate
-- **Preparation** : composer un atelier, selectionner les sources, definir les questions
-- **En cours** : atelier actif, acces au mode projection plein ecran
-- **Archives** : historique des ateliers termines avec compte-rendu
+- **Vivier** : sources proposees, triees par **recence** par defaut (le score reste un tri optionnel, plus un verdict). On lit des **facettes factuelles** (nombre d'evaluations, completude, mecanismes pressentis, fraicheur) ; la checklist « pretes pour atelier » (evaluee + archivee + accroche) est une **completude**, pas une note.
+- **Preparation** : composer un atelier en glisser-deposer (vivier a gauche, corpus a droite). Panneau « Profil du corpus » : on **decrit l'ensemble** (diversite de medias, de propriete, de mecanismes, profil de duree) avec des alertes douces et des suggestions de diversification, sans nombre-verdict.
+- **En cours** : atelier actif, table de pilotage sur un ecran, acces au mode projection plein ecran.
+- **Archives** : historique des ateliers termines avec compte-rendu.
 
 ### Archiver (`/archiver`)
 
@@ -76,8 +97,10 @@ Section pedagogique. 3 onglets :
 
 ### Mon espace (`/perso`)
 
-Espace personnel. 2 onglets :
+Espace personnel :
 
+- **Mon compte** : identite SSO, role, et **pseudo Discord** editable (sert au rapprochement des sources postees sur Discord avec votre compte)
+- **Mes contributions** : sources proposees, evaluations, mecanismes, commentaires, activites creees ou animees, sujets crees
 - **Mes lectures** : sources sauvegardees, recommandations reçues
 - **Chaines amies** : videos partenaires (PeerTube / Indymotion)
 
@@ -128,3 +151,33 @@ Les sources s'estompent progressivement avec le temps. La vitesse depend du type
 
 - **Tags** : poses manuellement par les membres (thematiques, libres)
 - **Mots-cles** : extraits automatiquement du contenu (meta HTML + TF-IDF)
+
+## Depuis Discord
+
+Le bot relie le salon Discord du collectif a l'application.
+
+### Poster un lien
+
+- Coller une **URL d'article** dans le canal surveille cree une source en **Inbox a qualifier**. Le bot **repond** avec le lien vers l'article dans l'app. Si vous avez renseigne votre **pseudo Discord** dans Mon espace, la source vous est creditee.
+- **Texte en plus du lien** : ajoute en **commentaire** sur la source.
+- **Version sans paywall** : repondre/editer avec un lien alternatif l'ajoute a la source (pas un doublon).
+- **Edition / reponse** Discord : rattachee a la bonne source (le bot garde le lien message ↔ source).
+
+### PDF Europresse et fichiers .ris
+
+- **PDF joint** : copie integrale **hors-ligne** lisible directement dans l'app (utile pour Europresse / BnF).
+- **`.ris` joint** : metadonnees recuperees (titre, media, date, resume).
+
+### Commandes (consultation et manuel)
+
+- `!source <id>` ou `!fiche <id>` : fiche d'une source (commentaires avec id, debunkages lies, presence de texte)
+- `!texte <id>` : texte integral, decoupe en blocs
+- `!editcom <id> <texte>` : modifier un commentaire (auteur ou admin)
+- `!vivier`, `!atelier`, `!analyser` : raccourcis vers le pipeline
+- `!aide`, `!manuel`, `!guide` : le manuel de deconstruction mediatique
+
+Chaque reponse du bot invite a « faire encore mieux dans l'app ».
+
+### App vers Discord
+
+A la publication d'un **sujet**, d'un **dossier/decryptage** ou d'un **debunkage**, un message est automatiquement poste dans le salon de diffusion (carte « unfurlee »).
