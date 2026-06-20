@@ -1,5 +1,7 @@
 # Deploiement — A la source
 
+> **Note (2026-06-20).** Le deploiement de production est desormais **conteneurise sur l'infra PIAF** (serveur Bomp4rd, `alasource.barjot.net`), derriere Authentik forward-auth, sur le modele de Prisme. Voir `Dockerfile`, `deploy/docker-compose.yml`, le `docs/CHANGELOG.md` (entree 2026-06-20) et `docs/acces-identite.md`. Mise a jour : depuis le poste de dev, `git archive HEAD | tar` vers `/srv/a-la-source/app`, puis `docker compose build && up -d`. La section YunoHost ci-dessous est conservee a titre historique.
+
 ## Prerequis
 
 - Serveur YunoHost fonctionnel

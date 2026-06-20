@@ -230,6 +230,17 @@ export interface Utilisateur {
   id: number
   nom: string
   role: 'membre' | 'animateur' | 'admin'
+  email?: string | null
+  discord_pseudo?: string | null
+}
+
+export interface Contributions {
+  sources: { id: number; titre: string; statut: string; soumis_le: string; media_nom?: string }[]
+  activites: { id: number; type: string; titre: string; statut: string; anime: number }[]
+  sujets: { id: number; slug: string; titre: string; statut: string }[]
+  nbEvaluations: number
+  nbMecanismes: number
+  nbCommentaires: number
 }
 
 export interface Lecture {

@@ -3,10 +3,53 @@ import db from '../lib/db.js'
 
 const router = Router()
 
-// GET /api/auth/me — utilisateur courant
+// GET /api/auth/me — utilisateur courant (enrichi : email SSO, pseudo Discord)
 router.get('/me', (req, res) => {
   if (!req.user) { res.status(401).json({ error: 'Non authentifie' }); return }
-  res.json(req.user)
+  const extra = db.prepare('SELECT discord_pseudo FROM utilisateurs WHERE id = ?')
+    .get(req.user.id) as { discord_pseudo: string | null } | undefined
+  res.json({
+    ...req.user,
+    email: (req.headers['x-authentik-email'] as string) || null,
+    discord_pseudo: extra?.discord_pseudo || null,
+  })
+})
+
+// POST /api/auth/profil — met a jour le profil de l'utilisateur courant (pseudo Discord)
+router.post('/profil', (req, res) => {
+  if (!req.user) { res.status(401).json({ error: 'Non authentifie' }); return }
+  const pseudo = typeof req.body?.discord_pseudo === 'string' ? req.body.discord_pseudo.trim() : ''
+  db.prepare('UPDATE utilisateurs SET discord_pseudo = ? WHERE id = ?')
+    .run(pseudo || null, req.user.id)
+  res.json({ ok: true, discord_pseudo: pseudo || null })
+})
+
+// GET /api/auth/contributions — synthese des contributions de l'utilisateur courant
+router.get('/contributions', (req, res) => {
+  if (!req.user) { res.status(401).json({ error: 'Non authentifie' }); return }
+  const uid = req.user.id
+  const sources = db.prepare(`
+    SELECT s.id, s.titre, s.statut, s.soumis_le, m.nom AS media_nom
+    FROM sources s LEFT JOIN medias m ON s.media_id = m.id
+    WHERE s.soumis_par = ? ORDER BY s.soumis_le DESC LIMIT 30
+  `).all(uid)
+  const activites = db.prepare(`
+    SELECT a.id, a.type, a.titre, a.statut,
+           CASE WHEN a.anime_par = ? THEN 1 ELSE 0 END AS anime
+    FROM activites a
+    WHERE a.cree_par = ? OR a.anime_par = ?
+    ORDER BY a.maj_le DESC LIMIT 30
+  `).all(uid, uid, uid)
+  const sujets = db.prepare(`
+    SELECT id, slug, titre, statut FROM sujets WHERE cree_par = ? ORDER BY maj_le DESC LIMIT 30
+  `).all(uid)
+  const nbEvaluations = (db.prepare('SELECT COUNT(*) AS c FROM evaluations WHERE evaluateur_id = ?')
+    .get(uid) as { c: number }).c
+  const nbMecanismes = (db.prepare('SELECT COUNT(*) AS c FROM source_mecanismes WHERE identifie_par = ?')
+    .get(uid) as { c: number }).c
+  const nbCommentaires = (db.prepare('SELECT COUNT(*) AS c FROM commentaires WHERE auteur_id = ?')
+    .get(uid) as { c: number }).c
+  res.json({ sources, activites, sujets, nbEvaluations, nbMecanismes, nbCommentaires })
 })
 
 // GET /api/auth/users — liste des utilisateurs (admin)

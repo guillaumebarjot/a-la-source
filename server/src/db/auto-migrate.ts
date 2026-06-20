@@ -57,6 +57,11 @@ export function autoMigrate(): void {
   // Inbox a qualifier — sources entrantes (ex. ingestion Discord) en attente de tri
   ajouterColonne('sources', 'a_qualifier', 'INTEGER DEFAULT 0')
 
+  // Espace perso — identite Discord. Permet d'attribuer a un membre les sources
+  // qu'il poste sur le serveur Discord (le bot rapproche pseudo/id Discord <-> compte).
+  ajouterColonne('utilisateurs', 'discord_pseudo', 'TEXT')
+  ajouterColonne('utilisateurs', 'discord_id', 'TEXT')
+
   // Chantier B — profil de transparence des médias
   db.exec(`
     CREATE TABLE IF NOT EXISTS media_transparence (

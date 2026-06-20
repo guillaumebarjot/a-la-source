@@ -5,17 +5,28 @@ reel au 11/06/2026 (verifie dans le code et la base), puis modele recommande.
 
 ---
 
-## 1. Authentification : SSO YunoHost
+## 1. Authentification : Authentik forward-auth (PIAF)
 
-L'application ne gere **aucun mot de passe**. Elle delegue l'identite a
-YunoHost, qui place l'identifiant de l'utilisateur connecte dans le header HTTP
-`Remote-User`. Le middleware `authMiddleware` (`server/src/lib/auth.ts`) :
+En production (Bomp4rd, `alasource.barjot.net`), l'application est servie derriere
+**Authentik** (SSO de l'infra PIAF, en forward-auth via NPM). L'app ne gere
+**aucun mot de passe** : NPM interroge Authentik et transmet l'identite et les
+groupes dans des en-tetes poses par la sous-requete d'auth (anti-usurpation : NPM
+ecrase toute valeur envoyee par le client). Le middleware `authMiddleware`
+(`server/src/lib/auth.ts`) :
 
-1. lit `Remote-User` ;
-2. cherche l'utilisateur en base (`utilisateurs.nom`, si `actif = 1`) ;
-3. s'il est inconnu, **cree** un compte avec le role par defaut `membre`
-   (auto-provisioning) ;
-4. attache `req.user = { id, nom, role }` a la requete.
+1. lit l'identite dans `X-authentik-username` (repli `Remote-User` pour l'ancien
+   SSO YunoHost, puis `?_user=` en dev) ;
+2. derive un role plancher des groupes (`X-authentik-groups`) : `admins`,
+   `sso-admins`, `rc-admins` ouvrent `admin` ; tout autre compte ayant franchi le
+   forward-auth entre `membre` ;
+3. cherche l'utilisateur en base (`utilisateurs.nom`, si `actif = 1`) ; s'il est
+   inconnu, **cree** un compte avec le role accorde (auto-provisioning) ;
+4. attache `req.user = { id, nom, role }`, le role effectif etant le **plus haut**
+   entre le role en base (qu'un admin peut elever, ex. `animateur`) et le role SSO.
+
+Groupes Authentik autorises a l'acces (bindings du blueprint `alasource`) :
+`rc-membres`, `rc-admins`, `piafs`, `admins`. Le vrai groupe des membres Rouge
+Coquelicot est `rc-membres`.
 
 ### Developpement
 
@@ -25,9 +36,11 @@ strictement reserve au dev : il ne doit jamais pouvoir s'activer en prod.
 
 ### Routes publiques
 
-Les pages de partage `/partage/*` (OpenGraph pour Discord) sont volontairement
-accessibles sans login. Au deploiement YunoHost, les declarer publiques dans le
-SSO (`skipped_uris`), sinon le SSO les intercepte avant l'application.
+Les pages de partage `/partage/*` (OpenGraph pour Discord) sont concues pour etre
+publiques. Tant que **tout est garde derriere le SSO** (choix initial du
+deploiement PIAF), elles le sont aussi. Pour les rouvrir (apercus de liens dans
+Discord), ajouter une exception sans auth sur `/partage/` dans l'hote NPM
+(equivalent des `skipped_uris` de l'ancien deploiement YunoHost).
 
 ---
 

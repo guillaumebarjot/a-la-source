@@ -28,11 +28,33 @@ function nettoyerUrl(brut: string): string {
 }
 
 /**
+ * Rapproche un auteur Discord (id stable, sinon pseudo) d'un compte membre.
+ * Renvoie l'id utilisateur a crediter, ou null si inconnu.
+ * Si on retrouve le membre par son pseudo et que son discord_id n'est pas encore
+ * connu, on le memorise (l'id Discord est stable, le pseudo peut changer).
+ */
+function trouverMembreDiscord(discordId: string, pseudo: string): number | null {
+  let u = db.prepare('SELECT id FROM utilisateurs WHERE discord_id = ? AND actif = 1')
+    .get(discordId) as { id: number } | undefined
+  if (u) return u.id
+  if (pseudo) {
+    u = db.prepare('SELECT id FROM utilisateurs WHERE discord_pseudo = ? AND actif = 1')
+      .get(pseudo) as { id: number } | undefined
+    if (u) {
+      try { db.prepare('UPDATE utilisateurs SET discord_id = ? WHERE id = ? AND (discord_id IS NULL OR discord_id = "")').run(discordId, u.id) } catch { /* best-effort */ }
+      return u.id
+    }
+  }
+  return null
+}
+
+/**
  * Cree une source en inbox a partir d'une URL, sans doublon d'URL.
  * Titre best-effort via OpenGraph ; a defaut, l'URL elle-meme.
+ * soumisPar : id du membre a crediter (auteur Discord rapproche), ou null.
  * Tout est defensif : en cas d'erreur, on logge et on continue.
  */
-async function ingererUrl(url: string): Promise<void> {
+async function ingererUrl(url: string, soumisPar: number | null): Promise<void> {
   try {
     const existe = db.prepare('SELECT id FROM sources WHERE url = ?').get(url) as { id: number } | undefined
     if (existe) return
@@ -54,10 +76,10 @@ async function ingererUrl(url: string): Promise<void> {
 
     db.prepare(`
       INSERT INTO sources (titre, url, origine, statut, a_qualifier, soumis_par)
-      VALUES (?, ?, 'discord', 'veille', 1, NULL)
-    `).run(titre, url)
+      VALUES (?, ?, 'discord', 'veille', 1, ?)
+    `).run(titre, url, soumisPar)
 
-    console.log(`Discord: source ingeree en inbox a qualifier — ${url}`)
+    console.log(`Discord: source ingeree en inbox a qualifier — ${url}${soumisPar ? ` (creditee au membre #${soumisPar})` : ''}`)
   } catch (err) {
     console.error('Discord: echec ingestion URL', url, err)
   }
@@ -113,10 +135,16 @@ export async function startDiscordBot(): Promise<void> {
         const matches = contenu.match(URL_REGEX)
         if (!matches) return
 
+        // Attribution : rapproche l'auteur Discord d'un compte membre (sinon NULL).
+        const soumisPar = trouverMembreDiscord(
+          message.author?.id || '',
+          message.author?.username || '',
+        )
+
         const urls = Array.from(new Set(matches.map(nettoyerUrl).filter(Boolean)))
         for (const url of urls) {
           // Fire-and-forget : ingererUrl gere ses propres erreurs.
-          void ingererUrl(url)
+          void ingererUrl(url, soumisPar)
         }
       } catch (err) {
         console.error('Discord: erreur de traitement de message', err)

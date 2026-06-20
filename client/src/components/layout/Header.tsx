@@ -48,6 +48,8 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
     { label: 'Utilisateurs', to: '/admin/utilisateurs' },
   ],
   '/perso': [
+    { label: 'Mon compte', to: '/perso/compte' },
+    { label: 'Mes contributions', to: '/perso/contributions' },
     { label: 'Mes lectures', to: '/perso/lectures' },
     { label: 'Chaines amies', to: '/perso/chaines' },
   ],

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
-import type { Lecture, Contenu } from '../types'
+import type { Lecture, Contenu, Contributions } from '../types'
 
 interface Video {
   id: string
@@ -187,18 +187,148 @@ function SectionChaines() {
   )
 }
 
+/* ---------- Section Mon compte ---------- */
+
+function SectionCompte() {
+  const user = useAuth((s) => s.user)
+  const fetchUser = useAuth((s) => s.fetchUser)
+  const [pseudo, setPseudo] = useState('')
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => { setPseudo(user?.discord_pseudo || '') }, [user?.discord_pseudo])
+
+  if (!user) return <p className="loading">Chargement...</p>
+
+  const enregistrer = async () => {
+    await api.post('/auth/profil', { discord_pseudo: pseudo })
+    await fetchUser()
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+  }
+
+  return (
+    <section className="compte">
+      <h2>Mon compte</h2>
+      <dl className="compte-infos">
+        <div><dt>Identifiant</dt><dd>{user.nom}</dd></div>
+        {user.email && <div><dt>Courriel</dt><dd>{user.email}</dd></div>}
+        <div><dt>Role</dt><dd>{user.role}</dd></div>
+      </dl>
+      <p className="compte-note">Ton identite vient du SSO (Authentik) ; le role est gere par les animateur·ices.</p>
+
+      <h3>Pseudo Discord</h3>
+      <p className="compte-aide">
+        Renseigne ton pseudo Discord pour que les liens que tu postes sur le serveur Rouge Coquelicot
+        te soient attribues automatiquement dans la veille.
+      </p>
+      <div className="compte-pseudo">
+        <input
+          type="text"
+          value={pseudo}
+          onChange={(e) => setPseudo(e.target.value)}
+          placeholder="ton.pseudo.discord"
+          aria-label="Pseudo Discord"
+        />
+        <button onClick={enregistrer}>Enregistrer</button>
+        {saved && <span className="compte-ok">Enregistre</span>}
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Section Mes contributions ---------- */
+
+function SectionContributions() {
+  const [c, setC] = useState<Contributions | null>(null)
+
+  useEffect(() => { api.get<Contributions>('/auth/contributions').then(setC).catch(() => {}) }, [])
+
+  if (!c) return <p className="loading">Chargement...</p>
+
+  return (
+    <>
+      <section className="contrib-stats">
+        <h2>Mes contributions</h2>
+        <div className="contrib-compteurs">
+          <div className="contrib-compteur"><strong>{c.sources.length}</strong><span>sources proposees</span></div>
+          <div className="contrib-compteur"><strong>{c.nbEvaluations}</strong><span>evaluations</span></div>
+          <div className="contrib-compteur"><strong>{c.nbMecanismes}</strong><span>mecanismes reperes</span></div>
+          <div className="contrib-compteur"><strong>{c.nbCommentaires}</strong><span>commentaires</span></div>
+          <div className="contrib-compteur"><strong>{c.activites.length}</strong><span>activites</span></div>
+          <div className="contrib-compteur"><strong>{c.sujets.length}</strong><span>sujets</span></div>
+        </div>
+      </section>
+
+      {c.sources.length > 0 && (
+        <section>
+          <h3>Sources proposees ({c.sources.length})</h3>
+          <div className="lecture-list">
+            {c.sources.map((s) => (
+              <Link key={s.id} to={`/lire/${s.id}`} className="lecture-item">
+                <span>{s.titre}</span>
+                <span className="lecture-media">{[s.media_nom, s.statut].filter(Boolean).join(' · ')}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {c.activites.length > 0 && (
+        <section>
+          <h3>Activites creees ou animees ({c.activites.length})</h3>
+          <ul className="contrib-liste">
+            {c.activites.map((a) => (
+              <li key={`${a.type}-${a.id}`}>
+                {a.titre || a.type}{' '}
+                <span className="contrib-meta">{a.type} · {a.statut}{a.anime ? ' · animateur·ice' : ''}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {c.sujets.length > 0 && (
+        <section>
+          <h3>Sujets crees ({c.sujets.length})</h3>
+          <ul className="contrib-liste">
+            {c.sujets.map((s) => (
+              <li key={s.id}>
+                <Link to={`/sujets/${s.slug}`}>{s.titre}</Link>{' '}
+                <span className="contrib-meta">{s.statut}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {c.sources.length === 0 && c.activites.length === 0 && c.sujets.length === 0
+        && c.nbEvaluations === 0 && c.nbMecanismes === 0 && c.nbCommentaires === 0 && (
+        <p className="empty">Pas encore de contribution. Propose une source dans la veille pour commencer.</p>
+      )}
+    </>
+  )
+}
+
 /* ---------- Composant principal ---------- */
+
+const INTROS: Record<string, string> = {
+  compte: 'Ton identite, ton pseudo Discord et tes droits.',
+  contributions: 'Tout ce que tu as propose, analyse et anime.',
+  lectures: 'Tes lectures sauvegardees et les recommandations recues.',
+  chaines: 'Les chaines de nos collectifs partenaires.',
+}
 
 export default function MonEspace() {
   const { section } = useParams<{ section?: string }>()
-  const user = useAuth((s) => s.user)
 
-  if (!section) return <Navigate to="/perso/lectures" replace />
+  if (!section) return <Navigate to="/perso/compte" replace />
 
   return (
     <div className="page-perso">
-      <p className="page-intro">Vos lectures sauvegardees et les chaines partenaires a suivre.</p>
+      <p className="page-intro">{INTROS[section] || ''}</p>
 
+      {section === 'compte' && <SectionCompte />}
+      {section === 'contributions' && <SectionContributions />}
       {section === 'lectures' && <SectionLectures />}
       {section === 'chaines' && <SectionChaines />}
     </div>

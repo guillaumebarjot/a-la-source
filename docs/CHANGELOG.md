@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-20 — Déploiement PIAF (Docker + Authentik) et espace personnel
+
+Mise en production sur l'infra PIAF (serveur Bomp4rd), sur le modèle de Prisme, et premier bloc de finition « espace perso ».
+
+- **Conteneurisation** : `Dockerfile` multi-étapes (Node 22, build des deux workspaces, runtime servant l'API + le build client sur le port 3033), `.dockerignore`, compose de référence dans `deploy/`. Conteneur `a-la-source` sur le réseau Docker `web`, base montée en lecture-écriture (`A_LA_SOURCE_DB=/data/a-la-source.db`), volumes `uploads/` et `image-cache/`.
+- **Authentification Authentik forward-auth** : `server/src/lib/auth.ts` lit désormais `X-authentik-username` / `X-authentik-groups` (repli `Remote-User`, puis `?_user=` en dev). Rôle dérivé des groupes (`admins`/`sso-admins`/`rc-admins` → admin, sinon membre), le rôle en base pouvant l'élever (animateur). Cf `docs/acces-identite.md`.
+- **Cible** : `alasource.barjot.net` (brand PIAF) derrière Authentik, hôte NPM managé, cert `*.barjot.net`. Bascule `rouge-coquelicot.fr` ultérieure.
+- **Espace personnel** : nouvelles sections « Mon compte » (identité SSO, rôle, **pseudo Discord** éditable) et « Mes contributions » (sources proposées, évaluations, mécanismes, commentaires, activités créées ou animées, sujets créés). API `GET /api/auth/me` enrichi (email, pseudo Discord), `POST /api/auth/profil`, `GET /api/auth/contributions`.
+- **Identité Discord** : colonnes `utilisateurs.discord_pseudo` et `discord_id` (auto-migration). Le bot d'ingestion rapproche désormais l'auteur Discord d'un compte membre (par `discord_id`, sinon `discord_pseudo` qu'il mémorise) et **crédite la source** au bon membre (`sources.soumis_par`) au lieu de la laisser anonyme.
+
 ## 2026-06-07 — Une seule base : chemin centralisé + schema.sql v3
 
 Fin de l'ambiguïté « deux bases ». La base est canonique et unique : celle d'OneDrive (`00_PERSO/A la source/a-la-source.db`). Le code vit dans le repo git ; la donnée dans OneDrive.
