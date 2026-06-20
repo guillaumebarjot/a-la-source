@@ -15,8 +15,14 @@
  */
 
 import db from '../lib/db.js'
-import { getDiscordConfig, handleCommand, handleReply, hasActiveConversation } from './bot.js'
+import { getDiscordConfig, handleCommand, handleReply, hasActiveConversation, texteSourceChunks } from './bot.js'
 import { traiterMessage, sourcePourMessage, type PieceJointe } from './ingestion.js'
+
+// Le bot invite toujours a faire la meme chose, en mieux, dans l'app.
+function avecAstuce(reponse: string): string {
+  const base = process.env.PUBLIC_BASE_URL || 'https://alasource.barjot.net'
+  return `${reponse}\n\n_💡 Encore plus confortable dans l'app : ${base}_`
+}
 
 /**
  * Rapproche un auteur Discord (id stable, sinon un de ses noms) d'un compte membre.
@@ -105,13 +111,21 @@ export async function startDiscordBot(): Promise<void> {
         // Commandes ! (et reponses a une conversation en cours)
         if (contenu.trim().startsWith('!')) {
           const parts = contenu.trim().split(/\s+/)
-          const { response } = handleCommand(authorId, parts[0], parts.slice(1).join(' '))
-          if (response) await message.reply(response).catch(() => {})
+          const cmd = parts[0].toLowerCase()
+          const args = parts.slice(1).join(' ')
+          // !texte : sortie multi-messages (texte integral decoupe)
+          if (cmd === '!texte') {
+            const blocs = texteSourceChunks(args)
+            for (const bloc of blocs) await message.reply(bloc).catch(() => {})
+            return
+          }
+          const { response } = handleCommand(authorId, auteurMembre(message), cmd, args)
+          if (response) await message.reply(avecAstuce(response)).catch(() => {})
           return
         }
         if (hasActiveConversation(authorId)) {
           const { response } = handleReply(authorId, contenu)
-          if (response) await message.reply(response).catch(() => {})
+          if (response) await message.reply(avecAstuce(response)).catch(() => {})
           return
         }
 

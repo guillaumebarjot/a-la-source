@@ -33,6 +33,10 @@ interface ConversationState {
 // Conversations actives (en memoire, pas persistees)
 const conversations = new Map<string, ConversationState>()
 
+function baseApp(): string {
+  return process.env.PUBLIC_BASE_URL || 'https://alasource.barjot.net'
+}
+
 /**
  * Recupere la config Discord depuis les parametres ou l'env
  */
@@ -61,17 +65,20 @@ export function getDiscordConfig(): DiscordConfig | null {
 /**
  * Gestion des commandes conversationnelles
  */
-export function handleCommand(userId: string, command: string, args: string): {
+export function handleCommand(userId: string, appUserId: number | null, command: string, args: string): {
   response: string
   expectsReply: boolean
 } {
   const cmd = command.toLowerCase()
 
   switch (cmd) {
-    case '!source': return cmdSource(userId, args)
+    case '!source': return cmdSource(appUserId, args)
+    case '!fiche': return cmdFiche(args)
     case '!analyser': return cmdAnalyser(userId, args)
     case '!evaluer': return cmdEvaluer(userId, args)
-    case '!commenter': return cmdCommenter(userId, args)
+    case '!commenter': return cmdCommenter(userId, appUserId, args)
+    case '!editcom':
+    case '!modifcom': return cmdEditCommentaire(appUserId, args)
     case '!taguer': return cmdTaguer(userId, args)
     case '!archiver': return cmdArchiver(userId, args)
     case '!score': return cmdScore(args)
@@ -108,21 +115,72 @@ export function handleReply(userId: string, message: string): {
 
 // --- Commandes simples ---
 
-function cmdSource(_userId: string, url: string): { response: string; expectsReply: boolean } {
-  if (!url || !url.startsWith('http')) {
-    return { response: 'Usage : `!source <url>` — Soumettre une source a A la source', expectsReply: false }
+// !source <id> = consulter une source ; coller un lien = ingestion auto (pas de commande).
+function cmdSource(_appUserId: number | null, args: string): { response: string; expectsReply: boolean } {
+  const a = (args || '').trim()
+  if (/^\d+$/.test(a)) return cmdFiche(a)
+  if (a.startsWith('http')) {
+    return { response: "Pas besoin de commande : colle simplement le lien dans le salon, je l'ingere et je te reponds. Pour consulter une source : `!source <id>`.", expectsReply: false }
   }
+  return { response: 'Usage : `!source <id>` pour consulter une source (ou colle un lien pour l\'ajouter).', expectsReply: false }
+}
 
-  // Creer la source via la BDD directement
-  const result = db.prepare(`
-    INSERT INTO sources (titre, url, origine, soumis_le) VALUES (?, ?, 'discord', CURRENT_TIMESTAMP)
-  `).run('Source Discord (titre a completer)', url)
+// Fiche d'une source dans Discord : commentaires (modifiables), debunkages lies, texte integral.
+function cmdFiche(args: string): { response: string; expectsReply: boolean } {
+  const id = parseInt(args)
+  if (isNaN(id)) return { response: 'Usage : `!fiche <id>` (ou `!source <id>`)', expectsReply: false }
+  const s = db.prepare('SELECT s.id, s.titre, s.url, s.completude, m.nom AS media FROM sources s LEFT JOIN medias m ON m.id = s.media_id WHERE s.id = ?').get(id) as { titre: string; completude: string | null; media: string | null } | undefined
+  if (!s) return { response: `Source #${id} introuvable.`, expectsReply: false }
+  const coms = db.prepare('SELECT c.id, c.type, c.contenu, u.nom AS auteur FROM commentaires c LEFT JOIN utilisateurs u ON u.id = c.auteur_id WHERE c.source_id = ? ORDER BY c.id').all(id) as { id: number; type: string; contenu: string; auteur: string | null }[]
+  const debs = db.prepare("SELECT a.id, a.titre, asrc.role FROM activite_sources asrc JOIN activites a ON a.id = asrc.activite_id AND a.type = 'debunkage' WHERE asrc.source_id = ?").all(id) as { id: number; titre: string; role: string | null }[]
+  const aTexte = db.prepare("SELECT 1 FROM archives WHERE source_id = ? AND contenu IS NOT NULL AND contenu != '' LIMIT 1").get(id)
 
-  const sourceId = Number(result.lastInsertRowid)
-  return {
-    response: `Source #${sourceId} creee ! URL : ${url}\nTitre a completer dans l'app. Utilisez \`!analyser ${sourceId}\` pour lancer l'analyse.`,
-    expectsReply: false
+  let r = `**${s.titre}**${s.media ? ` — ${s.media}` : ''}${s.completude ? ` _(${s.completude})_` : ''}\n${baseApp()}/lire/${id}\n\n`
+  r += `**Commentaires (${coms.length})**\n`
+  if (!coms.length) r += '_aucun_\n'
+  else {
+    for (const c of coms.slice(0, 10)) r += `• #${c.id} ${c.auteur || '?'} _(${c.type})_ : ${(c.contenu || '').slice(0, 140)}\n`
+    r += '_Modifier : `!editcom <id> <nouveau texte>`_\n'
   }
+  r += `\n**Débunkages (${debs.length})**\n`
+  if (!debs.length) r += '_aucun_\n'
+  else for (const d of debs) r += `• ${d.titre} _(${d.role || '—'})_ → ${baseApp()}/debunkages/${d.id}\n`
+  if (aTexte) r += `\n**Texte intégral** : tape \`!texte ${id}\``
+  return { response: r.slice(0, 1900), expectsReply: false }
+}
+
+// Edition d'un commentaire depuis Discord (auteur du commentaire, ou admin).
+function cmdEditCommentaire(appUserId: number | null, args: string): { response: string; expectsReply: boolean } {
+  const m = (args || '').trim().match(/^(\d+)\s+([\s\S]+)$/)
+  if (!m) return { response: 'Usage : `!editcom <id commentaire> <nouveau texte>`', expectsReply: false }
+  const cid = parseInt(m[1])
+  const texte = m[2].trim()
+  const c = db.prepare('SELECT id, auteur_id FROM commentaires WHERE id = ?').get(cid) as { auteur_id: number | null } | undefined
+  if (!c) return { response: `Commentaire #${cid} introuvable.`, expectsReply: false }
+  const role = appUserId ? (db.prepare('SELECT role FROM utilisateurs WHERE id = ?').get(appUserId) as { role: string } | undefined)?.role : null
+  const autorise = !!appUserId && (c.auteur_id === appUserId || c.auteur_id == null || role === 'admin')
+  if (!autorise) return { response: 'Tu ne peux modifier que tes propres commentaires (renseigne ton pseudo Discord dans Mon espace pour être reconnu).', expectsReply: false }
+  db.prepare('UPDATE commentaires SET contenu = ? WHERE id = ?').run(texte, cid)
+  return { response: `Commentaire #${cid} mis à jour.`, expectsReply: false }
+}
+
+// Texte integral d'une source, decoupe en blocs (limite Discord 2000 c/message).
+export function texteSourceChunks(args: string): string[] {
+  const id = parseInt(args)
+  if (isNaN(id)) return ['Usage : `!texte <id>`']
+  const a = db.prepare("SELECT contenu FROM archives WHERE source_id = ? AND contenu IS NOT NULL AND contenu != '' ORDER BY id DESC LIMIT 1").get(id) as { contenu: string } | undefined
+  if (!a) return [`Pas de texte intégral pour la source #${id}.`]
+  const texte = String(a.contenu)
+  const MAX = 1800, CAP = 8
+  const chunks: string[] = []
+  for (let i = 0; i < texte.length; i += MAX) chunks.push(texte.slice(i, i + MAX))
+  if (chunks.length > CAP) {
+    const reste = chunks.length - CAP
+    chunks.length = CAP
+    chunks.push(`… (${reste} bloc(s) en plus) — lire la suite dans l'app : ${baseApp()}/lire/${id}`)
+  }
+  chunks[0] = `**Texte intégral — source #${id}** (${chunks.length} message·s)\n\n${chunks[0]}`
+  return chunks
 }
 
 function cmdScore(args: string): { response: string; expectsReply: boolean } {
@@ -177,6 +235,8 @@ function cmdAide(): { response: string; expectsReply: boolean } {
 **Poster une source** : colle un lien d'article, il rejoint la veille et t'est attribué (renseigne ton pseudo Discord dans l'app : Mon espace → Mon compte). Du texte en plus du lien devient un commentaire. Le bot te répond avec le lien pour la lire et la commenter.
 
 **Article payant (Europresse)** : joins le **PDF intégral** dans le **même message** que le lien → copie hors-ligne lisible dans l'app (texte extrait). Tu peux aussi joindre un **.ris** (métadonnées). Version sans paywall ? **Édite** ton message et ajoute le lien.
+
+**Consulter une source** : \`!source <id>\` ou \`!fiche <id>\` (commentaires, débunkages liés, texte) · \`!texte <id>\` texte intégral · \`!editcom <id> <texte>\` modifier un commentaire.
 
 **Commandes** :
 \`!aide\` ce manuel · \`!vivier\` top 5 du vivier · \`!atelier\` prochain atelier
@@ -311,11 +371,11 @@ function stepEvaluer(conv: ConversationState, message: string): { response: stri
   }
 }
 
-function cmdCommenter(userId: string, args: string): { response: string; expectsReply: boolean } {
+function cmdCommenter(userId: string, appUserId: number | null, args: string): { response: string; expectsReply: boolean } {
   const id = parseInt(args)
   if (isNaN(id)) return { response: 'Usage : `!commenter <id>`', expectsReply: false }
 
-  conversations.set(userId, { userId, command: 'commenter', sourceId: id, step: 1, data: {} })
+  conversations.set(userId, { userId, command: 'commenter', sourceId: id, step: 1, data: { appUserId } })
 
   return {
     response: 'Type de commentaire ? (1=commentaire, 2=analyse, 3=question, 4=lien)',
@@ -333,8 +393,8 @@ function stepCommenter(conv: ConversationState, message: string): { response: st
     }
     case 2: {
       db.prepare(`
-        INSERT INTO commentaires (source_id, auteur_id, type, contenu) VALUES (?, 1, ?, ?)
-      `).run(conv.sourceId, conv.data.type, message)
+        INSERT INTO commentaires (source_id, auteur_id, type, contenu) VALUES (?, ?, ?, ?)
+      `).run(conv.sourceId, (conv.data.appUserId as number | null) ?? null, conv.data.type, message)
 
       conversations.delete(conv.userId)
       return { response: 'Commentaire enregistre !', expectsReply: false, done: true }
