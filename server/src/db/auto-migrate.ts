@@ -62,6 +62,17 @@ export function autoMigrate(): void {
   ajouterColonne('utilisateurs', 'discord_pseudo', 'TEXT')
   ajouterColonne('utilisateurs', 'discord_id', 'TEXT')
 
+  // Ingestion Discord v2 : mapping message Discord -> source, pour rattacher
+  // editions, reponses et pieces jointes posterieures a la bonne source (et dedup).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS discord_messages (
+      message_id TEXT PRIMARY KEY,
+      source_id INTEGER REFERENCES sources(id) ON DELETE CASCADE,
+      channel_id TEXT,
+      cree_le DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `)
+
   // Chantier B — profil de transparence des médias
   db.exec(`
     CREATE TABLE IF NOT EXISTS media_transparence (
