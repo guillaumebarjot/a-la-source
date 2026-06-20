@@ -198,12 +198,24 @@ router.post('/:id/sources', (req, res) => {
   if (!exists) { res.status(404).json({ error: 'Debunkage non trouve' }); return }
   const { source_id, role } = req.body
   if (!source_id) { res.status(400).json({ error: 'source_id requis' }); return }
+  const max = (db.prepare('SELECT COALESCE(MAX(ordre), -1) AS m FROM activite_sources WHERE activite_id = ?')
+    .get(req.params.id) as { m: number }).m
   db.prepare(`
-    INSERT INTO activite_sources (activite_id, source_id, role)
-    VALUES (?, ?, ?)
+    INSERT INTO activite_sources (activite_id, source_id, role, ordre)
+    VALUES (?, ?, ?, ?)
     ON CONFLICT(activite_id, source_id) DO UPDATE SET role = excluded.role
-  `).run(req.params.id, source_id, role || null)
+  `).run(req.params.id, source_id, role || null, max + 1)
   res.status(204).end()
+})
+
+// PATCH /api/debunkages/:id/sources/order — réordonner le corpus { source_ids: [] }
+router.patch('/:id/sources/order', (req, res) => {
+  const { source_ids } = req.body as { source_ids: number[] }
+  if (!Array.isArray(source_ids)) { res.status(400).json({ error: 'source_ids requis' }); return }
+  const stmt = db.prepare('UPDATE activite_sources SET ordre = ? WHERE activite_id = ? AND source_id = ?')
+  const tx = db.transaction(() => { source_ids.forEach((sid, i) => stmt.run(i, req.params.id, sid)) })
+  tx()
+  res.json({ ok: true })
 })
 
 // DELETE /api/debunkages/:id/sources/:sourceId — détacher une source
