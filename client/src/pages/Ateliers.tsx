@@ -753,7 +753,8 @@ function PreparationBoard({
   const [heure, setHeure] = useState(atelier.heure || '')
   const [lieu, setLieu] = useState(atelier.lieu || '')
 
-  // Ordre LOCAL du corpus (visuel) : pas d'API d'ordre cote serveur.
+  // Ordre du corpus : etat local pour le rendu, persiste cote serveur a chaque tri
+  // (PATCH /ateliers/:id/sources/order) pour survivre au rechargement.
   const [ordre, setOrdre] = useState<number[]>(atelier.sources.map(s => s.id))
 
   // L'atelier ou ses sources ont change (ajout/retrait/selection) -> resync.
@@ -815,13 +816,17 @@ function PreparationBoard({
       return
     }
 
-    // Tri interne du corpus (visuel, local).
+    // Tri interne du corpus : reordonnancement local PUIS persistance serveur.
     if (activeId.startsWith('corpus-') && event.over) {
       const overId = String(event.over.id)
       if (overId.startsWith('corpus-') && activeId !== overId) {
         const from = ordre.indexOf(Number(activeId.replace('corpus-', '')))
         const to = ordre.indexOf(Number(overId.replace('corpus-', '')))
-        if (from !== -1 && to !== -1) setOrdre(arrayMove(ordre, from, to))
+        if (from !== -1 && to !== -1) {
+          const nouvelOrdre = arrayMove(ordre, from, to)
+          setOrdre(nouvelOrdre)
+          void api.patch(`/ateliers/${atelier.id}/sources/order`, { source_ids: nouvelOrdre })
+        }
       }
     }
   }
