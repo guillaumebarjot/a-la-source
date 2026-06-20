@@ -23,6 +23,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+        // Supprime les anciens precaches a chaque nouvelle version du SW et prend
+        // le controle immediatement, pour ne pas servir des chunks de page
+        // perimes apres un redeploiement (sinon « Chargement... » bloque).
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         runtimeCaching: [
           {
             urlPattern: /^\/api\/sources\/\d+$/,
