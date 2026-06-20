@@ -42,7 +42,8 @@ export async function notifierPublication(notif: NotifPublication): Promise<void
 
     const res = await fetch(webhook, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // User-Agent obligatoire : Discord (Cloudflare) renvoie 403/1010 sans lui.
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'alasource-bot/1.0 (+https://alasource.barjot.net)' },
       body: JSON.stringify({ username: 'À la source', embeds: [embed] }),
     })
     if (!res.ok) {

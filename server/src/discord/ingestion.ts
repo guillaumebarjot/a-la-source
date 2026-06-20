@@ -21,6 +21,10 @@ const uploadsDir = join(__dirname, '..', '..', '..', 'uploads')
 
 const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
 
+// User-Agent explicite pour les telechargements (CDN Discord, etc.) : certains
+// hotes (Cloudflare) refusent les requetes sans User-Agent.
+const UA = 'alasource-bot/1.0 (+https://alasource.barjot.net)'
+
 export function nettoyerUrl(brut: string): string {
   return brut.replace(/[.,;:!?]+$/, '').trim()
 }
@@ -88,7 +92,7 @@ async function ingererLien(url: string, soumisPar: number | null): Promise<Resul
 /** Telecharge un PDF (PJ Discord ou lien direct) et l'attache comme copie integrale lisible. */
 async function attacherPdf(sourceId: number, fileUrl: string, soumisPar: number | null): Promise<boolean> {
   try {
-    const res = await fetch(fileUrl)
+    const res = await fetch(fileUrl, { headers: { 'User-Agent': UA } })
     if (!res.ok) return false
     const buf = Buffer.from(await res.arrayBuffer())
     const nom = `archive-${sourceId}-${Date.now()}.pdf`
@@ -137,7 +141,7 @@ export function parserRis(texte: string): {
 
 async function importerRis(sourceId: number, fileUrl: string): Promise<boolean> {
   try {
-    const res = await fetch(fileUrl)
+    const res = await fetch(fileUrl, { headers: { 'User-Agent': UA } })
     if (!res.ok) return false
     const ris = parserRis(await res.text())
     const src = db.prepare('SELECT titre, url, media_id, date_publication, accroche FROM sources WHERE id = ?')
