@@ -12,6 +12,7 @@ import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
 import { sujetVersYeswiki, type YeswikiSource, type YeswikiSujetEvenement } from '../lib/yeswiki.js'
+import { notifierPublication } from '../discord/notify.js'
 
 const router = Router()
 
@@ -147,10 +148,14 @@ router.put('/:id', (req, res) => {
 
 // POST /api/sujets/:id/publier — publier (animateur·ice / admin)
 router.post('/:id/publier', requireRole('animateur', 'admin'), (req, res) => {
-  const exists = db.prepare('SELECT id FROM sujets WHERE id = ?').get(req.params.id)
-  if (!exists) { res.status(404).json({ error: 'Sujet non trouve' }); return }
+  const row = db.prepare('SELECT slug, titre, accroche, statut FROM sujets WHERE id = ?')
+    .get(req.params.id) as { slug: string; titre: string; accroche: string | null; statut: string } | undefined
+  if (!row) { res.status(404).json({ error: 'Sujet non trouve' }); return }
   db.prepare(`UPDATE sujets SET statut = 'publie', valide_par = ?, maj_le = CURRENT_TIMESTAMP WHERE id = ?`)
     .run(req.user?.id || null, req.params.id)
+  if (row.statut !== 'publie') {
+    void notifierPublication({ type: 'Sujet', titre: row.titre, chemin: `/sujets/${row.slug}`, description: row.accroche || undefined })
+  }
   res.json(db.prepare('SELECT * FROM sujets WHERE id = ?').get(req.params.id))
 })
 

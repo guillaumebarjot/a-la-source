@@ -11,6 +11,7 @@ Mise en production sur l'infra PIAF (serveur Bomp4rd), sur le modèle de Prisme,
 - **Cible** : `alasource.barjot.net` (brand PIAF) derrière Authentik, hôte NPM managé, cert `*.barjot.net`. Bascule `rouge-coquelicot.fr` ultérieure.
 - **Espace personnel** : nouvelles sections « Mon compte » (identité SSO, rôle, **pseudo Discord** éditable) et « Mes contributions » (sources proposées, évaluations, mécanismes, commentaires, activités créées ou animées, sujets créés). API `GET /api/auth/me` enrichi (email, pseudo Discord), `POST /api/auth/profil`, `GET /api/auth/contributions`.
 - **Identité Discord** : colonnes `utilisateurs.discord_pseudo` et `discord_id` (auto-migration). Le bot d'ingestion rapproche désormais l'auteur Discord d'un compte membre (par `discord_id`, sinon `discord_pseudo` qu'il mémorise) et **crédite la source** au bon membre (`sources.soumis_par`) au lieu de la laisser anonyme.
+- **Notifications App→Discord (webhook)** : nouveau `server/src/discord/notify.ts`. À la publication d'un **sujet**, **dossier/décryptage** ou **débunkage**, un message est posté dans le salon dédié (webhook `DISCORD_WEBHOOK_URL`, sans bot). Garde anti-doublon (seule la transition vers `publie` notifie). Le **bot** (token) reste requis pour le sens entrant (ingestion + commandes).
 
 ## 2026-06-07 — Une seule base : chemin centralisé + schema.sql v3
 

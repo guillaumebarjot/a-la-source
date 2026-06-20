@@ -11,6 +11,7 @@ import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
 import { debunkageVersYeswiki, type YeswikiSource } from '../lib/yeswiki.js'
+import { notifierPublication } from '../discord/notify.js'
 
 const router = Router()
 
@@ -153,13 +154,18 @@ router.put('/:id', (req, res) => {
 
 // POST /api/debunkages/:id/publier — marquer le pipeline comme publié
 router.post('/:id/publier', (req, res) => {
-  const exists = db.prepare(
-    "SELECT 1 FROM activites WHERE id = ? AND type = 'debunkage'"
-  ).get(req.params.id)
-  if (!exists) { res.status(404).json({ error: 'Debunkage non trouve' }); return }
+  const row = db.prepare(
+    `SELECT a.titre, dp.statut FROM activites a
+     LEFT JOIN debunkage_pipeline dp ON dp.activite_id = a.id
+     WHERE a.id = ? AND a.type = 'debunkage'`
+  ).get(req.params.id) as { titre: string; statut: string | null } | undefined
+  if (!row) { res.status(404).json({ error: 'Debunkage non trouve' }); return }
   db.prepare('INSERT OR IGNORE INTO debunkage_pipeline (activite_id) VALUES (?)').run(req.params.id)
   db.prepare("UPDATE debunkage_pipeline SET statut = 'publie' WHERE activite_id = ?").run(req.params.id)
   db.prepare("UPDATE activites SET maj_le = CURRENT_TIMESTAMP WHERE id = ?").run(req.params.id)
+  if (row.statut !== 'publie') {
+    void notifierPublication({ type: 'Debunkage', titre: row.titre || 'Debunkage', chemin: `/debunkages/${req.params.id}` })
+  }
   res.json(db.prepare('SELECT * FROM debunkage_pipeline WHERE activite_id = ?').get(req.params.id))
 })
 

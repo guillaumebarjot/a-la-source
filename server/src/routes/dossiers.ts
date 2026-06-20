@@ -14,6 +14,7 @@ import { Router } from 'express'
 import db from '../lib/db.js'
 import { requireRole } from '../lib/auth.js'
 import { dossierVersYeswiki, type YeswikiSource } from '../lib/yeswiki.js'
+import { notifierPublication } from '../discord/notify.js'
 
 const router = Router()
 
@@ -177,11 +178,14 @@ router.put('/:id', (req, res) => {
 
 // POST /api/dossiers/:id/publier — marquer l'activité comme publiée
 router.post('/:id/publier', (req, res) => {
-  const exists = db.prepare(
-    "SELECT 1 FROM activites WHERE id = ? AND type = 'dossier'"
-  ).get(req.params.id)
-  if (!exists) { res.status(404).json({ error: 'Dossier non trouve' }); return }
+  const row = db.prepare(
+    "SELECT titre, statut FROM activites WHERE id = ? AND type = 'dossier'"
+  ).get(req.params.id) as { titre: string; statut: string } | undefined
+  if (!row) { res.status(404).json({ error: 'Dossier non trouve' }); return }
   db.prepare("UPDATE activites SET statut = 'publie', maj_le = CURRENT_TIMESTAMP WHERE id = ?").run(req.params.id)
+  if (row.statut !== 'publie') {
+    void notifierPublication({ type: 'Dossier', titre: row.titre || 'Dossier', chemin: `/dossiers/${req.params.id}` })
+  }
   res.json(db.prepare('SELECT id, titre, statut FROM activites WHERE id = ?').get(req.params.id))
 })
 
