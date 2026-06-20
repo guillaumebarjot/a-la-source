@@ -33,7 +33,7 @@ export default function Reader({ archive, url, sourceId, onArchived }: Props) {
     case 'markdown':
       return <MarkdownReader content={archive.contenu || ''} />
     case 'pdf':
-      return <PdfReader chemin={archive.chemin} />
+      return <PdfReader chemin={archive.chemin} contenu={archive.contenu} />
     case 'readability':
     case 'html':
       return <ReadabilityReader content={archive.contenu || ''} />

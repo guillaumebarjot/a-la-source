@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import { writeFileSync } from 'fs'
 import db from '../lib/db.js'
 import { fetchOpenGraph } from '../lib/opengraph.js'
+import { extrairePdfTexte } from '../lib/pdftext.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 // server/dist/discord -> ../../.. = racine projet ; uploads/ y est servi en /uploads
@@ -97,9 +98,12 @@ async function attacherPdf(sourceId: number, fileUrl: string, soumisPar: number 
     const buf = Buffer.from(await res.arrayBuffer())
     const nom = `archive-${sourceId}-${Date.now()}.pdf`
     writeFileSync(join(uploadsDir, nom), buf)
+    // On garde le PDF (fidelite) ET on extrait le texte (lecture plus facile + recherche).
+    const texte = await extrairePdfTexte(buf)
+    const nbMots = texte ? texte.split(/\s+/).filter(Boolean).length : null
     db.prepare(
-      "INSERT INTO archives (source_id, type, chemin, cree_par, statut) VALUES (?, 'pdf', ?, ?, 'complete')"
-    ).run(sourceId, `uploads/${nom}`, soumisPar)
+      "INSERT INTO archives (source_id, type, chemin, contenu, cree_par, nb_mots, statut) VALUES (?, 'pdf', ?, ?, ?, ?, 'complete')"
+    ).run(sourceId, `uploads/${nom}`, texte || null, soumisPar, nbMots)
     db.prepare("UPDATE sources SET completude = 'integral_offline' WHERE id = ?").run(sourceId)
     return true
   } catch (err) {

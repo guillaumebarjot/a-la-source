@@ -543,6 +543,9 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .reader-empty { padding: var(--space-xl); text-align: center; color: var(--color-text-secondary); }
 .reader-actions { display: flex; gap: var(--space-md); justify-content: center; margin-top: var(--space-md); }
 .pdf-iframe { width: 100%; height: 80vh; border: none; border-radius: var(--radius-sm); }
+/* Texte extrait d'un PDF (lecture facile) : on preserve les sauts de ligne. */
+.pdf-texte { white-space: pre-wrap; line-height: 1.6; }
+.pdf-original-link { margin: 0 0 var(--space-md); font-size: 0.85rem; }
 
 /* Reader mode toggle */
 .reader-mode-toggle { display: flex; gap: 0.5rem; }

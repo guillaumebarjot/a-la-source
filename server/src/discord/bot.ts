@@ -77,7 +77,9 @@ export function handleCommand(userId: string, command: string, args: string): {
     case '!score': return cmdScore(args)
     case '!vivier': return cmdVivier()
     case '!atelier': return cmdAtelier()
-    case '!aide': return cmdAide()
+    case '!aide':
+    case '!manuel':
+    case '!guide': return cmdAide()
     default: return { response: '', expectsReply: false }
   }
 }
@@ -170,17 +172,15 @@ function cmdAtelier(): { response: string; expectsReply: boolean } {
 
 function cmdAide(): { response: string; expectsReply: boolean } {
   return {
-    response: `**Commandes A la source :**
-\`!source <url>\` — Soumettre une source
-\`!analyser <id>\` — Identifier des mecanismes (conversation guidee)
-\`!evaluer <id>\` — Evaluer une source (sliders)
-\`!commenter <id>\` — Ajouter un commentaire
-\`!taguer <id>\` — Ajouter des tags
-\`!archiver <id>\` — Lancer l'archivage readability
-\`!score <id>\` — Voir le score d'une source
-\`!vivier\` — Top 5 du vivier
-\`!atelier\` — Info prochain atelier
-\`!aide\` — Cette aide`,
+    response: `**📖 Manuel — À la source**
+
+**Poster une source** : colle un lien d'article, il rejoint la veille et t'est attribué (renseigne ton pseudo Discord dans l'app : Mon espace → Mon compte). Du texte en plus du lien devient un commentaire. Le bot te répond avec le lien pour la lire et la commenter.
+
+**Article payant (Europresse)** : joins le **PDF intégral** dans le **même message** que le lien → copie hors-ligne lisible dans l'app (texte extrait). Tu peux aussi joindre un **.ris** (métadonnées). Version sans paywall ? **Édite** ton message et ajoute le lien.
+
+**Commandes** :
+\`!aide\` ce manuel · \`!vivier\` top 5 du vivier · \`!atelier\` prochain atelier
+\`!score <id>\` · \`!analyser <id>\` · \`!evaluer <id>\` · \`!commenter <id>\` · \`!taguer <id>\``,
     expectsReply: false
   }
 }

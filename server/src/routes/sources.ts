@@ -8,6 +8,7 @@ import { requireRole } from '../lib/auth.js'
 import { calculerScoreSource } from '../lib/score.js'
 import { fetchOpenGraph } from '../lib/opengraph.js'
 import { extractReadability, detecterArchivePartielle, compterMots } from '../lib/readability.js'
+import { extrairePdfTexte } from '../lib/pdftext.js'
 import { findSiteConfig, getSiteConfigCount, getConfiguredDomains } from '../lib/ftr-site-config.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -442,7 +443,7 @@ router.post('/:id/archive-manuelle', (req, res) => {
 })
 
 // POST /api/sources/:id/archive-fichier — upload d'un fichier (pdf, md, html, image)
-router.post('/:id/archive-fichier', upload.single('fichier'), (req, res) => {
+router.post('/:id/archive-fichier', upload.single('fichier'), async (req, res) => {
   if (!req.file) { res.status(400).json({ error: 'Fichier requis' }); return }
 
   const ext = extname(req.file.originalname).toLowerCase()
@@ -465,6 +466,8 @@ router.post('/:id/archive-fichier', upload.single('fichier'), (req, res) => {
     const newPath = join(uploadsDir, newName)
     renameSync(req.file.path, newPath)
     chemin = `uploads/${newName}`
+    // PDF : on garde le fichier ET on extrait le texte pour une lecture facile.
+    if (isPdf) contenu = (await extrairePdfTexte(readFileSync(newPath))) || null
   } else {
     contenu = readFileSync(req.file.path, 'utf-8')
     unlinkSync(req.file.path)
