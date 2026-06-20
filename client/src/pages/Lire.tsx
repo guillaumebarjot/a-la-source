@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Globe, FileText, AlertTriangle, Bookmark, Target, UserPlus, MessageCircle, FileUp } from 'lucide-react'
+import { Globe, FileText, AlertTriangle, Bookmark, Target, UserPlus, MessageCircle, FileUp, FolderPlus } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
@@ -22,6 +22,10 @@ export default function Lire() {
   // Partage a un utilisateur
   const [users, setUsers] = useState<UserItem[]>([])
   const [shareMsg, setShareMsg] = useState('')
+
+  // Ranger dans un dossier (parcours inverse veille -> dossier)
+  const [dossiers, setDossiers] = useState<{ id: number; titre: string; sujet_titre?: string | null }[]>([])
+  const [dossierMsg, setDossierMsg] = useState('')
 
   const loadSource = useCallback(async () => {
     if (!id) return
@@ -72,6 +76,20 @@ export default function Lire() {
     navigator.clipboard.writeText(text)
     setShareMsg('Lien copie ! Collez-le dans Discord.')
     setTimeout(() => setShareMsg(''), 3000)
+  }
+
+  async function handleDossierOpenChange(open: boolean) {
+    if (open && dossiers.length === 0) {
+      const all = await api.get<{ id: number; titre: string; sujet_titre?: string | null }[]>('/dossiers')
+      setDossiers(all)
+    }
+    if (!open) setDossierMsg('')
+  }
+
+  async function rangerDansDossier(dossierId: number) {
+    await api.post(`/dossiers/${dossierId}/sources`, { source_id: source!.id })
+    setDossierMsg('Rangee dans le dossier !')
+    setTimeout(() => setDossierMsg(''), 1800)
   }
 
   return (
@@ -131,6 +149,26 @@ export default function Lire() {
                       <MessageCircle size={14} /> Copier pour Discord
                     </DropdownMenu.Item>
                     {shareMsg && <div className="share-dropdown-msg">{shareMsg}</div>}
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+
+              <DropdownMenu.Root onOpenChange={handleDossierOpenChange}>
+                <DropdownMenu.Trigger asChild>
+                  <button className="btn-action-sm" title="Ranger cette source dans un dossier"><FolderPlus size={14} /> Dossier</button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content className="share-dropdown" sideOffset={4}>
+                    <div className="share-dropdown-section">
+                      <span className="share-dropdown-label">Ranger dans :</span>
+                      {dossiers.length === 0 && <span className="share-dropdown-empty">Aucun dossier</span>}
+                      {dossiers.map(d => (
+                        <DropdownMenu.Item key={d.id} className="share-dropdown-item" onSelect={() => rangerDansDossier(d.id)}>
+                          {d.titre}{d.sujet_titre ? ` · ${d.sujet_titre}` : ''}
+                        </DropdownMenu.Item>
+                      ))}
+                    </div>
+                    {dossierMsg && <div className="share-dropdown-msg">{dossierMsg}</div>}
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
               </DropdownMenu.Root>
