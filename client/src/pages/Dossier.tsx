@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api/client'
-import type { DossierDetail, DossierSource, EvenementOption } from '../types/dossier'
+import type { DossierDetail, EvenementOption } from '../types/dossier'
+import type { Source } from '../types'
+import CorpusDnD from '../components/corpus/CorpusDnD'
 import '../styles/dossier.css'
 
 /**
@@ -26,9 +28,8 @@ export default function Dossier() {
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
-  // Ajout de source
-  const [sourceId, setSourceId] = useState('')
-  const [sourceRole, setSourceRole] = useState<'pour' | 'contre' | ''>('')
+  // Vivier de candidates (veille) pour le glisser-déposer
+  const [veille, setVeille] = useState<Source[]>([])
 
   // Partage hors appli
   const [copieLien, setCopieLien] = useState(false)
@@ -48,6 +49,7 @@ export default function Dossier() {
   useEffect(() => {
     recharger()?.finally(() => setLoading(false))
     api.get<EvenementOption[]>('/evenements').then(setEvenements).catch(() => setEvenements([]))
+    api.get<Source[]>('/sources?limit=40').then(setVeille).catch(() => setVeille([]))
   }, [recharger])
 
   async function sauverContenu() {
@@ -67,14 +69,9 @@ export default function Dossier() {
     }
   }
 
-  async function ajouterSource(e: React.FormEvent) {
-    e.preventDefault()
-    if (!id || !sourceId.trim()) return
-    await api.post(`/dossiers/${id}/sources`, {
-      source_id: Number(sourceId.trim()),
-      role: sourceRole || undefined,
-    })
-    setSourceId('')
+  async function ajouterSource(sid: number, role?: string) {
+    if (!id) return
+    await api.post(`/dossiers/${id}/sources`, { source_id: sid, role: role || undefined })
     await recharger()
   }
 
@@ -82,6 +79,11 @@ export default function Dossier() {
     if (!id) return
     await api.delete(`/dossiers/${id}/sources/${sid}`)
     await recharger()
+  }
+
+  async function reordonner(ids: number[]) {
+    if (!id) return
+    await api.patch(`/dossiers/${id}/sources/order`, { source_ids: ids })
   }
 
   async function publier() {
@@ -124,6 +126,8 @@ export default function Dossier() {
   if (!data) return <div className="dossier-page"><p className="dossier-empty">Dossier introuvable.</p></div>
 
   const estPublie = data.statut_activite === 'publie'
+  const roleById = new Map(data.sources.map((s) => [s.id, s.role]))
+  const candidates = veille.filter((s) => !data.sources.some((d) => d.id === s.id))
 
   return (
     <div className="dossier-page">
@@ -197,37 +201,32 @@ export default function Dossier() {
 
       <section className="dossier-section">
         <h2>Sources mobilisees</h2>
-        <form className="dossier-row" onSubmit={ajouterSource} style={{ marginBottom: 'var(--space-md)' }}>
-          <input
-            className="dossier-input"
-            style={{ maxWidth: 140 }}
-            value={sourceId}
-            onChange={(e) => setSourceId(e.target.value)}
-            placeholder="id source"
-            inputMode="numeric"
-          />
-          <select
-            className="dossier-select"
-            style={{ maxWidth: 200 }}
-            value={sourceRole}
-            onChange={(e) => setSourceRole(e.target.value as 'pour' | 'contre' | '')}
-          >
-            <option value="">Sans role</option>
-            <option value="pour">Pour</option>
-            <option value="contre">Contre</option>
-          </select>
-          <button type="submit" className="btn btn-secondary" disabled={!sourceId.trim()}>Rattacher</button>
-        </form>
-
-        {data.sources.length === 0 ? (
-          <p className="dossier-empty">Aucune source rattachee.</p>
-        ) : (
-          <div className="dossier-sources-grid">
-            {data.sources.map((s) => (
-              <SourceCard key={s.id} source={s} onRemove={retirerSource} />
-            ))}
-          </div>
-        )}
+        <p className="dossier-card-meta">Promène une carte de la veille vers le corpus, choisis son rôle, réordonne par la poignée.</p>
+        <CorpusDnD
+          vivier={candidates}
+          corpus={data.sources}
+          onAdd={(sid) => ajouterSource(sid)}
+          onRemove={retirerSource}
+          onReorder={reordonner}
+          lienSource={(sid) => `/lire/${sid}`}
+          titreVivier="Veille"
+          titreCorpus="Corpus du dossier"
+          videVivier="Aucune source disponible."
+          videCorpus="Aucune source rattachée."
+          renderExtra={(c) => (
+            <select
+              className="dossier-select"
+              style={{ maxWidth: 160, marginTop: 4 }}
+              value={roleById.get(c.id) || ''}
+              onChange={(e) => ajouterSource(c.id, e.target.value)}
+            >
+              <option value="">Sans rôle</option>
+              <option value="pour">Pour</option>
+              <option value="neutre">Neutre</option>
+              <option value="contre">Contre</option>
+            </select>
+          )}
+        />
       </section>
 
       <section className="dossier-section">
@@ -294,25 +293,3 @@ export default function Dossier() {
   )
 }
 
-/** Carte source (image + titre), rôle dark-safe. */
-function SourceCard({ source: s, onRemove }: { source: DossierSource; onRemove: (id: number) => void }) {
-  return (
-    <div className="dossier-source-card">
-      <div className="dossier-source-visuel">
-        {s.image_url
-          ? <img src={s.image_url} alt="" loading="lazy" />
-          : <span className="dossier-source-initiale">{s.titre.charAt(0)}</span>}
-      </div>
-      <div className="dossier-source-body">
-        {s.url
-          ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="dossier-source-titre">{s.titre}</a>
-          : <span className="dossier-source-titre">{s.titre}</span>}
-        <div className="dossier-source-meta">
-          {s.media_nom && <span className="dossier-source-media">{s.media_nom}</span>}
-          {s.role && <span className="dossier-badge">{s.role}</span>}
-        </div>
-      </div>
-      <button className="btn btn-secondary btn-sm" onClick={() => onRemove(s.id)}>Retirer</button>
-    </div>
-  )
-}
