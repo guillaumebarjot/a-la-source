@@ -29,6 +29,10 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        // Ne PAS servir l'index SPA (navigateFallback) pour ces chemins : sinon un
+        // iframe vers un PDF /uploads, ou un appel /api, recoit l'app au lieu du
+        // fichier/JSON (symptome : « capture de A la source » a la place du PDF).
+        navigateFallbackDenylist: [/^\/api\//, /^\/uploads\//, /^\/images\//, /^\/partage\//],
         runtimeCaching: [
           {
             urlPattern: /^\/api\/sources\/\d+$/,

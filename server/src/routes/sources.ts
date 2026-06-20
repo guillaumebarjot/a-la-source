@@ -27,7 +27,7 @@ const router = Router()
 
 // GET /api/sources — liste avec filtres
 router.get('/', (req, res) => {
-  const { statut, type_source, media, tag, sans_archive, ordre, limit = '50', offset = '0' } = req.query
+  const { statut, type_source, media, tag, sans_archive, commentees, ordre, limit = '50', offset = '0' } = req.query
 
   let sql = `
     SELECT s.*, m.nom as media_nom, a.nom as auteur_nom, u.nom as soumis_par_nom,
@@ -50,6 +50,12 @@ router.get('/', (req, res) => {
   if (media) { conditions.push('m.nom = ?'); params.push(media) }
   if (sans_archive === '1') {
     conditions.push('(SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) = 0')
+  }
+  // Filtre veille : sources deja commentees (discutees) ou pas encore (a traiter).
+  if (commentees === 'oui') {
+    conditions.push('(SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) > 0')
+  } else if (commentees === 'non') {
+    conditions.push('(SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) = 0')
   }
   if (tag) {
     sql += ' JOIN source_tags st ON st.source_id = s.id JOIN tags t ON t.id = st.tag_id'
