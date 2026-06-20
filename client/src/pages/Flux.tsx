@@ -81,6 +81,7 @@ export default function Flux() {
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set())
   const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set())
   const [filterMedia, setFilterMedia] = useState('')
+  const [filterComment, setFilterComment] = useState<'tous' | 'oui' | 'non'>('tous')
 
   // Sidebar filtres
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -132,9 +133,12 @@ export default function Flux() {
       }
       if (activeTypes.size > 0 && (!s.type_source || !activeTypes.has(s.type_source))) return false
       if (filterMedia && s.media_nom !== filterMedia) return false
+      const aDesCommentaires = (s.nb_commentaires ?? 0) > 0
+      if (filterComment === 'oui' && !aDesCommentaires) return false
+      if (filterComment === 'non' && aDesCommentaires) return false
       return true
     })
-  }, [sources, search, activeTypes, filterMedia, activeTags])
+  }, [sources, search, activeTypes, filterMedia, activeTags, filterComment])
 
   // Groupement par periode
   const now = useMemo(() => new Date(), [])
@@ -176,7 +180,7 @@ export default function Flux() {
     })
   }
 
-  const activeFilterCount = activeTags.size + activeTypes.size + (filterMedia ? 1 : 0)
+  const activeFilterCount = activeTags.size + activeTypes.size + (filterMedia ? 1 : 0) + (filterComment !== 'tous' ? 1 : 0)
 
   return (
     <Dialog.Root open={showSubmit} onOpenChange={setShowSubmit}>
@@ -268,11 +272,27 @@ export default function Flux() {
             </div>
           )}
 
+          <div className="flux-sidebar-section">
+            <h3 className="flux-sidebar-title">Discussion</h3>
+            <div className="flux-sidebar-chips">
+              {([['tous', 'Toutes'], ['oui', 'Commentées'], ['non', 'Non commentées']] as const).map(([val, label]) => (
+                <button
+                  key={val}
+                  className={`flux-chip ${filterComment === val ? 'flux-chip--active' : ''}`}
+                  onClick={() => setFilterComment(val)}
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {activeFilterCount > 0 && (
             <button
               className="flux-sidebar-reset"
               type="button"
-              onClick={() => { setActiveTags(new Set()); setActiveTypes(new Set()); setFilterMedia('') }}
+              onClick={() => { setActiveTags(new Set()); setActiveTypes(new Set()); setFilterMedia(''); setFilterComment('tous') }}
             >
               Reinitialiser les filtres
             </button>

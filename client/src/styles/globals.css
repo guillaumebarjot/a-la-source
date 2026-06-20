@@ -206,6 +206,13 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .dark .nav-link { color: rgba(255,255,255,0.82); }
 .dark .nav-link:hover { color: #fff; }
 .dark .nav-link.active { color: var(--rc-crimson); }
+/* La regle globale `a:visited` (bordeaux) bat .nav-link/.subnav-link en specificite
+   et repeignait en ROUGE SUR NOIR les entrees deja visitees (Sujets, Mon espace...).
+   On restaure explicitement les couleurs voulues pour l'etat visite. */
+.nav-link:visited { color: rgba(255,255,255,0.82); }
+.nav-link.active:visited { color: var(--rc-crimson); }
+.subnav-link:visited { color: var(--color-text-secondary); }
+.subnav-link.active:visited { color: #fff; }
 
 /* SubNav — Header ligne 2 (H2) contextuelle */
 .header-subnav {
