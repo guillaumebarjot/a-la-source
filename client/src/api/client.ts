@@ -9,7 +9,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error(err.error || res.statusText)
   }
-  return res.json()
+  // Tolere les reponses sans corps (204, ou 200 vide) : ne pas tenter de parser
+  // du JSON vide (sinon « Unexpected end of JSON input » sur add/remove/order...).
+  const texte = await res.text()
+  return (texte ? JSON.parse(texte) : null) as T
 }
 
 export const api = {
