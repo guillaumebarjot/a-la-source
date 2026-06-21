@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Complétion BDD appliquée à la base canonique
+
+Application supervisée des scripts de complétion sur la base canonique (OneDrive), après backup horodaté (`_backups-alasource/a-la-source-PREcompletion-20260621.db`). Méthode : backup, copie de travail hors OneDrive, `--apply` sur la copie, vérifications, puis remise en place de la copie. `PRAGMA integrity_check : ok`.
+
+- **Doublons fusionnés à la main** : 259 → 26 (rentrée scolaire Strasbourg) et 252 → 256 (lithium géothermie), rattachements réattribués (l'évaluation portée par 252 préservée sur 256), lignes doublons supprimées. 162 → **160 sources**, 0 doublon d'URL restant.
+- **Accroches** : 48 accroches dérivées du texte archivé. Sources sans accroche 74 → **25** (les 25 restantes n'ont pas d'archive exploitable, à rédiger à la main).
+- **Images** : 51 `og:image` récupérées (réseau, 65 %). Nettoyage qualité : 11 URLs aux entités HTML (`&amp;`) décodées, 2 placeholders inutiles (`default.png`, `DNA_placeholder.png`) remis à NULL pour laisser le fallback « initiale » du front. Sources sans image 80 → **29** (liens morts 404 et anti-bot 403 à traiter en amont).
+- **Rattachement aux sujets** : 14 sources rattachées à leur thème (2 cas faibles re-routés à la main : 227 IA/emploi vers `reforme-retraites-temps-travail` ; 299 hantavirus détaché, sans foyer pertinent, laissé en triage manuel). Sources sans sujet 15 → **1**.
+- Note : la base canonique (master de dev) est mise à jour ; l'app déployée sur PIAF a sa propre base locale, la propagation en production reste un geste de déploiement à part.
+
 ## 2026-06-21 — Cadrage en flotte : conception (modèle, quiz, tunnel) + fiabilisation (quiz, Discord, BDD)
 
 Session de dev menée par une flotte d'agents dédiés sur des surfaces disjointes. Aucune écriture sur la base canonique. Notes de conception et plans posés pour la suite ; correctifs sûrs commités.
