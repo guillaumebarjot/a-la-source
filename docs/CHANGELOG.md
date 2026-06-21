@@ -2,6 +2,15 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Dossiers publiés, accueil neutre, page à archiver, analyses, complétion v2
+
+- **Dossiers publiés** : les 3 dossiers thématiques (Pesticides, Concentration des médias, PFAS) passent en `publie` (pages publiques `/partage/dossier/:id` accessibles), sur la base de dev et en prod.
+- **Accueil neutre distinct de Mon espace** : `/` mène à une vraie page d'accueil (`/accueil`, entrée de nav dédiée) centrée sur la veille partagée (carte « Inbox partagée à qualifier » + raccourcis sobres). « Mon espace » (compte, contributions, lectures, chaînes) redevient une rubrique à part.
+- **Page « Sources sans copie locale »** : route `/a-archiver` (sous-menu Archiver) listant les sources dont le texte intégral n'est pas archivé en local, hors vidéo et audio (exclusion par `type_source`, type de média et heuristique d'URL). Endpoint `GET /api/sources/sans-copie-locale`. 13 sources concernées.
+- **Analyses de mécanismes (conservatrices, anonymes)** : script idempotent `server/src/scripts/seed-analyses.ts` qui pose des analyses sur les sources à copie locale, uniquement quand le mécanisme est manifeste (extrait vérifié mot pour mot contre le texte archivé), `identifie_par = NULL`. Volontairement parcimonieux.
+- **Complétion BDD v2** : `refetch-images.ts` décode les entités HTML des URLs, écarte les placeholders (`default.png`, logos), retente les 403 avec un second User-Agent ; `backfill-accroche.ts` nettoie mieux les résidus de tête et écarte les archives anti-bot ; nouveau `rapport-liens-morts.ts` (lecture seule) qui recense les liens morts (19 sur 160).
+- **Aide du bot Discord** : commentaires corrigés (orthographe, forme), contenus inchangés sur le fond.
+
 ## 2026-06-21 — Accueil personnel, aide Discord rédigée, réalignement de main
 
 - **Accueil à la connexion** : `/` atterrit désormais sur l'espace personnel (`/perso`) plutôt que sur la grille des thèmes (jugée trop chargée). Nouvel accueil calme : salutation, carte « Inbox partagée à qualifier (N) » mise en avant juste après, puis tuiles sobres (à lire, à réancrer, sources proposées, accès veille et thèmes). La logique « mon espace d'abord, la veille partagée ensuite ».
