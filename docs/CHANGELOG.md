@@ -2,6 +2,12 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Accueil personnel, aide Discord rédigée, réalignement de main
+
+- **Accueil à la connexion** : `/` atterrit désormais sur l'espace personnel (`/perso`) plutôt que sur la grille des thèmes (jugée trop chargée). Nouvel accueil calme : salutation, carte « Inbox partagée à qualifier (N) » mise en avant juste après, puis tuiles sobres (à lire, à réancrer, sources proposées, accès veille et thèmes). La logique « mon espace d'abord, la veille partagée ensuite ».
+- **Aide du bot Discord réécrite** : `!aide` / `!manuel` / `!guide` renvoient un mode d'emploi clair et structuré (proposer une source, article payant et Europresse, lire et consulter, contribuer, se repérer), ton éducation populaire, qui rappelle que l'app va plus au fond que le bot.
+- **Flux git remis d'aplomb** : `main` (branche par défaut sur GitHub, le « dev » de référence) avait été shuntée au profit de la branche de travail déployée en direct. `main` est réalignée sur l'état déployé ; le flux redevient dev (GitHub `main`) puis prod.
+
 ## 2026-06-21 — Phase 3 : design général, répétition espacée, back-office quiz
 
 - **Amélioration générale du design** : token `--radius` manquant rétabli (coins arrondis), tokens sémantiques ajoutés (focus, surface-2, success/warning/info, dark-safe). Titres de cartes-sources en couleur de texte (le rouge reste réservé aux actions), états vides soignés (bloc sobre), anneau de focus homogène sur les formulaires, champs de saisie lisibles en sombre. Deux violations rouge-sur-fond-sombre corrigées (bouton du stepper, liens Parcours) vers l'accent dark-safe. Pages Mon espace (Mon compte, Mes contributions) entièrement stylées.
