@@ -26,12 +26,10 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
     { label: 'Fiches médias', to: '/observatoire/fiches' },
     { label: 'Catalogue mécanismes', to: '/observatoire/catalogue' },
   ],
-  // Ateliers : on arrive sur les ateliers (a venir et en cours), puis les passes ;
-  // le vivier (reserve de sources, utilisee a la preparation) passe en dernier.
+  // Ateliers : la liste unique (/ateliers) contient à venir + en cours + passés.
+  // Le vivier est la réserve de sources, accessible depuis la liste ou en direct.
   '/ateliers': [
-    { label: 'A venir et en cours', to: '/ateliers/en-cours' },
-    { label: 'Passes', to: '/ateliers/archives' },
-    { label: 'Preparation', to: '/ateliers/preparation' },
+    { label: 'Liste', to: '/ateliers' },
     { label: 'Vivier', to: '/ateliers/vivier' },
   ],
   // Apprendre : garde Parcours/quiz, Manuel, Aide (Mecanismes deplaces vers Observatoire).

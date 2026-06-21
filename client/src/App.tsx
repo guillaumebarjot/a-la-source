@@ -10,6 +10,7 @@ const Inbox = lazy(() => import('./pages/Inbox'))
 const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
 const Ateliers = lazy(() => import('./pages/Ateliers'))
+const Atelier = lazy(() => import('./pages/Atelier'))
 const Accueil = lazy(() => import('./pages/Accueil'))
 // BecsRouges: route redirects to /perso/chaines, component kept but not lazy-loaded
 const MonEspace = lazy(() => import('./pages/MonEspace'))
@@ -62,7 +63,14 @@ export default function App() {
             <Route path="/arpentages" element={<Arpentages />} />
             <Route path="/arpentages/:id" element={<Arpentage />} />
             <Route path="/ateliers" element={<Ateliers />} />
-            <Route path="/ateliers/:section" element={<Ateliers />} />
+            {/* /ateliers/vivier AVANT /ateliers/:id pour ne pas avaler 'vivier' comme id */}
+            <Route path="/ateliers/vivier" element={<Ateliers />} />
+            {/* Redirects des anciennes sections (en-cours, preparation, archives) */}
+            <Route path="/ateliers/en-cours" element={<Ateliers />} />
+            <Route path="/ateliers/preparation" element={<Ateliers />} />
+            <Route path="/ateliers/archives" element={<Ateliers />} />
+            {/* Objet atelier (id numérique) */}
+            <Route path="/ateliers/:id" element={<Atelier />} />
             {/* Archiver a fondu dans l'Inbox-hub : ses fonctions sont des filtres.
                 On redirige les anciennes routes vers l'Inbox avec le bon filtre,
                 pour ne casser aucun lien. */}
@@ -89,7 +97,7 @@ export default function App() {
             <Route path="/admin" element={<Navigate to="/admin/parametrage" replace />} />
             <Route path="/admin/:section" element={<AdminParametrage />} />
             <Route path="/projection/:atelierId" element={<Projection />} />
-            <Route path="/projection" element={<Navigate to="/ateliers/en-cours" replace />} />
+            <Route path="/projection" element={<Navigate to="/ateliers" replace />} />
           </Routes>
         </Suspense>
       </main>

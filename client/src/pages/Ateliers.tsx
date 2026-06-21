@@ -1,3 +1,17 @@
+/**
+ * Ateliers.tsx
+ *
+ * Deux responsabilités :
+ *  1. Export default : la LISTE de tous les ateliers (/ateliers) + le VIVIER
+ *     (/ateliers/vivier). La liste renvoie vers /ateliers/:id (objet atelier).
+ *  2. Exports nommés : composants réutilisés par Atelier.tsx (page objet) :
+ *     AtelierStepperExport, EnCoursPiloteExport, PreparationBoardExport.
+ *     On exporte aussi les types VivierSource et TriVivier.
+ *
+ * DARK-SAFE : uniquement des tokens --color-* / --space-* / --radius-*.
+ * Jamais de texte rouge sur fond sombre.
+ */
+
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import { Star, FileCheck, Pencil, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
@@ -29,16 +43,9 @@ import '../styles/ateliers-prep.css'
 import '../styles/ateliers-encours.css'
 import '../styles/slider-saisie.css'
 
-// Jalons de completude FACTUELS renvoyes par GET /ateliers/:id (chantier #1).
-interface AtelierJalons {
-  a_corpus: boolean
-  a_source_choisie: boolean
-  a_mecanismes: boolean
-  a_synthese: boolean
-  est_termine: boolean
-}
-
-/* ---------- Types ---------- */
+/* ============================================================================
+ * Types
+ * ========================================================================== */
 
 interface ScoreComplet {
   pedagogie: number
@@ -63,7 +70,7 @@ interface QualityGate {
   hasAccroche: boolean
 }
 
-interface VivierSource extends Source {
+export interface VivierSource extends Source {
   score: ScoreComplet
   facettes: Facettes
   tags: Tag[]
@@ -73,10 +80,18 @@ interface VivierSource extends Source {
 
 // Tris factuels du vivier (le score n'est plus le tri par défaut, doctrine
 // « décrire, ne pas noter »). Il reste proposé comme tri optionnel.
-type TriVivier = 'recence' | 'fraicheur' | 'score'
+export type TriVivier = 'recence' | 'fraicheur' | 'score'
 
-// Profil de diversité d'un corpus (méthode de sélection « décrire, ne pas noter »).
-// On ne note pas une source : on décrit le corpus par ses axes de diversité.
+// Jalons factuels renvoyés par GET /ateliers/:id.
+interface AtelierJalons {
+  a_corpus: boolean
+  a_source_choisie: boolean
+  a_mecanismes: boolean
+  a_synthese: boolean
+  est_termine: boolean
+}
+
+// Profil de diversité d'un corpus (méthode « décrire, ne pas noter »).
 interface AxeDiversite {
   cle: string
   label: string
@@ -104,78 +119,78 @@ interface ProfilDiversite {
   suggestions: SuggestionDiversite[]
 }
 
-/* ---------- Composant ---------- */
+interface MecanismeRef {
+  id: number
+  nom: string
+  categorie: string | null
+  categorie_label: string | null
+}
+
+const STATUT_LABELS: Record<string, string> = {
+  preparation: 'En préparation',
+  pret: 'Prêt',
+  en_cours: 'En cours',
+  termine: 'Terminé',
+}
+
+/* ============================================================================
+ * Composant principal : LISTE des ateliers + VIVIER
+ *
+ * Route /ateliers      -> section = undefined -> liste
+ * Route /ateliers/vivier -> section = 'vivier'
+ * Les autres sections (en-cours, preparation, archives) sont redirigées :
+ *   - en-cours et preparation -> /ateliers (la liste contient maintenant tout)
+ *   - archives -> /ateliers (les terminés s'y trouvent aussi)
+ * ========================================================================== */
 
 export default function Ateliers() {
   const { section } = useParams<{ section?: string }>()
   const user = useAuth((s) => s.user)
   const isFacilitateur = user?.role === 'animateur' || user?.role === 'admin'
 
-  // Data
+  // Redirects des anciennes sections vers la liste ou le vivier.
+  if (section === 'en-cours' || section === 'preparation' || section === 'archives') {
+    return <Navigate to="/ateliers" replace />
+  }
+
+  return <AteliersInterne section={section} isFacilitateur={isFacilitateur} />
+}
+
+/* Composant interne pour isoler les hooks (pas de hook après return conditionnel). */
+function AteliersInterne({
+  section,
+  isFacilitateur,
+}: {
+  section: string | undefined
+  isFacilitateur: boolean
+}) {
   const [vivier, setVivier] = useState<VivierSource[]>([])
-  const [ateliersActifs, setAteliersActifs] = useState<AtelierDetail[]>([])
-  const [ateliersTermines, setAteliersTermines] = useState<Atelier[]>([])
+  const [ateliers, setAteliers] = useState<Atelier[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Filtres vivier : tri factuel par défaut (récence), quality gate = checklist
-  // de complétude (évaluée / archivée / accroche), pas un score.
   const [tri, setTri] = useState<TriVivier>('recence')
   const [qualityOnly, setQualityOnly] = useState(false)
 
-  // Atelier creation form
   const [showNewForm, setShowNewForm] = useState(false)
   const [newDate, setNewDate] = useState('')
   const [newHeure, setNewHeure] = useState('')
   const [newLieu, setNewLieu] = useState('')
 
-  // Atelier actuellement en preparation (s'il y en a plusieurs, on choisit lequel).
-  const [prepAtelierId, setPrepAtelierId] = useState<number | null>(null)
-
-  // Atelier actuellement piloté dans la sous-vue « en cours » (sélection indépendante).
-  const [pilotAtelierId, setPilotAtelierId] = useState<number | null>(null)
-
-  /* ---------- Fetch ---------- */
-
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [vivierData, enCoursData, historiqueData] = await Promise.all([
+      const [vivierData, listeData] = await Promise.all([
         api.get<VivierSource[]>('/ateliers/vivier'),
-        api.get<AtelierDetail[]>('/ateliers/en-cours'),
         api.get<Atelier[]>('/ateliers'),
       ])
       setVivier(vivierData)
-      setAteliersActifs(enCoursData)
-      setAteliersTermines(historiqueData.filter(a => a.statut === 'termine'))
+      setAteliers(listeData)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
-
-  // Garde une selection d'atelier en preparation valide : si l'atelier choisi
-  // disparait (ou aucun choisi), on retombe sur le premier atelier actif.
-  useEffect(() => {
-    if (ateliersActifs.length === 0) {
-      if (prepAtelierId !== null) setPrepAtelierId(null)
-      return
-    }
-    const stillThere = ateliersActifs.some(a => a.id === prepAtelierId)
-    if (!stillThere) setPrepAtelierId(ateliersActifs[0].id)
-  }, [ateliersActifs, prepAtelierId])
-
-  // Idem pour l'atelier piloté en sous-vue « en cours ».
-  useEffect(() => {
-    if (ateliersActifs.length === 0) {
-      if (pilotAtelierId !== null) setPilotAtelierId(null)
-      return
-    }
-    const stillThere = ateliersActifs.some(a => a.id === pilotAtelierId)
-    if (!stillThere) setPilotAtelierId(ateliersActifs[0].id)
-  }, [ateliersActifs, pilotAtelierId])
-
-  /* ---------- Filtres vivier ---------- */
+  useEffect(() => { void fetchData() }, [fetchData])
 
   const vivierFiltre = useMemo(() => {
     const filtre = vivier.filter((s) => !qualityOnly || s.quality_gate.ok)
@@ -185,16 +200,13 @@ export default function Ateliers() {
     } else if (tri === 'score') {
       trie.sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
     } else {
-      // Récence : source la plus récemment soumise d'abord (aligné sur le serveur).
       trie.sort((a, b) => String(b.soumis_le ?? '').localeCompare(String(a.soumis_le ?? '')))
     }
     return trie
   }, [vivier, tri, qualityOnly])
 
-  /* ---------- Actions ---------- */
-
   const creerAtelier = async () => {
-    await api.post<{ id: number; numero: number }>('/ateliers', {
+    const res = await api.post<{ id: number; numero: number }>('/ateliers', {
       date_atelier: newDate || null,
       heure: newHeure || null,
       lieu: newLieu || null,
@@ -204,43 +216,11 @@ export default function Ateliers() {
     setNewHeure('')
     setNewLieu('')
     await fetchData()
+    // Redirige vers la page objet du nouvel atelier si l'id est disponible.
+    if (res?.id) {
+      window.location.href = `/ateliers/${res.id}`
+    }
   }
-
-  const ajouterSource = async (atelierId: number, sourceId: number) => {
-    await api.post(`/ateliers/${atelierId}/sources`, { source_id: sourceId })
-    await fetchData()
-  }
-
-  const retirerSource = async (atelierId: number, sourceId: number) => {
-    await api.delete(`/ateliers/${atelierId}/sources/${sourceId}`)
-    await fetchData()
-  }
-
-  const sauvegarderAtelier = async (atelier: AtelierDetail, fields: Record<string, unknown>) => {
-    await api.patch(`/ateliers/${atelier.id}`, fields)
-    await fetchData()
-  }
-
-  const changerStatut = async (atelierId: number, statut: string) => {
-    await api.patch(`/ateliers/${atelierId}`, { statut })
-    await fetchData()
-  }
-
-  const terminerAtelier = async (atelierId: number) => {
-    await api.patch(`/ateliers/${atelierId}`, { statut: 'termine' })
-    await fetchData()
-  }
-
-  const enregistrerSynthese = async (atelierId: number, fields: Record<string, unknown>) => {
-    await api.post(`/ateliers/${atelierId}/synthese`, fields)
-    await fetchData()
-  }
-
-  /* ---------- Redirect par defaut ---------- */
-
-  // On atterrit sur la liste des ateliers (a venir et en cours), pas sur le vivier.
-  // Le vivier est la reserve de sources, utilisee a la preparation d'un atelier.
-  if (!section) return <Navigate to="/ateliers/en-cours" replace />
 
   if (loading) return (
     <div className="page-ateliers">
@@ -248,16 +228,16 @@ export default function Ateliers() {
     </div>
   )
 
-  /* ---------- Rendu ---------- */
-
-  return (
-    <div className="page-ateliers">
-
-      {/* ===== VIVIER ===== */}
-      {section === 'vivier' && (
+  /* ---- VUE VIVIER ---- */
+  if (section === 'vivier') {
+    return (
+      <div className="page-ateliers">
         <section className="atelier-section">
           <header className="atelier-section-header">
             <h2>Vivier ({vivierFiltre.length} sources)</h2>
+            <Link to="/ateliers" className="btn btn-sm btn-secondary">
+              Retour à la liste
+            </Link>
           </header>
 
           <p className="section-intro">
@@ -294,130 +274,151 @@ export default function Ateliers() {
                 facettes={s.facettes}
                 showFraicheur={true}
                 atelierBadges={s.atelier_badges}
-                action={isFacilitateur && ateliersActifs.length > 0 ? (
-                  <div className="vivier-actions-multi">
-                    {!s.quality_gate.ok && (
-                      <QualityGateIndicator gate={s.quality_gate} />
-                    )}
-                    {s.quality_gate.ok && ateliersActifs.map(a => {
-                      const alreadyIn = a.sources.some(src => src.id === s.id)
-                      return alreadyIn ? (
-                        <span key={a.id} className="badge-atelier badge-atelier--retenue">
-                          #{a.numero}
-                        </span>
-                      ) : (
-                        <button
-                          key={a.id}
-                          className="btn btn-sm btn-primary"
-                          onClick={() => ajouterSource(a.id, s.id)}
-                          type="button"
-                          title={`Ajouter a l'atelier #${a.numero}`}
-                        >
-                          + #{a.numero}
-                        </button>
-                      )
-                    })}
-                  </div>
-                ) : undefined}
               />
             ))}
           </div>
         </section>
+      </div>
+    )
+  }
+
+  /* ---- VUE LISTE (défaut) ---- */
+  const actifs = ateliers.filter(a => a.statut !== 'termine')
+  const termines = ateliers.filter(a => a.statut === 'termine')
+
+  return (
+    <div className="page-ateliers">
+
+      {/* ---- En-tête liste ---- */}
+      <div className="ateliers-liste-header">
+        <h2>Ateliers</h2>
+        <div className="ateliers-liste-actions">
+          <Link to="/ateliers/vivier" className="btn btn-sm btn-secondary">
+            Vivier ({vivier.length})
+          </Link>
+          {isFacilitateur && !showNewForm && (
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => setShowNewForm(true)}
+            >
+              Créer un atelier
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ---- Formulaire de création ---- */}
+      {showNewForm && (
+        <div className="atelier-new-form">
+          <h3>Nouvel atelier</h3>
+          <div className="atelier-form-grid">
+            <label>
+              <span>Date</span>
+              <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+            </label>
+            <label>
+              <span>Heure</span>
+              <input type="time" value={newHeure} onChange={(e) => setNewHeure(e.target.value)} />
+            </label>
+            <label>
+              <span>Lieu</span>
+              <input type="text" value={newLieu} onChange={(e) => setNewLieu(e.target.value)} placeholder="Salle, en ligne..." />
+            </label>
+          </div>
+          <div className="atelier-new-actions">
+            <button className="btn btn-primary" onClick={creerAtelier} type="button">Créer</button>
+            <button className="btn" onClick={() => setShowNewForm(false)} type="button">Annuler</button>
+          </div>
+        </div>
       )}
 
-      {/* ===== PREPARATION ===== */}
-      {section === 'preparation' && (
-        <section className="atelier-section">
-          <header className="atelier-section-header">
-            <h2>Preparation d'atelier</h2>
-            {isFacilitateur && (
-              <button className="btn btn-primary" onClick={() => setShowNewForm(true)} type="button">
-                Nouvel atelier
-              </button>
-            )}
-          </header>
-
-          {showNewForm && (
-            <div className="atelier-new-form">
-              <h3>Creer un atelier</h3>
-              <div className="atelier-form-grid">
-                <label>
-                  <span>Date</span>
-                  <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
-                </label>
-                <label>
-                  <span>Heure</span>
-                  <input type="time" value={newHeure} onChange={(e) => setNewHeure(e.target.value)} />
-                </label>
-                <label>
-                  <span>Lieu</span>
-                  <input type="text" value={newLieu} onChange={(e) => setNewLieu(e.target.value)} placeholder="Salle, en ligne..." />
-                </label>
-              </div>
-              <div className="atelier-new-actions">
-                <button className="btn btn-primary" onClick={creerAtelier} type="button">Creer</button>
-                <button className="btn" onClick={() => setShowNewForm(false)} type="button">Annuler</button>
-              </div>
-            </div>
-          )}
-
-          {ateliersActifs.length === 0 && !showNewForm && (
-            <p className="empty">Aucun atelier en preparation. Creez-en un pour commencer.</p>
-          )}
-
-          {ateliersActifs.length > 0 && (
-            <PreparationBoard
-              ateliers={ateliersActifs}
-              vivier={vivierFiltre}
-              prepAtelierId={prepAtelierId}
-              isFacilitateur={isFacilitateur}
-              tri={tri}
-              qualityOnly={qualityOnly}
-              onChangeAtelier={setPrepAtelierId}
-              onChangeTri={setTri}
-              onChangeQualityOnly={setQualityOnly}
-              onAjouter={ajouterSource}
-              onRetirer={retirerSource}
-              onSave={sauvegarderAtelier}
-            />
-          )}
-        </section>
-      )}
-
-      {/* ===== EN COURS ===== */}
-      {section === 'en-cours' && (
-        <EnCoursTableau
-          ateliers={ateliersActifs}
-          pilotAtelierId={pilotAtelierId}
-          isFacilitateur={isFacilitateur}
-          onChangeAtelier={setPilotAtelierId}
-          onChangeStatut={changerStatut}
-          onSaveSynthese={enregistrerSynthese}
-          onTerminer={terminerAtelier}
-        />
-      )}
-
-      {/* ===== ARCHIVES ===== */}
-      {section === 'archives' && (
-        <section className="atelier-section">
-          <h2>Ateliers termines ({ateliersTermines.length})</h2>
-
-          {ateliersTermines.length === 0 && (
-            <p className="empty">Aucun atelier termine pour l'instant.</p>
-          )}
-
-          <div className="historique-list">
-            {ateliersTermines.map((a) => (
-              <AtelierArchiveCard key={a.id} atelier={a} />
+      {/* ---- Ateliers actifs (à venir et en cours) ---- */}
+      {actifs.length > 0 && (
+        <section className="ateliers-groupe">
+          <h3 className="ateliers-groupe-titre">À venir et en cours</h3>
+          <div className="ateliers-liste">
+            {actifs.map((a) => (
+              <AtelierCard key={a.id} atelier={a} />
             ))}
           </div>
         </section>
+      )}
+
+      {/* ---- Ateliers passés ---- */}
+      {termines.length > 0 && (
+        <section className="ateliers-groupe">
+          <h3 className="ateliers-groupe-titre">Passés</h3>
+          <div className="ateliers-liste">
+            {termines.map((a) => (
+              <AtelierCard key={a.id} atelier={a} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ---- État vide ---- */}
+      {ateliers.length === 0 && !showNewForm && (
+        <div className="ateliers-vide">
+          <p className="ateliers-vide-titre">Aucun atelier pour l'instant.</p>
+          <p className="ateliers-vide-aide">
+            Commencez par alimenter le{' '}
+            <Link to="/ateliers/vivier">vivier de sources</Link>, puis créez un atelier.
+          </p>
+          {isFacilitateur && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setShowNewForm(true)}
+            >
+              Créer le premier atelier
+            </button>
+          )}
+        </div>
       )}
     </div>
   )
 }
 
-/* ---------- Sous-composants ---------- */
+/* ============================================================================
+ * Carte d'atelier dans la liste
+ * ========================================================================== */
+
+function AtelierCard({ atelier }: { atelier: Atelier }) {
+  const dateStr = atelier.date_atelier
+    ? new Date(atelier.date_atelier).toLocaleDateString('fr-FR', {
+        weekday: 'short', day: 'numeric', month: 'long', year: 'numeric',
+      })
+    : null
+
+  return (
+    <Link to={`/ateliers/${atelier.id}`} className="atelier-card">
+      <div className="atelier-card-numero">#{atelier.numero}</div>
+      <div className="atelier-card-corps">
+        <div className="atelier-card-tete">
+          <span className="atelier-card-date">{dateStr ?? 'Date à fixer'}</span>
+          {atelier.heure && <span className="atelier-card-heure">{atelier.heure}</span>}
+        </div>
+        {atelier.lieu && <span className="atelier-card-lieu">{atelier.lieu}</span>}
+        {atelier.nb_participants != null && (
+          <span className="atelier-card-nb">
+            {atelier.nb_participants} participant·e{atelier.nb_participants > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+      <span className={`encours-statut encours-statut--${atelier.statut} atelier-card-statut`}>
+        {STATUT_LABELS[atelier.statut] ?? atelier.statut}
+      </span>
+    </Link>
+  )
+}
+
+/* ============================================================================
+ * EXPORTS nommés — composants réutilisés par Atelier.tsx (page objet).
+ * On les préfixe "Export" pour éviter les conflits de noms internes.
+ * ========================================================================== */
+
+/* ---------- QualityGateIndicator (interne + export implicite via Board) ---- */
 
 function QualityGateIndicator({ gate }: { gate: QualityGate }) {
   return (
@@ -429,31 +430,12 @@ function QualityGateIndicator({ gate }: { gate: QualityGate }) {
   )
 }
 
-interface QualityGate {
-  ok: boolean
-  hasEvaluation: boolean
-  hasArchive: boolean
-  hasAccroche: boolean
-}
-
 /* ===========================================================================
- * PREPARATION : tableau 2 colonnes en glisser-deposer (dnd-kit).
- *
- *  - Colonne GAUCHE = VIVIER : cartes-sources candidates (score visible),
- *    draggables. Contexte ANIMATEUR (curation), le score est volontairement
- *    montre ici (a ne pas confondre avec la projection, carte nue).
- *  - Colonne DROITE = CORPUS de l'atelier choisi : sources retenues,
- *    reordonnables par glisser (sortable) et retirables.
- *
- * Glisser une carte du vivier sur le corpus -> POST /ateliers/:id/sources puis
- * refresh (via onAjouter). Reordonner dans le corpus reste local (aucune API
- * d'ordre cote serveur). Fallback boutons « + Retenir » / « Retirer » pour
- * l'accessibilite. La carte du vivier est neutralisee si deja dans le corpus.
+ * PRÉPARATION : tableau 2 colonnes en glisser-déposer (dnd-kit).
  * =========================================================================== */
 
 const ZONE_CORPUS = 'zone-corpus'
 
-/** Forme minimale partagee par les cartes vivier et corpus pour le visuel. */
 type CarteMin = { titre: string; image_url: string | null; media_nom?: string | null }
 
 function PrepVisuel({ source }: { source: CarteMin }) {
@@ -462,7 +444,6 @@ function PrepVisuel({ source }: { source: CarteMin }) {
     : <span className="prep-carte-initiale">{(source.media_nom || source.titre).charAt(0)}</span>
 }
 
-/** Carte candidate du vivier : draggable + bouton « + Retenir » (fallback). */
 function PrepCarteVivier({ source, dejaRetenue, enDrag, onAjouter }: {
   source: VivierSource
   dejaRetenue: boolean
@@ -485,7 +466,7 @@ function PrepCarteVivier({ source, dejaRetenue, enDrag, onAjouter }: {
     >
       <div className="prep-carte-visuel"><PrepVisuel source={source} /></div>
       <div className="prep-carte-corps">
-        <span className="prep-carte-poignee">⠿ a promener vers le corpus</span>
+        <span className="prep-carte-poignee">à promener vers le corpus</span>
         <Link to={`/lire/${source.id}`} className="prep-carte-titre">{source.titre}</Link>
         <div className="prep-carte-meta">
           {source.media_nom && <span>{source.media_nom}</span>}
@@ -493,7 +474,7 @@ function PrepCarteVivier({ source, dejaRetenue, enDrag, onAjouter }: {
         </div>
         <div className="prep-carte-actions">
           {dejaRetenue ? (
-            <span className="prep-carte-poignee">deja dans le corpus</span>
+            <span className="prep-carte-poignee">déjà dans le corpus</span>
           ) : (
             <button className="btn btn-sm btn-primary" onClick={() => onAjouter(source.id)} type="button">
               + Retenir
@@ -508,7 +489,6 @@ function PrepCarteVivier({ source, dejaRetenue, enDrag, onAjouter }: {
   )
 }
 
-/** Carte du corpus : sortable (poignee) + bouton « Retirer ». */
 function PrepCarteCorpus({ source, rang, isFacilitateur, onRetirer }: {
   source: Source
   rang: number
@@ -531,7 +511,7 @@ function PrepCarteCorpus({ source, rang, isFacilitateur, onRetirer }: {
       className={`prep-carte prep-carte--corpus${isDragging ? ' prep-carte--sorting' : ''}`}
     >
       <span className="prep-carte-rang">{rang}.</span>
-      <button className="prep-corpus-grip" type="button" aria-label="Reordonner" {...attributes} {...listeners}>
+      <button className="prep-corpus-grip" type="button" aria-label="Réordonner" {...attributes} {...listeners}>
         <GripVertical size={16} />
       </button>
       <div className="prep-carte-visuel"><PrepVisuel source={source} /></div>
@@ -552,7 +532,6 @@ function PrepCarteCorpus({ source, rang, isFacilitateur, onRetirer }: {
   )
 }
 
-/** Colonne droite : zone de depot + liste sortable du corpus. */
 function PrepColonneCorpus({ sources, ordre, isFacilitateur, enCoursDeDrag, onRetirer }: {
   sources: Source[]
   ordre: number[]
@@ -593,7 +572,7 @@ function PrepColonneCorpus({ sources, ordre, isFacilitateur, enCoursDeDrag, onRe
         </SortableContext>
         {enCoursDeDrag && (
           <p className="prep-dropzone-invite">
-            {isOver ? 'Relachez pour retenir la source' : 'Deposez la carte ici pour la retenir'}
+            {isOver ? 'Relâchez pour retenir la source' : 'Déposez la carte ici pour la retenir'}
           </p>
         )}
       </div>
@@ -601,14 +580,7 @@ function PrepColonneCorpus({ sources, ordre, isFacilitateur, enCoursDeDrag, onRe
   )
 }
 
-/* ===========================================================================
- * PROFIL DE DIVERSITE du corpus (methode de selection « decrire, ne pas noter »).
- *
- * On ne note pas une source. On decrit le corpus par ses axes de diversite
- * (medias, propriete, types, sujets, mecanismes), avec des jauges sobres, des
- * alertes douces (observations factuelles) et des suggestions de complement.
- * Outil de COULISSE animateur : il ne fuite jamais vers la projection (epoche).
- * =========================================================================== */
+/* ---------- Profil de diversité ---- */
 
 function JaugeAxe({ axe }: { axe: AxeDiversite }) {
   const ratio = axe.cible > 0 ? Math.min(1, axe.distinct / axe.cible) : 1
@@ -649,7 +621,6 @@ function ProfilDiversitePanneau({
       .then((p) => { if (!annule) setProfil(p) })
       .catch(() => { if (!annule) setProfil(null) })
     return () => { annule = true }
-    // Recalcul a chaque changement de corpus (sourcesKey) ou d'option suggestions.
   }, [atelierId, sourcesKey, avecSuggestions])
 
   if (!profil) return null
@@ -741,10 +712,9 @@ function ProfilDiversitePanneau({
   )
 }
 
-function PreparationBoard({
-  ateliers, vivier, prepAtelierId, isFacilitateur, tri, qualityOnly,
-  onChangeAtelier, onChangeTri, onChangeQualityOnly, onAjouter, onRetirer, onSave,
-}: {
+/* ---------- PreparationBoard (interne + export) ---- */
+
+export interface PreparationBoardProps {
   ateliers: AtelierDetail[]
   vivier: VivierSource[]
   prepAtelierId: number | null
@@ -757,19 +727,19 @@ function PreparationBoard({
   onAjouter: (atelierId: number, sourceId: number) => Promise<void> | void
   onRetirer: (atelierId: number, sourceId: number) => Promise<void> | void
   onSave: (atelier: AtelierDetail, fields: Record<string, unknown>) => Promise<void> | void
-}) {
+}
+
+function PreparationBoard({
+  ateliers, vivier, prepAtelierId, isFacilitateur, tri, qualityOnly,
+  onChangeAtelier, onChangeTri, onChangeQualityOnly, onAjouter, onRetirer, onSave,
+}: PreparationBoardProps) {
   const atelier = ateliers.find(a => a.id === prepAtelierId) ?? ateliers[0]
 
-  // Champs date/lieu/heure compacts, sauvegardes a la volee.
   const [date, setDate] = useState(atelier.date_atelier || '')
   const [heure, setHeure] = useState(atelier.heure || '')
   const [lieu, setLieu] = useState(atelier.lieu || '')
-
-  // Ordre du corpus : etat local pour le rendu, persiste cote serveur a chaque tri
-  // (PATCH /ateliers/:id/sources/order) pour survivre au rechargement.
   const [ordre, setOrdre] = useState<number[]>(atelier.sources.map(s => s.id))
 
-  // L'atelier ou ses sources ont change (ajout/retrait/selection) -> resync.
   useEffect(() => {
     setDate(atelier.date_atelier || '')
     setHeure(atelier.heure || '')
@@ -780,7 +750,6 @@ function PreparationBoard({
   useEffect(() => {
     const ids = atelier.sources.map(s => s.id)
     setOrdre(prev => {
-      // Conserve l'ordre local existant, ajoute les nouveaux, retire les partis.
       const conserves = prev.filter(id => ids.includes(id))
       const nouveaux = ids.filter(id => !conserves.includes(id))
       return [...conserves, ...nouveaux]
@@ -788,16 +757,11 @@ function PreparationBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [atelier.id, sourcesKey])
 
-  // Carte promenee (DragOverlay) : depuis le vivier (drag) ou le corpus (tri).
   const [overlay, setOverlay] = useState<CarteMin | null>(null)
   const [vivierDragId, setVivierDragId] = useState<number | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
-
   const dejaRetenues = useMemo(() => new Set(atelier.sources.map(s => s.id)), [atelier.sources])
-
-  // Index du vivier par id : sert au panneau de diversite a resoudre les
-  // suggestions (ids -> carte) sans nouvel appel.
   const vivierParId = useMemo(() => new Map(vivier.map(s => [s.id, s])), [vivier])
 
   function onDragStart(event: DragStartEvent) {
@@ -818,7 +782,6 @@ function PreparationBoard({
     setOverlay(null)
     setVivierDragId(null)
 
-    // Promenade depuis le vivier -> deposee sur le corpus = on retient.
     if (activeId.startsWith('vivier-')) {
       const s = event.active.data.current?.source as VivierSource | undefined
       const surCorpus = event.over?.id === ZONE_CORPUS || String(event.over?.id ?? '').startsWith('corpus-')
@@ -828,7 +791,6 @@ function PreparationBoard({
       return
     }
 
-    // Tri interne du corpus : reordonnancement local PUIS persistance serveur.
     if (activeId.startsWith('corpus-') && event.over) {
       const overId = String(event.over.id)
       if (overId.startsWith('corpus-') && activeId !== overId) {
@@ -847,11 +809,10 @@ function PreparationBoard({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      {/* ----- Bandeau de contexte : choix de l'atelier + champs compacts ----- */}
       <div className="prep-barre">
         {ateliers.length > 1 ? (
           <label className="prep-barre-bloc">
-            <span>Atelier prepare</span>
+            <span>Atelier préparé</span>
             <select value={atelier.id} onChange={(e) => onChangeAtelier(Number(e.target.value))}>
               {ateliers.map(a => (
                 <option key={a.id} value={a.id}>
@@ -862,7 +823,7 @@ function PreparationBoard({
           </label>
         ) : (
           <div className="prep-barre-bloc">
-            <span>Atelier prepare</span>
+            <span>Atelier préparé</span>
             <strong>#{atelier.numero}</strong>
           </div>
         )}
@@ -897,7 +858,6 @@ function PreparationBoard({
         )}
       </div>
 
-      {/* ----- Profil de diversite du corpus (methode de selection) ----- */}
       <ProfilDiversitePanneau
         atelierId={atelier.id}
         sourcesKey={sourcesKey}
@@ -906,9 +866,7 @@ function PreparationBoard({
         onAjouter={(sid) => { if (!dejaRetenues.has(sid)) void onAjouter(atelier.id, sid) }}
       />
 
-      {/* ----- Tableau 2 colonnes ----- */}
       <div className="prep-board">
-        {/* Colonne gauche : vivier draggable */}
         <div className="prep-colonne">
           <div className="prep-colonne-head">
             <h3>Vivier</h3>
@@ -946,7 +904,6 @@ function PreparationBoard({
           </div>
         </div>
 
-        {/* Colonne droite : corpus sortable + zone de depot */}
         <PrepColonneCorpus
           sources={atelier.sources}
           ordre={ordre}
@@ -956,7 +913,6 @@ function PreparationBoard({
         />
       </div>
 
-      {/* La carte promenee suit le curseur, rendue hors flux. */}
       <DragOverlay>
         {overlay ? (
           <div className="prep-carte prep-carte--overlay">
@@ -972,109 +928,13 @@ function PreparationBoard({
   )
 }
 
-/* ===========================================================================
- * EN COURS : table de pilotage de l'atelier prêt / en cours.
- *
- *  - Sélecteur d'atelier (onglets) si plusieurs ateliers actifs.
- *  - Carte d'identité de l'atelier piloté : numéro, date, lieu, statut,
- *    nb de sources, nb de participants, transitions de statut.
- *  - Gros bouton « Lancer la projection » vers /projection/:id (page séparée).
- *  - Corpus en cartes (image + titre) via SourceCard, en mode « carte nue »
- *    (hideAttribution) pour ne pas biaiser le regard pendant l'atelier.
- *  - Synthèse compacte (mécanismes cochés, ce qui a surpris, questions
- *    restantes, nb participants) via POST /ateliers/:id/synthese.
- *
- * Aucun endpoint inventé : transitions via PATCH /ateliers/:id { statut },
- * synthèse via POST /ateliers/:id/synthese, clôture via { statut: 'termine' }.
- * =========================================================================== */
+// Export nommé pour Atelier.tsx
+export { PreparationBoard as PreparationBoardExport }
 
-interface MecanismeRef {
-  id: number
-  nom: string
-  categorie: string | null
-  categorie_label: string | null
-}
+/* ============================================================================
+ * STEPPER de jalons factuels (GET /ateliers/:id)
+ * ========================================================================== */
 
-const STATUT_LABELS: Record<string, string> = {
-  preparation: 'En préparation',
-  pret: 'Prêt',
-  en_cours: 'En cours',
-  termine: 'Terminé',
-}
-
-function EnCoursTableau({
-  ateliers, pilotAtelierId, isFacilitateur,
-  onChangeAtelier, onChangeStatut, onSaveSynthese, onTerminer,
-}: {
-  ateliers: AtelierDetail[]
-  pilotAtelierId: number | null
-  isFacilitateur: boolean
-  onChangeAtelier: (id: number) => void
-  onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
-  onSaveSynthese: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
-  onTerminer: (atelierId: number) => Promise<void> | void
-}) {
-  if (ateliers.length === 0) {
-    return (
-      <section className="atelier-section encours-vue">
-        <h2>Atelier en cours</h2>
-        <div className="encours-vide">
-          <p className="encours-vide-titre">Aucun atelier prêt à piloter.</p>
-          <p className="encours-vide-aide">
-            Composez un corpus de sources, puis revenez ici pour mener l'atelier.
-          </p>
-          <Link to="/ateliers/preparation" className="btn btn-primary">Aller à la préparation</Link>
-        </div>
-      </section>
-    )
-  }
-
-  const atelier = ateliers.find(a => a.id === pilotAtelierId) ?? ateliers[0]
-
-  return (
-    <section className="atelier-section encours-vue">
-      <h2>Atelier en cours</h2>
-
-      {ateliers.length > 1 && (
-        <div className="encours-onglets" role="tablist" aria-label="Ateliers à piloter">
-          {ateliers.map(a => (
-            <button
-              key={a.id}
-              type="button"
-              role="tab"
-              aria-selected={a.id === atelier.id}
-              className={`encours-onglet${a.id === atelier.id ? ' encours-onglet--actif' : ''}`}
-              onClick={() => onChangeAtelier(a.id)}
-            >
-              <span className="encours-onglet-num">#{a.numero}</span>
-              <span className={`encours-statut-pastille encours-statut-pastille--${a.statut}`} />
-              {a.date_atelier && (
-                <span className="encours-onglet-date">
-                  {new Date(a.date_atelier).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <EnCoursPilote
-        key={atelier.id}
-        atelier={atelier}
-        isFacilitateur={isFacilitateur}
-        onChangeStatut={onChangeStatut}
-        onSaveSynthese={onSaveSynthese}
-        onTerminer={onTerminer}
-      />
-    </section>
-  )
-}
-
-/**
- * Stepper de l'atelier (chantier #1, livrable B). Les jalons factuels ne sont
- * exposes que par GET /ateliers/:id (pas par /ateliers/en-cours), on les charge
- * donc ici a la demande. Souple, non bloquant, sans score.
- */
 function AtelierStepper({ atelierId, refreshKey }: { atelierId: number; refreshKey: string }) {
   const [jalons, setJalons] = useState<AtelierJalons | null>(null)
   useEffect(() => {
@@ -1089,138 +949,24 @@ function AtelierStepper({ atelierId, refreshKey }: { atelierId: number; refreshK
   const etapes: Etape[] = [
     { cle: 'corpus', label: 'Corpus', fait: jalons.a_corpus,
       invitation: 'composer un corpus de sources' },
-    { cle: 'source', label: 'Source de seance', fait: jalons.a_source_choisie,
-      invitation: 'choisir la source a projeter' },
-    { cle: 'meca', label: 'Mecanismes', fait: jalons.a_mecanismes,
-      invitation: 'noter les mecanismes identifies par le groupe' },
-    { cle: 'synthese', label: 'Synthese', fait: jalons.a_synthese,
-      invitation: 'saisir la synthese de la seance' },
-    { cle: 'termine', label: 'Termine', fait: jalons.est_termine,
-      invitation: 'marquer l\'atelier comme termine' },
+    { cle: 'source', label: 'Source de séance', fait: jalons.a_source_choisie,
+      invitation: 'choisir la source à projeter' },
+    { cle: 'meca', label: 'Mécanismes', fait: jalons.a_mecanismes,
+      invitation: 'noter les mécanismes identifiés par le groupe' },
+    { cle: 'synthese', label: 'Synthèse', fait: jalons.a_synthese,
+      invitation: 'saisir la synthèse de la séance' },
+    { cle: 'termine', label: 'Terminé', fait: jalons.est_termine,
+      invitation: 'marquer l\'atelier comme terminé' },
   ]
-  return <EtapesActivite etapes={etapes} titreFin="La seance est complete. Sa synthese peut nourrir un dossier ou un quiz." />
+  return <EtapesActivite etapes={etapes} titreFin="La séance est complète. Sa synthèse peut nourrir un dossier ou un quiz." />
 }
 
-function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese, onTerminer }: {
-  atelier: AtelierDetail
-  isFacilitateur: boolean
-  onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
-  onSaveSynthese: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
-  onTerminer: (atelierId: number) => Promise<void> | void
-}) {
-  const nbSources = atelier.sources.length
-  const projectionDispo = nbSources > 0
-  // Cle de rafraichissement du stepper : change quand le corpus ou la synthese bougent.
-  const stepperKey = `${atelier.statut}:${nbSources}:${(atelier.mecanismes_identifies ?? []).length}`
+// Export nommé pour Atelier.tsx
+export { AtelierStepper as AtelierStepperExport }
 
-  return (
-    <div className="encours-grille">
-      <AtelierStepper atelierId={atelier.id} refreshKey={stepperKey} />
-      {/* ---- Carte d'identité de l'atelier ---- */}
-      <div className="encours-fiche">
-        <div className="encours-fiche-tete">
-          <span className="encours-fiche-num">Atelier #{atelier.numero}</span>
-          <span className={`encours-statut encours-statut--${atelier.statut}`}>
-            {STATUT_LABELS[atelier.statut] ?? atelier.statut}
-          </span>
-        </div>
-
-        <dl className="encours-faits">
-          <div className="encours-fait">
-            <dt>Date</dt>
-            <dd>{atelier.date_atelier
-              ? new Date(atelier.date_atelier).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-              : 'à fixer'}{atelier.heure ? ` · ${atelier.heure}` : ''}</dd>
-          </div>
-          <div className="encours-fait">
-            <dt>Lieu</dt>
-            <dd>{atelier.lieu || 'à préciser'}</dd>
-          </div>
-          <div className="encours-fait">
-            <dt>Sources</dt>
-            <dd>{nbSources}</dd>
-          </div>
-          <div className="encours-fait">
-            <dt>Participant·es</dt>
-            <dd>{atelier.nb_participants ?? '—'}</dd>
-          </div>
-        </dl>
-
-        {isFacilitateur && (
-          <div className="encours-transitions">
-            <span className="encours-transitions-label">Avancement</span>
-            <div className="encours-transitions-pas">
-              <StatutPas
-                actif={atelier.statut === 'pret'}
-                fait={atelier.statut === 'en_cours' || atelier.statut === 'termine'}
-                label="Prêt"
-                onClick={atelier.statut !== 'pret' ? () => onChangeStatut(atelier.id, 'pret') : undefined}
-              />
-              <StatutPas
-                actif={atelier.statut === 'en_cours'}
-                fait={atelier.statut === 'termine'}
-                label="En cours"
-                onClick={atelier.statut !== 'en_cours' ? () => onChangeStatut(atelier.id, 'en_cours') : undefined}
-              />
-              <StatutPas
-                actif={false}
-                fait={false}
-                label="Terminé"
-                onClick={() => onTerminer(atelier.id)}
-                variante="fin"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ---- Accès projection ---- */}
-      <div className="encours-projection">
-        {projectionDispo ? (
-          <>
-            <Link to={`/projection/${atelier.id}`} className="encours-lancer">
-              Lancer la projection
-            </Link>
-            <a
-              href={`/api/ateliers/${atelier.id}/print`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary encours-imprimable"
-            >
-              Version imprimable
-            </a>
-          </>
-        ) : (
-          <p className="encours-projection-vide">
-            Aucune source dans le corpus. <Link to="/ateliers/preparation">Complétez la préparation</Link> avant de projeter.
-          </p>
-        )}
-      </div>
-
-      {/* ---- Corpus en cartes ---- */}
-      <div className="encours-corpus">
-        <div className="encours-corpus-tete">
-          <h3>Corpus à promener</h3>
-          <span className="encours-corpus-compte">{nbSources} source{nbSources > 1 ? 's' : ''}</span>
-        </div>
-        {nbSources === 0 ? (
-          <p className="encours-corpus-vide">Le corpus est vide.</p>
-        ) : (
-          <div className="encours-cartes">
-            {atelier.sources.map((s) => (
-              <SourceCard key={s.id} source={s} hideAttribution />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ---- Synthèse ---- */}
-      {isFacilitateur && (
-        <EnCoursSynthese atelier={atelier} onSave={onSaveSynthese} />
-      )}
-    </div>
-  )
-}
+/* ============================================================================
+ * EN COURS : pilotage de l'atelier (statut + projection + corpus + synthèse)
+ * ========================================================================== */
 
 function StatutPas({ label, actif, fait, onClick, variante }: {
   label: string
@@ -1261,7 +1007,6 @@ function EnCoursSynthese({ atelier, onSave }: {
     return () => { actif = false }
   }, [])
 
-  // Regroupe les mécanismes par catégorie pour une grille compacte.
   const parCategorie = useMemo(() => {
     const m = new Map<string, MecanismeRef[]>()
     for (const r of refs) {
@@ -1371,83 +1116,124 @@ function EnCoursSynthese({ atelier, onSave }: {
   )
 }
 
-function AtelierArchiveCard({ atelier }: { atelier: Atelier }) {
-  const [detail, setDetail] = useState<AtelierDetail | null>(null)
-  const [expanded, setExpanded] = useState(false)
+export interface EnCoursPiloteProps {
+  atelier: AtelierDetail
+  isFacilitateur: boolean
+  onChangeStatut: (atelierId: number, statut: string) => Promise<void> | void
+  onSaveSynthese: (atelierId: number, fields: Record<string, unknown>) => Promise<void> | void
+  onTerminer: (atelierId: number) => Promise<void> | void
+  modeInitial?: 'synthese'
+}
 
-  const loadDetail = async () => {
-    if (!detail) {
-      const d = await api.get<AtelierDetail>(`/ateliers/${atelier.id}`)
-      setDetail(d)
-    }
-    setExpanded(!expanded)
-  }
+function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese, onTerminer }: EnCoursPiloteProps) {
+  const nbSources = atelier.sources.length
+  const projectionDispo = nbSources > 0
+  const stepperKey = `${atelier.statut}:${nbSources}:${(atelier.mecanismes_identifies ?? []).length}`
 
   return (
-    <div className="historique-card">
-      <div className="historique-header" onClick={loadDetail} style={{ cursor: 'pointer' }}>
-        <h3>Atelier #{atelier.numero}</h3>
-        <span className="historique-date">{atelier.date_atelier || 'Date non renseignee'}</span>
-        <span className="historique-expand">{expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
-      </div>
-      <div className="historique-meta">
-        {atelier.lieu && <span>Lieu : {atelier.lieu}</span>}
-        {atelier.nb_participants && <span>{atelier.nb_participants} participant·es</span>}
-        <a href={`/api/ateliers/${atelier.id}/print`} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">PDF</a>
-      </div>
-      {!expanded && atelier.compte_rendu && (
-        <p className="historique-cr">{atelier.compte_rendu.substring(0, 200)}{atelier.compte_rendu.length > 200 ? '...' : ''}</p>
-      )}
-
-      {expanded && detail && (
-        <div className="historique-detail">
-          {detail.sources.length > 0 && (
-            <div className="historique-sources">
-              <h4>Sources</h4>
-              {detail.sources.map((s, i) => (
-                <div key={s.id} className="atelier-source-mini">
-                  <span>{i + 1}.</span>
-                  <Link to={`/lire/${s.id}`}>{s.titre}</Link>
-                </div>
-              ))}
-            </div>
-          )}
-          {detail.mecanismes_identifies && detail.mecanismes_identifies.length > 0 && (
-            <div className="historique-mecanismes">
-              <h4>Mecanismes identifies par le groupe</h4>
-              <div className="mecanismes-tags">
-                {detail.mecanismes_identifies.map(m => (
-                  <span key={m.mecanisme_id} className="badge-mecanisme">{m.mecanisme_nom}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {detail.compte_rendu && (
-            <div className="historique-section">
-              <h4>Compte-rendu</h4>
-              <p>{detail.compte_rendu}</p>
-            </div>
-          )}
-          {detail.observations && (
-            <div className="historique-section">
-              <h4>Observations</h4>
-              <p>{detail.observations}</p>
-            </div>
-          )}
-          {detail.observations_surprise && (
-            <div className="historique-section">
-              <h4>Ce qui a surpris</h4>
-              <p>{detail.observations_surprise}</p>
-            </div>
-          )}
-          {detail.questions_restantes && (
-            <div className="historique-section">
-              <h4>Questions restantes</h4>
-              <p>{detail.questions_restantes}</p>
-            </div>
-          )}
+    <div className="encours-grille">
+      <AtelierStepper atelierId={atelier.id} refreshKey={stepperKey} />
+      <div className="encours-fiche">
+        <div className="encours-fiche-tete">
+          <span className="encours-fiche-num">Atelier #{atelier.numero}</span>
+          <span className={`encours-statut encours-statut--${atelier.statut}`}>
+            {STATUT_LABELS[atelier.statut] ?? atelier.statut}
+          </span>
         </div>
+
+        <dl className="encours-faits">
+          <div className="encours-fait">
+            <dt>Date</dt>
+            <dd>{atelier.date_atelier
+              ? new Date(atelier.date_atelier).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+              : 'à fixer'}{atelier.heure ? ` · ${atelier.heure}` : ''}</dd>
+          </div>
+          <div className="encours-fait">
+            <dt>Lieu</dt>
+            <dd>{atelier.lieu || 'à préciser'}</dd>
+          </div>
+          <div className="encours-fait">
+            <dt>Sources</dt>
+            <dd>{nbSources}</dd>
+          </div>
+          <div className="encours-fait">
+            <dt>Participant·es</dt>
+            <dd>{atelier.nb_participants ?? '—'}</dd>
+          </div>
+        </dl>
+
+        {isFacilitateur && (
+          <div className="encours-transitions">
+            <span className="encours-transitions-label">Avancement</span>
+            <div className="encours-transitions-pas">
+              <StatutPas
+                actif={atelier.statut === 'pret'}
+                fait={atelier.statut === 'en_cours' || atelier.statut === 'termine'}
+                label="Prêt"
+                onClick={atelier.statut !== 'pret' ? () => onChangeStatut(atelier.id, 'pret') : undefined}
+              />
+              <StatutPas
+                actif={atelier.statut === 'en_cours'}
+                fait={atelier.statut === 'termine'}
+                label="En cours"
+                onClick={atelier.statut !== 'en_cours' ? () => onChangeStatut(atelier.id, 'en_cours') : undefined}
+              />
+              <StatutPas
+                actif={false}
+                fait={false}
+                label="Terminé"
+                onClick={() => onTerminer(atelier.id)}
+                variante="fin"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="encours-projection">
+        {projectionDispo ? (
+          <>
+            <Link to={`/projection/${atelier.id}`} className="encours-lancer">
+              Lancer la projection
+            </Link>
+            <a
+              href={`/api/ateliers/${atelier.id}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary encours-imprimable"
+            >
+              Version imprimable
+            </a>
+          </>
+        ) : (
+          <p className="encours-projection-vide">
+            Aucune source dans le corpus. Complétez la préparation avant de projeter.
+          </p>
+        )}
+      </div>
+
+      <div className="encours-corpus">
+        <div className="encours-corpus-tete">
+          <h3>Corpus à promener</h3>
+          <span className="encours-corpus-compte">{nbSources} source{nbSources > 1 ? 's' : ''}</span>
+        </div>
+        {nbSources === 0 ? (
+          <p className="encours-corpus-vide">Le corpus est vide.</p>
+        ) : (
+          <div className="encours-cartes">
+            {atelier.sources.map((s) => (
+              <SourceCard key={s.id} source={s} hideAttribution />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {isFacilitateur && (
+        <EnCoursSynthese atelier={atelier} onSave={onSaveSynthese} />
       )}
     </div>
   )
 }
+
+// Export nommé pour Atelier.tsx
+export { EnCoursPilote as EnCoursPiloteExport }

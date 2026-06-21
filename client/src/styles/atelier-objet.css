@@ -1,0 +1,329 @@
+/*
+ * atelier-objet.css — page objet d'un atelier (/ateliers/:id).
+ *
+ * Un seul atelier : en-tête + stepper + onglets internes
+ * (Préparation / Pilotage / Synthèse).
+ *
+ * DARK-SAFE : uniquement des tokens --color-* / --space-* / --radius-*.
+ * Jamais de texte rouge sur fond sombre. Les titres de lien gardent
+ * var(--color-text) via les gardes-fous existants dans globals.css.
+ */
+
+/* ---- Cadre général ---- */
+
+.page-atelier-objet {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+/* ---- En-tête : fil d'Ariane + titre + meta ---- */
+
+.atelier-objet-entete {
+  margin-bottom: var(--space-lg);
+}
+
+.atelier-objet-ariane {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.atelier-objet-ariane a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.atelier-objet-ariane a:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+/* Dark-safe : le fil d'Ariane ne prend pas la couleur accent (rouge) du .dark a */
+.dark .atelier-objet-ariane a {
+  color: var(--color-text-secondary);
+}
+.dark .atelier-objet-ariane a:hover {
+  color: var(--color-text);
+}
+
+.atelier-objet-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.atelier-objet-titre {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.atelier-objet-date {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.atelier-objet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.atelier-objet-lieu {
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.atelier-objet-nb-sources {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ---- Stepper (factuel, non bloquant) ---- */
+
+.atelier-objet-stepper {
+  margin-bottom: var(--space-lg);
+}
+
+/* ---- Onglets internes ---- */
+
+.atelier-objet-onglets {
+  display: flex;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0;
+}
+
+.atelier-objet-onglet {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+  bottom: -1px;
+}
+
+.atelier-objet-onglet:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.atelier-objet-onglet--actif {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  border-bottom-color: var(--color-surface);
+}
+
+/* ---- Section interne (contenu d'un onglet) ---- */
+
+.atelier-objet-section {
+  padding-top: var(--space-md);
+}
+
+.atelier-objet-section--archive {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-lg);
+}
+
+/* ============================================================================
+ * ateliers-liste.css (intégré ici, même périmètre)
+ *
+ * La LISTE des ateliers (/ateliers) : cartes cliquables conduisant à /ateliers/:id.
+ * ========================================================================== */
+
+/* ---- En-tête de la liste ---- */
+
+.page-ateliers {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+.ateliers-liste-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.ateliers-liste-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.ateliers-liste-actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+/* ---- Formulaire de création ---- */
+
+.atelier-new-form {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.atelier-new-form h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--color-text);
+  margin: 0 0 var(--space-md);
+}
+
+/* Dark-safe : le titre du formulaire ne part pas en rouge */
+.dark .atelier-new-form h3 { color: var(--color-text); }
+
+.atelier-new-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* ---- Groupes (actifs / passés) ---- */
+
+.ateliers-groupe {
+  margin-bottom: var(--space-xl);
+}
+
+.ateliers-groupe-titre {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.ateliers-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ---- Carte d'atelier ---- */
+
+.atelier-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.atelier-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+  text-decoration: none;
+}
+
+/* Dark-safe : la carte d'atelier ne prend pas la couleur accent */
+.dark .atelier-card { color: var(--color-text); }
+.dark .atelier-card:hover { border-color: var(--color-accent); }
+
+.atelier-card-numero {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  min-width: 2.8rem;
+  text-align: center;
+}
+
+.atelier-card-corps {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.atelier-card-tete {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: baseline;
+}
+
+.atelier-card-date {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+.atelier-card-heure {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.atelier-card-lieu {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.atelier-card-nb {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.atelier-card-statut {
+  flex-shrink: 0;
+}
+
+/* ---- État vide ---- */
+
+.ateliers-vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ateliers-vide-titre {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.ateliers-vide-aide {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-sm);
+}
