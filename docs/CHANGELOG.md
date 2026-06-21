@@ -2,6 +2,17 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Cadrage en flotte : conception (modèle, quiz, tunnel) + fiabilisation (quiz, Discord, BDD)
+
+Session de dev menée par une flotte d'agents dédiés sur des surfaces disjointes. Aucune écriture sur la base canonique. Notes de conception et plans posés pour la suite ; correctifs sûrs commités.
+
+- **Audit BDD** (lecture seule) : `docs/audit-bdd-2026-06-21.md`. État réel : 162 sources (49 % sans image, 46 % sans accroche), 27 sujets jamais reliés à une activité, 5 activités seulement, tables débunkage/arpentage vides. Le « quiz sans images » s'avère un défaut d'affichage front, pas un manque de données.
+- **Conception — Dossier vs Débunkage** (`docs/conception-activites-dossier-debunkage.md`, inspiration Acrimed + éducation populaire) : le dossier collectionne des sources sur un thème dans la durée (frère éditorial du Sujet), le débunkage démonte une affirmation ciblée (sources pour/contre, sortie post réseau), le décryptage reste un dossier `a_chaud`. Reco clé : adosser toute activité à un `sujet_id` (NULL partout aujourd'hui). Le schéma actuel suffit.
+- **Conception — Tunnelisation des activités** (`docs/conception-tunnelisation-activites.md`) : tunnel générique `brouillon → publie → archive` sur `activites.statut` + jalons de complétude factuels (jamais un score-verdict), stepper « prochaine action » par type. Dettes repérées : double statut débunkage à unifier, arpentage sans diffusion, démonstration de débunkage hors `source_mecanismes` (boucle quiz cassée).
+- **Quiz — fiabilisation de l'affichage (commité)** : composant `SourceVisuel` (image avec fallback `onError` dark-safe, fin de l'icône cassée et de la carte effondrée quand `image_url` est nulle ou morte), source rendue lisible (lien « Lire la source en entier » + média). Note de modèle multi-quiz par thème via `parcours.sujet_id` : `docs/conception-quiz-autoapprentissage.md`.
+- **Bot Discord — fiabilisation (commité)** : `require` ESM remplacé par un import statique (plantage silencieux du score corrigé), commentaires/liens refusés proprement quand l'auteur Discord n'est pas rapproché (fin de l'échec muet sur `auteur_id` NOT NULL). Audit complet et plan de consolidation : `docs/conception-discord.md` (restent index unique `sources.url`, propagation `evaluateur_id`, `!archiver` réel — hors `discord/`, à valider).
+- **Complétion BDD — scripts dry-run (commité, non appliqués)** : `server/src/scripts/completion/` (`backfill-accroche`, `refetch-images`, `dedup-sources`, `rattacher-sujets`), tous idempotents avec garde-fou refusant tout `--apply` sur un chemin OneDrive. Dry-run réels : 49/74 accroches dérivables, 52/80 images récupérées, 2 paires de doublons, 15 rattachements de sujet proposés. Plan : `docs/completion-bdd-plan.md`. Application canonique en attente de validation + backup.
+
 ## 2026-06-21 — Débunkage : glisser-déposer du corpus (fin du chantier)
 
 Fin du chantier ouvert la veille (l'endpoint serveur `PATCH /debunkages/:id/sources/order` était posé, « client à finir »).
