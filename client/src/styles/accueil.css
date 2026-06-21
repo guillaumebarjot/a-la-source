@@ -1,0 +1,80 @@
+/* Accueil pédagogique. Sobre, dark-safe (cf references/design-alasource.md). */
+
+.accueil { max-width: 880px; margin: 0 auto; }
+
+.accueil-intro { margin-bottom: var(--space-lg); }
+.accueil-intro h1 { margin: 0 0 var(--space-xs); }
+.accueil-baseline { color: var(--color-text-secondary); max-width: 70ch; }
+
+/* Reprendre */
+.accueil-reprendre {
+  display: flex; flex-wrap: wrap; gap: var(--space-md);
+  align-items: stretch; margin-bottom: var(--space-xl);
+}
+.accueil-inbox {
+  display: flex; align-items: center; gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: var(--color-surface-2, var(--color-surface));
+  text-decoration: none; color: var(--color-text);
+  transition: border-color 0.15s; flex: 1 1 260px;
+}
+.accueil-inbox:hover { border-color: var(--color-focus, var(--color-text-secondary)); }
+.accueil-inbox-n { font-size: 2rem; font-weight: 700; min-width: 2.2rem; text-align: center; }
+.accueil-inbox-texte { display: flex; flex-direction: column; }
+.accueil-inbox-texte strong { font-size: 1rem; }
+.accueil-inbox-texte small { color: var(--color-text-secondary); }
+.accueil-tuiles { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+.accueil-tuile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: var(--space-sm) var(--space-md); min-width: 96px;
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: var(--color-surface); text-decoration: none; color: var(--color-text);
+  text-align: center; transition: border-color 0.15s;
+}
+.accueil-tuile:hover { border-color: var(--color-focus, var(--color-text-secondary)); }
+.accueil-tuile strong { font-size: 1.4rem; font-weight: 700; }
+.accueil-tuile span { font-size: 0.78rem; color: var(--color-text-secondary); }
+
+/* Blocs pédagogiques */
+.accueil-bloc { margin-bottom: var(--space-xl); }
+.accueil-bloc h2 { margin: 0 0 var(--space-xs); }
+.accueil-bloc-intro { color: var(--color-text-secondary); margin: 0 0 var(--space-md); }
+
+/* Parcours d'une source */
+.accueil-parcours { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+.accueil-etape > details {
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: var(--color-surface); overflow: hidden;
+}
+.accueil-etape summary {
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md); cursor: pointer; list-style: none;
+}
+.accueil-etape summary::-webkit-details-marker { display: none; }
+.accueil-etape summary::after { content: '+'; margin-left: auto; color: var(--color-text-secondary); }
+.accueil-etape details[open] summary::after { content: '–'; }
+.accueil-etape-num {
+  flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-surface-2, var(--color-border)); font-size: 0.8rem; font-weight: 700;
+}
+.accueil-etape-titre { font-weight: 600; color: var(--color-text); text-decoration: none; }
+.accueil-etape-titre:hover { text-decoration: underline; }
+.accueil-etape-resume { color: var(--color-text-secondary); font-size: 0.85rem; }
+.accueil-etape-detail { margin: 0; padding: 0 var(--space-md) var(--space-md); color: var(--color-text-secondary); }
+
+/* Légende du menu (repliable) */
+.accueil-menu-repli {
+  border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface);
+}
+.accueil-menu-repli > summary {
+  padding: var(--space-sm) var(--space-md); cursor: pointer; color: var(--color-text);
+}
+.accueil-menu { list-style: none; margin: 0; padding: 0 var(--space-md) var(--space-sm); }
+.accueil-menu li { padding: 4px 0; border-top: 1px solid var(--color-border); }
+.accueil-menu li:first-child { border-top: none; }
+.accueil-menu-titre { font-weight: 600; color: var(--color-text); text-decoration: none; margin-right: var(--space-xs); }
+.accueil-menu-titre:hover { text-decoration: underline; }
+.accueil-menu-texte { color: var(--color-text-secondary); font-size: 0.88rem; }
+.accueil-rassure { margin-top: var(--space-md); color: var(--color-text-secondary); font-style: italic; font-size: 0.9rem; }
