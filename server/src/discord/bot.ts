@@ -233,18 +233,29 @@ function cmdAtelier(): { response: string; expectsReply: boolean } {
 
 function cmdAide(): { response: string; expectsReply: boolean } {
   return {
-    response: `**📖 Manuel — À la source**
+    response: `**📖 À la source, mode d'emploi du bot**
 
-**Poster une source** : colle un lien d'article, il rejoint la veille et t'est attribué (renseigne ton pseudo Discord dans l'app : Mon espace → Mon compte). Du texte en plus du lien devient un commentaire. Le bot te répond avec le lien pour la lire et la commenter.
+Ici, on construit ensemble notre regard critique sur les médias. Ce salon est la porte d'entrée de la veille : tout ce que tu y déposes nourrit l'app, où on lit, on analyse et on prépare les ateliers.
 
-**Article payant (Europresse)** : joins le **PDF intégral** dans le **même message** que le lien → copie hors-ligne lisible dans l'app (texte extrait). Tu peux aussi joindre un **.ris** (métadonnées). Version sans paywall ? **Édite** ton message et ajoute le lien.
+**1. Proposer une source.** Colle simplement le lien d'un article. Il rejoint la veille et t'est crédité. Pour être reconnu, renseigne une fois ton pseudo Discord dans l'app (Mon espace, puis Mon compte). Si tu ajoutes du texte sous le lien, il devient ton commentaire. Le bot te répond avec le lien pour lire et commenter l'article dans l'app.
 
-**Consulter une source** : \`!source <id>\` ou \`!fiche <id>\` (commentaires, débunkages liés, texte) · \`!texte <id>\` texte intégral · \`!editcom <id> <texte>\` modifier un commentaire.
+**2. Article payant ou Europresse.** Joins le PDF intégral dans le même message que le lien : l'app en garde une copie lisible hors ligne. Un fichier .ris apporte les métadonnées (titre, média, date). Tu as trouvé une version sans paywall ? Édite ton message et ajoute le lien, le bot le rattache à la même source.
 
-**Commandes** :
-\`!aide\` ce manuel · \`!vivier\` top 5 du vivier · \`!atelier\` prochain atelier
-\`!score <id>\` · \`!analyser <id>\` · \`!evaluer <id>\` · \`!commenter <id>\` · \`!taguer <id>\` · \`!archiver <id>\`
-\`!abandon\` (ou \`!annuler\` / \`!stop\`) pour quitter une discussion en cours`,
+**3. Lire et consulter.**
+\`!source <id>\` ou \`!fiche <id>\` la fiche d'une source (commentaires, débunkages liés)
+\`!texte <id>\` le texte intégral archivé
+\`!editcom <id> <texte>\` corriger un de tes commentaires
+
+**4. Contribuer.**
+\`!analyser <id>\` proposer un mécanisme à l'œuvre
+\`!evaluer <id>\` situer la source · \`!commenter <id>\` ajouter une note · \`!taguer <id>\` étiqueter
+\`!archiver <id>\` en garder le texte · \`!score <id>\` voir ses facettes
+
+**5. Se repérer.**
+\`!vivier\` les cinq sources phares du moment · \`!atelier\` le prochain atelier
+\`!aide\` ce mode d'emploi · \`!abandon\` (ou \`!annuler\`, \`!stop\`) pour quitter une discussion en cours
+
+Tout cela se fait encore mieux dans l'app : le bot est là pour commencer, l'app pour aller au fond.`,
     expectsReply: false
   }
 }
