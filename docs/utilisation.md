@@ -1,216 +1,219 @@
-# Guide d'utilisation — A la source
+# Guide d'utilisation — À la source
 
-## Presentation
+## Présentation
 
-« A la source » est un outil collaboratif d'education populaire aux medias, porte par Rouge Coquelicot. Il permet de collecter des sources mediatiques, d'identifier les mecanismes informationnels a l'oeuvre, et de preparer des ateliers de decryptage collectif.
+« À la source » est un outil collaboratif d'éducation populaire aux médias, porté par Rouge Coquelicot. Il permet de collecter des sources médiatiques, d'identifier les mécanismes informationnels à l'oeuvre, et de préparer des ateliers de décryptage collectif.
 
 ## Parcours type (refonte v3, par sujets)
 
-1. **Sujets** — Page d'accueil : explorer les themes durables (couverture multisource)
-2. **Veille** — Le substrat : decouvrir et soumettre des sources partagees par la communaute
-3. **Lire** — Lire en detail une source, identifier des mecanismes, evaluer
-4. **Activites** — Le hub : preparer un atelier, un dossier, un debunkage, un arpentage…
+1. **Accueil** — Point d'entrée pédagogique : comprendre où se déroule quoi, reprendre là où on en était.
+2. **Inbox** — Qualifier les sources entrantes ensemble : enrichir (copie locale, accroche, image, sujet, mécanisme).
+3. **Veille** — Explorer et soumettre des sources partagées par la communauté.
+4. **Sujets** — Retrouver les sources par thème durable, voir la couverture multisource.
+5. **Lire** — Lire en détail une source, identifier des mécanismes, évaluer.
+6. **Activités** — Préparer un atelier, un dossier, un débunkage, un arpentage.
 
 ## Navigation
 
-Le menu de tete comporte 8 entrees, **Sujets en premier**, la Veille reléguée en substrat :
+Le menu de tête comporte 8 entrées :
 
 ```
-Sujets | Activites | Veille | Observatoire | Archiver | Apprendre | Mon espace | [Admin]
+Accueil | Mon espace | Inbox | Veille | Sujets | Activités | Apprendre | Observatoire
 ```
+
+Une sous-navigation contextuelle (H2) apparaît selon la page active.
 
 ## Pages de l'application
 
-### Sujets (`/sujets`)
+### Accueil (`/accueil`)
 
-Page d'accueil (`/` y redirige). Grille des **Sujets** (themes durables, ex. le lithium en Alsace), l'objet pivot editorial. Chaque carte mene a la page du sujet : couverture multisource par evenement, sources rattachees (par glisser-deposer), section « Partager » (page publique OpenGraph + export YesWiki). Tout membre cree un sujet ; un·e animateur·ice le publie.
+Point d'entrée pédagogique. Explique le **parcours d'une source** de bout en bout (de l'Inbox aux activités), avec **aide au survol** sur chaque étape et **blocs repliables** pour le menu de l'application. Affiche en permanence le nombre de sources en Inbox à qualifier, les lectures en cours et les parcours en révision. `/` redirige ici.
+
+### Inbox (`/inbox`)
+
+Le **hub collectif de qualification des sources**. Qualifier une source n'est plus un simple « envoyer en veille » : c'est un **tunnel d'enrichissement à la carte, non bloquant**, en six étapes :
+
+1. **Accepter** : la source n'est pas un spam, elle entre en veille.
+2. **Fiabiliser** : copie locale (archivage auto, coller le texte Europresse ou joindre un PDF), image de couverture, accroche lisible, date et média.
+3. **Situer** : rattacher à au moins un sujet, ajouter des mots-clés.
+4. **Analyser** : repérer un mécanisme médiatique (optionnel).
+5. **Mobiliser** : verser dans un dossier ou une activité (optionnel).
+6. **Commenter** (optionnel).
+
+Aucune étape n'est bloquante. Chaque source affiche ses **jalons factuels** (faits/à faire) et un **score d'avancement** de 0 à 100. Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
+
+**Filtres par ce qui manque** : à accepter · sans copie locale · sans accroche · sans image · sans sujet · non analysée · lien mort. Ces filtres remplacent l'ancienne page Archiver (`/archiver` et `/a-archiver` redirigent ici).
+
+La copie locale s'ajoute directement sur la carte de la source, sans ressaisir l'identifiant : « Archiver » (readability automatique), « Coller le texte » (Europresse), « Joindre un PDF ».
+
+Ouvert à tous les membres connectés.
 
 ### Veille (`/veille`)
 
-Le **substrat** de la veille collaborative (anciennement « Flux »). Affiche les sources soumises par la communaute, triees par recence (les plus recentes en premier). Les sources anciennes s'estompent progressivement (fraicheur visuelle).
+Le **substrat** de la veille collaborative (distinct de l'Inbox). Affiche les sources soumises, triées par récence (les plus récentes en premier). Les sources anciennes s'estompent progressivement (fraîcheur visuelle).
 
 **Actions possibles** :
-- Filtrer par tag, type de source, media, et **commentees / non commentees**
-- Soumettre une nouvelle source (coller une URL, tout le reste est auto-fetche)
-- Cliquer sur une carte pour acceder a la page Lire
-- Acceder a l'**Inbox a qualifier** via le lien discret en tete
-
-### Inbox a qualifier (`/inbox`)
-
-Les sources entrantes en attente de tri, notamment celles **ingerees depuis Discord** (origine `discord`). Pour chaque carte : **Qualifier** (→ veille / vivier) ou **Rejeter** (→ archive, non destructif).
+- Filtrer par tag, type de source, média, commentées / non commentées
+- Soumettre une nouvelle source (coller une URL, tout le reste est auto-fetché)
+- Cliquer sur une carte pour accéder à la page Lire
 
 ### Lire (`/lire/:id`)
 
-Coeur de l'application. Affiche le contenu archive d'une source avec une sidebar interactive.
+Coeur de l'application. Affiche le contenu archivé d'une source avec une sidebar interactive.
 
 **Sidebar** :
-- **Metadonnees** : media, auteur·ice, date, type, paywall
+- **Métadonnées** : média, auteur·ice, date, type, paywall
 - **Tags** : ajouter ou retirer des tags
-- **Mecanismes** : voir les mecanismes identifies, en identifier de nouveaux
-- **Evaluation** : noter la source (complexite, resonance, bonus expert·e)
+- **Mécanismes** : voir les mécanismes identifiés, en identifier de nouveaux
+- **Évaluation** : noter la source (complexité, résonance, bonus expert·e)
 - **Commentaires** : discuter, analyser, poser des questions
 
 **Actions** :
 - Marquer comme lu·e
-- Recommander a un·e autre membre
+- Recommander à un·e autre membre
 - Proposer au vivier (pour les ateliers)
-- **Ranger dans un dossier existant** (parcours inverse veille → dossier : on
-  rattache directement la source ouverte au corpus d'un dossier)
-- Archiver (si pas encore fait)
+- **Ranger dans un dossier existant** (parcours inverse veille vers dossier)
+- Archiver (si pas encore fait), coller le texte Europresse, joindre un PDF
 - Partager (copier le lien, Discord)
 
-### Observatoire (`/observatoire`)
+### Sujets (`/sujets`)
 
-Visualisations et statistiques sur l'ensemble des sources analysees. 4 onglets :
+Grille des **Sujets** (thèmes durables, ex. le lithium en Alsace). Chaque carte mène à la page du sujet : couverture multisource par événement, sources rattachées (par glisser-déposer), section « Partager » (page publique OpenGraph + export YesWiki). Tout membre crée un sujet ; un·e animateur·ice le publie.
 
-- **Mecanismes** : timeline des mecanismes identifies (barres empilees), matrice media × mecanisme (heatmap)
-- **Medias** : nombre de sources par media, indice de confiance par media
-- **Fiches medias** : fiches detaillees (proprietaire, ligne editoriale, stats)
-- **Sources** : top sources les plus evaluees
+### Activités (`/activites`)
 
-### Activites (`/activites`)
+Le **hub** des activités d'éducation populaire, posées sur un socle commun. Section « Créer une activité » en tête avec les formats disponibles : **atelier, dossier, décryptage (à chaud), débunkage, arpentage**. Le **Parcours** ne vit plus ici ; il est accessible sous **Apprendre**.
 
-Le **hub** des activites d'education populaire, posees sur un socle commun. Section « Creer une activite » en tete avec les 6 formats : **atelier, dossier, decryptage (a chaud), debunkage, parcours, arpentage**. Compteurs et acces a chaque famille.
+#### Composer un corpus en glisser-déposer (sujet, dossier, débunkage)
 
-#### Composer un corpus en glisser-deposer (sujet, dossier, debunkage)
+Les pages **Sujet**, **Dossier** et **Débunkage** partagent un même composant de composition de corpus (`CorpusDnD`) : on **promène une carte** (image + titre) depuis la veille vers le corpus, on la réordonne par la poignée, l'ordre est persisté. Sur le **débunkage**, chaque carte reçoit un **rôle** (pour / contre).
 
-Les pages **Sujet**, **Dossier** et **Debunkage** partagent un meme composant de
-composition de corpus (`CorpusDnD`) : on **promene une carte** (image + titre)
-depuis la veille vers le corpus, on la reordonne par la poignee, l'ordre est
-persiste. Sur le **debunkage**, chaque carte recoit un **role** (pour / contre)
-en plus de l'ordre. La carte garde toujours son image ; jamais de scroll
-infini.
+#### Débunkage (`/debunkages`)
 
-#### Debunkage (`/debunkages`)
+Activité de démonstration : affirmation visée, démonstration, corpus de sources **pour / contre** (glisser-déposer), **liens de posts réseaux**. Une fois publié, le débunkage dispose d'une page publique partageable (OpenGraph) et d'un export YesWiki.
 
-Activite de demonstration : on consigne une affirmation visee, une
-demonstration, un corpus de sources **pour / contre** (glisser-deposer), et des
-**liens de posts reseaux**. Une fois publie, le debunkage dispose d'une page
-publique partageable (OpenGraph) et d'un export YesWiki via la section
-« Partager ».
+#### Dossier et décryptage (`/dossiers`)
 
-#### Dossier et decryptage (`/dossiers`)
-
-Le **dossier** est une mise en perspective redigee autour d'un corpus de
-sources. Le **decryptage** est un dossier « a chaud », rattache a un
-**evenement** d'actualite (meme page, flag « a chaud »). Sources composees en
-glisser-deposer, contenu redige, section « Partager » (page publique + export
-YesWiki).
+Le **dossier** est une mise en perspective rédigée autour d'un corpus de sources. Le **décryptage** est un dossier « à chaud », rattaché à un **événement** d'actualité (même page, flag « à chaud »). Sources composées en glisser-déposer, contenu rédigé, section « Partager » (page publique + export YesWiki).
 
 #### Arpentage (`/arpentages`)
 
-Lecture collective **fragmentee** d'un document : on decoupe le document en
-fragments, on les **attribue** aux participant·es, chacun·e restitue, puis on
-fait la **synthese** collective.
+Lecture collective **fragmentée** d'un document : découpage en fragments, **attribution** aux participant·es, restitutions, puis **synthèse** collective.
 
 ### Ateliers (`/ateliers`)
 
-Pipeline de preparation et gestion des ateliers. 4 onglets :
+Pipeline de préparation et gestion des ateliers. 4 onglets :
 
-- **Vivier** : sources proposees, triees par **recence** par defaut (le score reste un tri optionnel, plus un verdict). On lit des **facettes factuelles** (nombre d'evaluations, completude, mecanismes pressentis, fraicheur) ; la checklist « pretes pour atelier » (evaluee + archivee + accroche) est une **completude**, pas une note.
-- **Preparation** : composer un atelier en glisser-deposer (vivier a gauche, corpus a droite). Panneau « Profil du corpus » : on **decrit l'ensemble** (diversite de medias, de propriete, de mecanismes, profil de duree) avec des alertes douces et des suggestions de diversification, sans nombre-verdict.
-- **En cours** : atelier actif, table de pilotage sur un ecran, acces au mode projection plein ecran.
-- **Archives** : historique des ateliers termines avec compte-rendu.
+- **Vivier** : sources proposées, triées par **récence** par défaut (le score reste un tri optionnel, jamais un verdict). On lit des **facettes factuelles** (nombre d'évaluations, complétude, mécanismes pressentis, fraîcheur).
+- **Préparation** : composer un atelier en glisser-déposer (vivier à gauche, corpus à droite). Panneau « Profil du corpus » : on **décrit l'ensemble** (diversité de médias, de propriété, de mécanismes, profil de durée) avec des alertes douces et des suggestions de diversification.
+- **En cours** : atelier actif, table de pilotage, accès au mode projection plein écran.
+- **Archives** : historique des ateliers terminés avec compte-rendu.
 
-### Archiver (`/archiver`)
+### Observatoire (`/observatoire`)
 
-Page collaborative d'archivage anti-linkrot. 3 onglets :
+La **référence critique des médias** : qui possède quoi, couverture comparée d'un même fait, fiches médias, catalogue des mécanismes. 5 onglets (sous-nav H2) :
 
-- **A archiver** : sources prioritaires non encore archivees
-- **Archives partielles** : sources dont l'archivage est incomplet
-- **Completer** : contribuer a l'archivage (upload manuel, markdown, PDF)
+- **Mécanismes** : les 25 mécanismes de référence (fiches pédagogiques, anciennement sous Apprendre)
+- **Médias** : nombre de sources par média, indice de confiance par média
+- **Fiches médias** : propriétaire, actionnaire ultime, type de propriété, financement, ligne revendiquée
+- **Couverture** : couverture comparée d'un même fait/sujet par différents médias
+- **Sources** : top sources les plus évaluées
+
+Doctrine : on décrit les médias et les sources par des faits ; on ne les note pas.
 
 ### Apprendre (`/apprendre`)
 
-Section pedagogique. 3 onglets :
+Section pédagogique. 3 onglets (sous-nav H2) :
 
-- **Catalogue** : les 25+ mecanismes informationnels classes par categorie (6 familles), avec fiches detaillees, exemples, questions guidees
-- **Manuel** : le Manuel de deconstruction mediatique, guide complet pour les facilitateur·ices (biais cognitifs, mecaniques de fabrication, grille d'analyse, glossaire, ressources)
-- **Aide & Ressources** : fonctionnement de l'outil, contrat d'epoche, guidelines d'evaluation, systeme de score
+- **Parcours** : quiz de repérage des mécanismes sur cartes-sources nues (score). Génération automatique depuis `source_mecanismes`.
+- **Manuel** : le Manuel de déconstruction médiatique, guide complet pour les facilitateur·ices (biais cognitifs, mécaniques de fabrication, grille d'analyse, glossaire, ressources).
+- **Aide et Ressources** : fonctionnement de l'outil, contrat d'epoché, guidelines d'évaluation, système de score.
+
+Le catalogue des 25 mécanismes est désormais sous **Observatoire > Mécanismes**.
 
 ### Mon espace (`/perso`)
 
-Espace personnel :
+Espace personnel (sous-nav H2 : Mon compte · Mes contributions · Mes lectures · Chaînes amies) :
 
-- **Mon compte** : identite SSO, role, et **pseudo Discord** editable (sert au rapprochement des sources postees sur Discord avec votre compte)
-- **Mes contributions** : sources proposees, evaluations, mecanismes, commentaires, activites creees ou animees, sujets crees
-- **Mes lectures** : sources sauvegardees, recommandations reçues
-- **Chaines amies** : videos partenaires (PeerTube / Indymotion)
+- **Mon compte** : identité SSO, rôle, et **pseudo Discord** éditable (sert au rapprochement des sources postées sur Discord avec votre compte).
+- **Mes contributions** : sources proposées, évaluations, mécanismes, commentaires, activités créées ou animées, sujets créés.
+- **Mes lectures** : sources sauvegardées, recommandations reçues.
+- **Chaînes amies** : vidéos partenaires (PeerTube / Indymotion).
 
 ### Administration (`/admin`)
 
-Reserve aux admins. 2 onglets :
+Réservé aux admins. 2 onglets :
 
-- **Parametrage** : configuration generale de l'app
-- **Utilisateurs** : gestion des roles (membre, animateur·ice, admin)
+- **Paramétrage** : configuration générale de l'app
+- **Utilisateurs** : gestion des rôles (membre, animateur·ice, admin)
 
 ### Projection (`/projection/:atelierId`)
 
-Mode plein ecran pour la projection en atelier. Fond clair force, typographie de lecture. 3 phases :
-1. **Selection** : grille neutre des sources de la shortlist (sans scores ni mecanismes)
-2. **Lecture** : reader serif, plein ecran, mode archive
-3. **Synthese** : formulaire guide (mecanismes identifies, observations, nombre de participants)
+Mode plein écran pour la projection en atelier. Fond clair forcé, typographie de lecture. 3 phases :
+1. **Sélection** : grille neutre des sources de la shortlist (sans scores ni mécanismes)
+2. **Lecture** : reader serif, plein écran, mode archive
+3. **Synthèse** : formulaire guidé (mécanismes identifiés, observations, nombre de participants)
 
-## Systeme de score
+## Système de score
 
 ### Score atelier /100
 
-Chaque source reçoit un score sur 100, compose de :
+Chaque source reçoit un score sur 100, composé de :
 
-- **Pedagogie (50 pts)** : densite de mecanismes identifies, diversite, qualite des justifications, complexite du sujet (slider), bonus expert·e (slider)
-- **Echo (50 pts)** : croisements internes (tags communs), lectures, commentaires, viralite, resonance (slider)
+- **Pédagogie (50 pts)** : densité de mécanismes identifiés, diversité, qualité des justifications, complexité du sujet (slider), bonus expert·e (slider)
+- **Écho (50 pts)** : croisements internes (tags communs), lectures, commentaires, viralité, résonance (slider)
 
 ### Indice timing (A/B/C/D)
 
-Base sur la duree de lecture/visionnage :
-- **A** = 3-8 min (ideal pour un atelier d'1h)
+Basé sur la durée de lecture/visionnage :
+- **A** = 3-8 min (idéal pour un atelier d'1h)
 - **B** = 8-15 min (acceptable)
 - **C** = 15-30 min (long)
 - **D** = >30 min (trop long)
 
 Le·la facilitateur·ice peut overrider cet indice manuellement.
 
-### Fraicheur
+### Fraîcheur
 
-Les sources s'estompent progressivement avec le temps. La vitesse depend du type de source (un rapport reste « frais » plus longtemps qu'un fait divers). Un toggle permet d'afficher les anciennes sources.
+Les sources s'estompent progressivement avec le temps. La vitesse dépend du type de source (un rapport reste « frais » plus longtemps qu'un fait divers). Un toggle permet d'afficher les anciennes sources.
 
-## Roles
+## Rôles
 
-- **Membre** : soumettre, taguer, commenter, evaluer, identifier des mecanismes, lire
-- **Animateur·ice** : + gerer les ateliers, selectionner des sources, overrider le timing
-- **Admin** : + gerer les utilisateur·ices, configurer les parametres
+- **Membre** : soumettre, taguer, commenter, évaluer, identifier des mécanismes, lire
+- **Animateur·ice** : + gérer les ateliers, sélectionner des sources, overrider le timing
+- **Admin** : + gérer les utilisateur·ices, configurer les paramètres
 
-## Tags vs Mots-cles
+## Tags vs Mots-clés
 
-- **Tags** : poses manuellement par les membres (thematiques, libres)
-- **Mots-cles** : extraits automatiquement du contenu (meta HTML + TF-IDF)
+- **Tags** : posés manuellement par les membres (thématiques, libres)
+- **Mots-clés** : extraits automatiquement du contenu (meta HTML + TF-IDF)
 
 ## Depuis Discord
 
-Le bot relie le salon Discord du collectif a l'application.
+Le bot relie le salon Discord du collectif à l'application.
 
 ### Poster un lien
 
-- Coller une **URL d'article** dans le canal surveille cree une source en **Inbox a qualifier**. Le bot **repond** avec le lien vers l'article dans l'app. Si vous avez renseigne votre **pseudo Discord** dans Mon espace, la source vous est creditee.
-- **Texte en plus du lien** : ajoute en **commentaire** sur la source.
-- **Version sans paywall** : repondre/editer avec un lien alternatif l'ajoute a la source (pas un doublon).
-- **Edition / reponse** Discord : rattachee a la bonne source (le bot garde le lien message ↔ source).
+- Coller une **URL d'article** dans le canal surveillé crée une source en **Inbox à qualifier**. Le bot **répond** avec le lien vers l'article dans l'app. Si vous avez renseigné votre **pseudo Discord** dans Mon espace, la source vous est créditée.
+- **Texte en plus du lien** : ajouté en **commentaire** sur la source.
+- **Version sans paywall** : répondre/éditer avec un lien alternatif l'ajoute à la source (pas un doublon).
+- **Édition / réponse** Discord : rattachée à la bonne source.
 
 ### PDF Europresse et fichiers .ris
 
-- **PDF joint** : copie integrale **hors-ligne** lisible directement dans l'app (utile pour Europresse / BnF).
-- **`.ris` joint** : metadonnees recuperees (titre, media, date, resume).
+- **PDF joint** : copie intégrale **hors-ligne** lisible directement dans l'app.
+- **`.ris` joint** : métadonnées récupérées (titre, média, date, résumé).
 
 ### Commandes (consultation et manuel)
 
-- `!source <id>` ou `!fiche <id>` : fiche d'une source (commentaires avec id, debunkages lies, presence de texte)
-- `!texte <id>` : texte integral, decoupe en blocs
+- `!source <id>` ou `!fiche <id>` : fiche d'une source
+- `!texte <id>` : texte intégral, découpé en blocs
 - `!editcom <id> <texte>` : modifier un commentaire (auteur ou admin)
 - `!vivier`, `!atelier`, `!analyser` : raccourcis vers le pipeline
-- `!aide`, `!manuel`, `!guide` : le manuel de deconstruction mediatique
+- `!aide`, `!manuel`, `!guide` : le manuel de déconstruction médiatique
 
-Chaque reponse du bot invite a « faire encore mieux dans l'app ».
+Chaque réponse du bot invite à « faire encore mieux dans l'app ».
 
 ### App vers Discord
 
-A la publication d'un **sujet**, d'un **dossier/decryptage** ou d'un **debunkage**, un message est automatiquement poste dans le salon de diffusion (carte « unfurlee »).
+À la publication d'un **sujet**, d'un **dossier/décryptage** ou d'un **débunkage**, un message est automatiquement posté dans le salon de diffusion (carte « unfurlée »).

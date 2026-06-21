@@ -7,7 +7,7 @@
 
 Monorepo npm workspaces (`server/`, `client/`). Outil web d'éducation populaire aux médias de Rouge Coquelicot. Déployé en conteneur Docker sur l'infra PIAF (serveur Bomp4rd), derrière Authentik forward-auth.
 
-**Refonte v3, par sujets.** L'entrée du produit est désormais le **Sujet** (thème durable, ex. lithium en Alsace), pas le flux de liens. La page d'accueil est `/sujets` ; la veille collaborative (ex `/flux`, renommée « Veille ») devient un **substrat secondaire** qui alimente les sujets et les activités. Autour des données communes (sources, événements, médias, mécanismes, sujets), une famille d'**activités** d'éducation populaire (atelier, dossier, décryptage, débunkage, parcours, arpentage) se branche, chacune posée comme un pipeline-outil sur ce socle.
+**Refonte v3, par sujets.** L'entrée du produit est désormais le **Sujet** (thème durable, ex. lithium en Alsace), pas le flux de liens. La page d'accueil est `/accueil` (pédagogique) ; `/` redirige vers `/accueil`. La veille collaborative (ex `/flux`, renommée « Veille ») devient un **substrat secondaire** qui alimente les sujets et les activités. Autour des données communes (sources, événements, médias, mécanismes, sujets), une famille d'**activités** d'éducation populaire (atelier, dossier, décryptage, débunkage, parcours, arpentage) se branche, chacune posée comme un pipeline-outil sur ce socle.
 
 ```
 a-la-source/
@@ -19,7 +19,7 @@ a-la-source/
 └── uploads/                fichiers uploadés
 ```
 
-Stack : voir la note vault `02 — Choix technologiques`. Résumé : server Node 22 + Express 4 + TypeScript + better-sqlite3 + Mozilla Readability ; client React 19 + Vite 6 + react-router-dom 7 + zustand + recharts ; PWA.
+Stack : server Node 22 + Express 4 + TypeScript + better-sqlite3 + Mozilla Readability ; client React 19 + Vite 6 + react-router-dom 7 + zustand + recharts ; PWA.
 
 ## Serveur (`server/src/`)
 
@@ -29,29 +29,29 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 
 | Montage | Fichier | Rôle |
 |---|---|---|
-| `/api/sources` | sources.ts | CRUD des sources (vivier), fetch métadonnées, statuts veille/vivier/atelier/archive |
-| `/api/tags` | tags.ts | tags manuels (thématique/mécanisme/média/libre) |
-| `/api/evaluations` | evaluations.ts | scores écho (0-40) et pédagogie (0-50) par évaluateur |
-| `/api/commentaires` | commentaires.ts | commentaires/analyses/questions sur les sources |
-| `/api/medias` | medias.ts | liste, détail, stats, matrice média x mécanisme, **indice de confiance** |
-| `/api/ateliers` | ateliers.ts | pipeline atelier (vivier, préparation, en-cours, synthèse, impression). **A1 terminée** : lit/écrit exclusivement depuis `activites` + `atelier_pipeline` + `activite_sources` + `activite_mecanismes` ; forme d'API inchangée ; tables `ateliers*` legacy conservées en filet **non lu**. `GET /vivier` expose un bloc `facettes` factuel (cf. doctrine « décrire, ne pas noter ») et trie par récence de soumission par défaut, plus par le score |
-| `/api/sujets` | sujets.ts | sujets (thèmes durables, refonte par sujets) : CRUD, publication, rattachement sources/événements |
-| `/api/debunkages` | debunkages.ts | activité débunkage (adhérent) : démonstration, sources pour/contre, liens de posts réseaux, publier |
-| `/api/parcours` | parcours.ts | cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
-| `/api/dossiers` | dossiers.ts | activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources |
-| `/api/arpentages` | arpentage.ts | activité arpentage : fragments d'un document, attribution, restitutions, synthèse |
-| `/partage/{debunkage,dossier}/:id`, `/partage/sujet/:slug` | partage.ts | **pages HTML publiques** (sans login) des débunks, dossiers/décryptages et thèmes publiés, avec OpenGraph (unfurl Discord). Pour les rouvrir sans SSO : exception sans auth sur `/partage/` dans l'hôte NPM |
-| `/api/{debunkages,dossiers}/:id/yeswiki`, `/api/sujets/:idOrSlug/yeswiki` | (resp. routes) | export en syntaxe YesWiki (lib `yeswiki.ts`) |
-| `/api/auth` | auth.ts | authentification (rôles membre/animateur/admin) |
+| `/api/sources` | sources.ts | CRUD des sources (vivier), fetch métadonnées, statuts veille/vivier/atelier/archive. `GET /qualification` : hub de qualité des sources (Inbox-hub), jalons booléens, score d'avancement 0-100, filtre `?manque=` par jalon manquant. |
+| `/api/tags` | tags.ts | Tags manuels (thématique/mécanisme/média/libre) |
+| `/api/evaluations` | evaluations.ts | Scores écho (0-40) et pédagogie (0-50) par évaluateur |
+| `/api/commentaires` | commentaires.ts | Commentaires/analyses/questions sur les sources |
+| `/api/medias` | medias.ts | Liste, détail, stats, matrice média × mécanisme, indice de confiance |
+| `/api/ateliers` | ateliers.ts | Pipeline atelier (vivier, préparation, en cours, synthèse, impression). A1 terminée : lit/écrit exclusivement depuis `activites` + `atelier_pipeline` + `activite_sources` + `activite_mecanismes`. `GET /vivier` expose un bloc `facettes` factuel (doctrine « décrire, ne pas noter ») et trie par récence de soumission par défaut. |
+| `/api/sujets` | sujets.ts | Sujets (thèmes durables) : CRUD, publication, rattachement sources/événements |
+| `/api/debunkages` | debunkages.ts | Activité débunkage : démonstration, sources pour/contre, liens de posts réseaux, publier |
+| `/api/parcours` | parcours.ts | Cursus Apprendre : parcours/quiz de repérage des mécanismes, sessions, score |
+| `/api/dossiers` | dossiers.ts | Activité dossier (et décryptage à chaud = flag `a_chaud` + événement) : contenu, mise en perspective, sources, publier |
+| `/api/arpentages` | arpentage.ts | Activité arpentage : fragments, attribution, restitutions, synthèse |
+| `/partage/{debunkage,dossier}/:id`, `/partage/sujet/:slug` | partage.ts | Pages HTML publiques (sans login) des débunks, dossiers/décryptages et thèmes publiés, avec OpenGraph (unfurl Discord) |
+| `/api/{debunkages,dossiers}/:id/yeswiki`, `/api/sujets/:idOrSlug/yeswiki` | (resp. routes) | Export en syntaxe YesWiki (lib `yeswiki.ts`) |
+| `/api/auth` | auth.ts | Authentification (rôles membre/animateur/admin) |
 | `/api/mecanismes` | mecanismes.ts | 25 mécanismes de référence (fiches pédagogiques) |
-| `/api/contenus` | contenus.ts | pages éditables (clé/valeur) |
-| `/api/parametres` | parametres.ts | paramètres admin (courbes de fraîcheur, poids scores, formule confiance) |
-| `/api/recherche` | recherche.ts | recherche plein texte |
-| `/api/becs-rouges` | becsrouges.ts | suivi de chaînes/médias (intégré à l'espace perso) |
+| `/api/contenus` | contenus.ts | Pages éditables (clé/valeur) |
+| `/api/parametres` | parametres.ts | Paramètres admin (courbes de fraîcheur, poids scores, formule confiance) |
+| `/api/recherche` | recherche.ts | Recherche plein texte |
+| `/api/becs-rouges` | becsrouges.ts | Suivi de chaînes/médias (intégré à l'espace perso) |
 
 ### Bibliothèques (`server/src/lib/`)
 
-- `db.ts` : connexion better-sqlite3.
+- `db.ts` : connexion better-sqlite3, mode DELETE (pas WAL -- incompatible OneDrive), `foreign_keys = ON`.
 - `auth.ts` : middleware d'authentification (Authentik forward-auth : lit `X-authentik-username` / `X-authentik-groups`, repli `Remote-User` puis `?_user=` en dev ; rôle dérivé des groupes, élevable en base).
 - `readability.ts` + `opengraph.ts` : extraction d'articles (Mozilla Readability, OpenGraph).
 - `ftr-site-config.ts` : règles FullTextRSS par site (65 sites configurés).
@@ -59,112 +59,144 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 
 ### Base de données (`server/src/db/`)
 
-`schema.sql` définit les tables ; des scripts `migrate-*.ts` appliquent les évolutions (phases 1-3, mécanismes v2, ateliers v2, archives v2) ; des `seed-*.ts` peuplent (médias, descriptions médias, évaluations d'ateliers).
+`schema.sql` définit les tables ; des scripts `migrate-*.ts` appliquent les évolutions additives (phases 1-3, mécanismes v2, ateliers v2, archives v2, activités, sujets, débunkage, parcours, dossiers, arpentage, événements, propriété des médias) ; des `seed-*.ts` peuplent (médias, descriptions médias, évaluations d'ateliers).
 
-Tables principales : `utilisateurs`, `medias`, `auteurs`, `sources`, `archives`, `tags` + `source_tags`, `mecanismes_reference` + `source_mecanismes`, `evaluations`, `commentaires`, `lectures`, `ateliers` + `atelier_sources` + `atelier_mecanismes`, `contenus`, `parametres`, `mots_cles`.
+Tables principales : `utilisateurs`, `medias`, `auteurs`, `sources`, `archives`, `tags` + `source_tags`, `mecanismes_reference` + `source_mecanismes`, `evaluations`, `commentaires`, `lectures`, `contenus`, `parametres`, `mots_cles`.
 
 Refonte v3 (par sujets), tables additives (auto-migrate au boot, idempotent) :
-- `sujets` + `sujet_sources` + `sujet_evenements` : le Sujet, thème durable, objet pivot éditorial (création membre, publication animateur). Seed : lithium en Alsace + 7 dossiers locaux Becs Rouges.
+- `sujets` + `sujet_sources` + `sujet_evenements` : le Sujet, thème durable, objet pivot éditorial.
+- `evenements` : faits d'actualité couverts par plusieurs sources.
 
 #### Socle commun des activités : `activites`
 
 `migrate-activites.ts` pose la colonne vertébrale de l'éducation populaire : une table **unique** `activites` (socle commun) + une **extension par type**. Schéma réel :
 
 - `activites` : `id`, `type` (CHECK : `atelier` / `dossier` / `decryptage` / `debunkage` / `parcours` / `arpentage`), `sujet_id` (rattachement au thème), `titre`, `statut` (défaut `brouillon`), `anime_par`, `cree_par`, `legacy_atelier_id` (trace du backfill), `cree_le`, `maj_le`. Index sur `type` et `sujet_id`.
-- `activite_sources` : corpus de l'activité (`activite_id`, `source_id`, `ordre`, `note`, PK composite). Le rôle pour/contre est porté côté débunkage.
-- `activite_mecanismes` : mécanismes de synthèse rattachés à l'activité (`activite_id`, `mecanisme_id`).
-- Extensions par type : `atelier_pipeline` (logistique + déroulé : `numero`, `date_atelier`, `heure`, `lieu`, `facilitateur_id`, `source_choisie_id`, `nb_participants`, `compte_rendu`, `observations`, `observations_surprise`, `questions_restantes`, `mecanisme_identifie`), `debunkage_pipeline` + `debunkage_posts`, `dossier_contenu` (dossier + décryptage à chaud, flag `a_chaud` + `evenement_id`), `arpentage_pipeline` + `arpentage_fragments` + `arpentage_restitutions`.
+- `activite_sources` : corpus de l'activité (`activite_id`, `source_id`, `ordre`, `note`, PK composite).
+- `activite_mecanismes` : mécanismes de synthèse rattachés à l'activité.
+- Extensions par type : `atelier_pipeline` (logistique + déroulé), `debunkage_pipeline` + `debunkage_posts`, `dossier_contenu` (dossier + décryptage à chaud, flag `a_chaud` + `evenement_id`), `arpentage_pipeline` + `arpentage_fragments` + `arpentage_restitutions`.
 
-**Types branchés sur `activites` aujourd'hui : atelier, débunkage, dossier (et décryptage = dossier `a_chaud=1`), arpentage.** Le **parcours** est listé dans le CHECK mais vit en tables propres (`parcours` + `parcours_questions` + `parcours_sessions` + `parcours_reponses`), structurellement distinct (cursus/quiz, pas un pipeline éditorial). Parcours « Découverte des mécanismes » auto-généré depuis `source_mecanismes`.
+**Types branchés sur `activites` aujourd'hui : atelier, débunkage, dossier (et décryptage = dossier `a_chaud=1`), arpentage.** Le **parcours** est listé dans le CHECK mais vit en tables propres (`parcours` + `parcours_questions` + `parcours_sessions` + `parcours_reponses`), structurellement distinct (cursus/quiz, pas un pipeline éditorial).
 
 #### Bascule A1 (terminée)
 
-La bascule de l'atelier sur le socle est **terminée**. `routes/ateliers.ts` lit et écrit **exclusivement** depuis `activites` (identité + statut), `atelier_pipeline` (logistique + déroulé), `activite_sources` (corpus) et `activite_mecanismes` (synthèse) ; l'`id` atelier = `activites.id`. Le backfill des ateliers existants (et de leurs mécanismes de synthèse) est non destructif et idempotent (tracé par `legacy_atelier_id`).
+`routes/ateliers.ts` lit et écrit exclusivement depuis `activites`, `atelier_pipeline`, `activite_sources` et `activite_mecanismes`. Les tables legacy `ateliers` / `atelier_sources` / `atelier_mecanismes` sont conservées en filet mais ne sont plus lues par aucun code applicatif.
 
-Les tables **legacy** `ateliers` / `atelier_sources` / `atelier_mecanismes` sont **conservées en filet** mais ne sont **plus lues par aucun code applicatif** (vérifié : la requête `migrate-activites.ts` y accède uniquement pour le backfill ; aucune route ni lib ni le bot Discord ne les interroge). Le compteur `nb_ateliers` et le bot Discord lisent désormais `activites`. Suppression du filet possible plus tard, une fois la confiance établie.
+#### Inbox à qualifier : jalons et score
+
+`GET /api/sources/qualification` calcule par source 7 jalons booléens :
+- `copie_locale` : archive `complete` ou `completude = 'integral_offline'`
+- `accroche` : accroche non vide
+- `image` : `image_url` non vide
+- `sujet` : rattachée à au moins 1 sujet
+- `analysee` : au moins 1 mécanisme identifié
+- `mobilisee` : versée dans au moins 1 activité
+- `commentee` : au moins 1 commentaire
+
+Score pondéré : copie_locale 25, accroche 20, image 15, sujet 20, analysee 10, mobilisee 5, commentee 5. **Bien qualifiée** = copie_locale ET accroche ET image. Filtre `?manque=<jalon>` pour cibler les sources incomplètes. Filtre `?tout=1` pour inclure les sources déjà bien qualifiées.
 
 #### Autres tables additives
 
-- `sources.completude` : `libre` / `partiel` / `integral_offline` (intégralité consultée hors-ligne, ex. Europresse/BnF, sans copie du texte).
-- Migrations : `migrate-sujets.ts`, `migrate-activites.ts`, `migrate-debunkage.ts`, `migrate-parcours.ts`, `migrate-dossiers.ts`, `migrate-arpentage.ts`, `migrate-evenements.ts` ; seed `seed-sujets.ts`. Toutes appliquées au boot par `auto-migrate.ts`.
+- `sources.completude` : `libre` / `partiel` / `integral_offline`.
+- `medias` : propriété structurée (`proprietaire`, `actionnaire_ultime`, `type_propriete`, `financement`, `ligne_revendiquee`) requêtable (cartographie « qui possède quoi »). Migration `migrate-medias-propriete.ts`, données `seed-medias-propriete.ts`.
+- `discord_messages` : mapping message Discord vers source (dédup, éditions, réponses Discord rattachées à la bonne source).
 
-Table `medias` : `id, nom, type, url_site, description` + propriété structurée (Chantier A) `proprietaire, actionnaire_ultime, type_propriete, financement, annee_creation, ligne_revendiquee`. La propriété est désormais requêtable (cartographie « qui possède quoi »), plus seulement en texte libre. Migration `migrate-medias-propriete.ts`, données `seed-medias-propriete.ts` (à valider sur la carte Acrimed). Édition via `PUT /api/medias/:id/propriete`. Affichage dans la fiche média de l'Observatoire (`FichesMedias`). Principe : on décrit la propriété, on ne note pas le média. Cf. note vault `2026-06-05 — Refonte Observatoire et propriété des médias`.
+#### Scripts de complétion (`server/src/scripts/completion/`)
 
-### Inbox à qualifier (ingestion Discord)
+Appliqués à la base canonique (sur copie, jamais en direct) :
+- `refetch-images.ts` : récupère l'`og:image` manquante avec décodage des entités HTML et filtrage des placeholders (chemins contenant « placeholder », « default.png », ou segment « logo » isolé).
+- `backfill-accroche.ts` : dérive l'accroche depuis le texte archivé pour les sources sans accroche.
+- `rattacher-sujets.ts` : rapprochement automatique source/sujet par mots-clés.
+- `rapport-liens-morts.ts` : détecte les sources dont l'URL est inaccessible (ENOTFOUND, ECONNREFUSED, timeout) ; rapport seul, décision humaine.
+- `dedup-sources.ts` : fusion des doublons d'URL.
 
-`sources.a_qualifier` (flag) marque les sources entrantes en attente de tri. API `GET /api/sources/inbox`, `POST /api/sources/:id/qualifier` (→ veille/vivier), `POST /api/sources/:id/rejeter` (→ archive, non destructif : la source sort de l'inbox et passe en `archive`). Page client `/inbox`, plus un lien discret « Inbox à qualifier (N) » en tête de la Veille. La veille autonome (dépôt `from-url`) peut elle aussi déposer en Inbox (`a_qualifier`) et porter une `completude`.
+Script `server/src/scripts/seed-analyses.ts` : pose des analyses de mécanismes sur les sources à copie locale, de façon conservative et anonyme (`identifie_par = NULL`).
 
 ### Intégration Discord
 
-`server/src/discord/bot.ts` + `server/src/discord/client.ts` (discord.js 14). Tout message entrant repéré dans un canal surveillé crée une **source en Inbox** (`origine='discord'`, `a_qualifier=1`), à qualifier ensuite dans l'appli (anti-doublon).
-
-**Gated sur le token.** `startDiscordBot()` est lancé après le boot du serveur, mais uniquement si `getDiscordConfig()` renvoie une config avec un `token` (variable `DISCORD_TOKEN` ou paramètre BDD `discord`). Sans token, le bot logge « Discord non configuré, ingestion inactive » et ne fait rien. L'appel est entièrement try/catché : un échec Discord ne casse jamais le démarrage. Activation : `DISCORD_TOKEN` + (`DISCORD_CHANNEL_VEILLE` et/ou `DISCORD_GUILD_IDS`).
+`server/src/discord/bot.ts` + `client.ts` (discord.js 14). Gated sur `DISCORD_TOKEN`. Tout message entrant dans un canal surveillé crée une source en Inbox (`origine='discord'`, `a_qualifier=1`). Commandes de consultation (`!source`, `!fiche`, `!texte`, `!editcom`, `!vivier`, `!atelier`, `!analyser`, `!aide`, `!manuel`, `!guide`). Notifications App vers Discord à la publication (via `DISCORD_WEBHOOK_URL`, sans bot).
 
 ### Doctrine « décrire, ne pas noter » et epoché
 
 Principe transverse du produit : on décrit les sources et les médias par des **faits**, on ne les note pas par un score-verdict.
 
-- **Au vivier (07/06).** `GET /api/ateliers/vivier` expose un bloc `facettes` factuel par source (`nbEvaluations`, `archiveStatut`, `completude`, `datePublication`, `nbMecanismes`, `fraicheur`). Le tri par défaut est la **récence de soumission** ; le bloc `score` reste fourni pour un **tri optionnel** et la rétrocompatibilité, mais n'est plus présenté comme un verdict. Côté Observatoire, la propriété des médias est décrite (cartographie « qui possède quoi »), pas notée.
-- **Epoché en atelier (carte nue).** En contexte atelier/projection, la source est présentée « à nu » (image + titre, sans attribution ni mécanismes pressentis, pour ne pas biaiser le groupe). Le masquage est porté côté client (`SourceCard` prop `nue`), et **garanti aussi côté API** pour le parcours : `GET /api/parcours/:id` renvoie une carte-source nue, **sans** révéler le `mecanisme_attendu` ni l'explication, le bon mécanisme étant noyé dans la liste complète des mécanismes proposés.
+- **Au vivier.** `GET /api/ateliers/vivier` expose un bloc `facettes` factuel par source. Le tri par défaut est la **récence de soumission** ; le bloc `score` reste fourni pour un **tri optionnel** mais n'est plus présenté comme un verdict.
+- **Epoché en atelier (carte nue).** En contexte atelier/projection, la source est présentée « à nu » (image + titre, sans attribution ni mécanismes pressentis). Le masquage est porté côté client (`SourceCard` prop `nue`), et garanti aussi côté API pour le parcours : `GET /api/parcours/:id` renvoie une carte-source nue, sans révéler le `mecanisme_attendu`.
+- **Observatoire.** La propriété des médias est décrite (cartographie « qui possède quoi »), jamais notée.
 
 ## Client (`client/src/`)
 
 SPA React 19, react-router-dom 7, pages en `lazy()`. State global zustand (`store/useAuth.ts`, `store/useUI.ts`). API via `api/client.ts`. Types dans `types/index.ts`.
 
-#### Socle glisser-déposer : `CorpusDnD`
+### Navigation principale (refonte v3, refondue 21/06)
 
-`components/corpus/CorpusDnD.tsx` est le composant réutilisable de composition de corpus (dnd-kit). On promène une carte (image + titre) depuis la veille vers le corpus, on la réordonne par la poignée, l'ordre est persisté côté serveur (`activite_sources.ordre` ou `sujet_sources.ordre` selon l'objet). Il est monté sur trois pages : **Sujet** (rattachement des sources à un thème), **Dossier** (corpus du dossier/décryptage) et **Débunkage** (corpus avec rôle pour/contre par carte). La page **Ateliers → Préparation** garde son propre tableau dnd-kit (logique de curation animateur·ice spécifique).
-
-Parcours inverse : depuis la page **Lire**, une source ouverte peut être **rangée directement dans un dossier existant** (`POST /api/dossiers/:id/sources`), sans repasser par la composition de corpus.
-
-### Navigation principale (refonte v3)
-
-Le menu de tête comporte 8 entrées, **Sujets en premier**, la Veille reléguée en substrat :
+Le menu H1 comporte 8 entrées :
 
 ```
-Sujets | Activités | Veille | Observatoire | Archiver | Apprendre | Mon espace | [Admin]
+Accueil | Mon espace | Inbox | Veille | Sujets | Activités | Apprendre | Observatoire
+(+ Admin si admin)
 ```
+
+Changements par rapport à la v3 initiale :
+- **Accueil** remplace Sujets en tête (pédagogique, point d'entrée).
+- **Mon espace** juste après Accueil.
+- **Inbox** en H1 (le hub qualité) ; Archiver est retiré (fondu dans l'Inbox via filtres).
+- **Parcours** retiré du hub Activités, vit désormais uniquement sous Apprendre (sous-nav H2).
+- **Mécanismes** retiré d'Apprendre, vit désormais uniquement sous Observatoire (sous-nav H2).
+
+Sous-navigation H2 (SUBNAV_CONFIG dans `Header.tsx`) :
+- Activités : Ateliers · Dossiers · Débunkages
+- Observatoire : Mécanismes · Médias · Fiches médias · Couverture · Sources
+- Ateliers : Vivier · Préparation · En cours · Archives
+- Apprendre : Parcours · Manuel · Aide et Ressources
+- Mon espace : Mon compte · Mes contributions · Mes lectures · Chaînes amies
+
+### Socle glisser-déposer : `CorpusDnD`
+
+`components/corpus/CorpusDnD.tsx` : composant réutilisable de composition de corpus (dnd-kit). Monté sur trois pages : Sujet, Dossier et Débunkage. La page Ateliers > Préparation garde son propre tableau dnd-kit (logique de curation animateur·ice spécifique). Parcours inverse : depuis Lire, une source peut être rangée directement dans un dossier existant.
 
 ### Routes (vocabulaire à jour)
 
 | Route | Page | Rôle |
 |---|---|---|
-| `/sujets` | Sujets | accueil (refonte v3) : grille de thèmes (cartes) ; `/` redirige ici |
-| `/sujets/:slug` | Sujet | page thème : couverture (événements) + sources, rattachement par glisser-déposer ; section « Partager » |
-| `/veille`, `/flux` | Flux | veille collaborative de sources (substrat secondaire) ; lien « Inbox à qualifier (N) » |
-| `/inbox` | Inbox | Inbox à qualifier (sources entrantes, dont Discord) : Qualifier / Rejeter |
-| `/activites` | Activites | hub : toutes les activités d'éducation populaire (atelier, dossier, décryptage, débunkage, parcours, arpentage) + « Créer une activité » |
-| `/debunkages[/:id]` | Debunkages, Debunkage | activité débunkage, liens de posts réseaux, section « Partager » |
-| `/dossiers[/:id]` | Dossiers, Dossier | activité dossier / décryptage à chaud, section « Partager » |
-| `/arpentages[/:id]` | Arpentages, Arpentage | activité arpentage (lecture collective fragmentée) |
-| `/parcours[/:id]` | Parcours, ParcoursSession | cursus Apprendre : quiz de repérage des mécanismes (carte nue) |
-| `/lire/:id` | Lire | reader + sidebar d'analyse (cœur) |
-| `/observatoire[/:section]` | Observatoire | visualisations : mécanismes, médias, fiches médias, couverture, sources |
-| `/ateliers[/:section]` | Ateliers | pipeline atelier : vivier, préparation, en cours, archives |
-| `/archiver[/:section]` | Archiver | archivage collaboratif |
-| `/perso[/:section]` | MonEspace | espace personnel (dont chaînes suivies, ex Becs Rouges) |
-| `/apprendre[/:categorie[/:slug]]` | Mecanismes | fiches des 25 mécanismes + manuel + aide |
-| `/admin/:section` | AdminParametrage | paramétrage (rôle admin) |
-| `/projection/:atelierId` | Projection | mode projection plein écran en atelier (cartes nues) |
+| `/` | -- | Redirige vers `/accueil` |
+| `/accueil` | Accueil | Page pédagogique d'entrée : parcours d'une source, aide au survol, blocs repliables |
+| `/sujets` | Sujets | Grille des thèmes durables (cartes) |
+| `/sujets/:slug` | Sujet | Page thème : couverture + sources, glisser-déposer, section « Partager » |
+| `/veille`, `/flux` | Flux | Veille collaborative de sources (substrat secondaire) |
+| `/inbox` | Inbox | Hub de qualification des sources : jalons factuels, score, actions inline |
+| `/lire/:id` | Lire | Reader + sidebar d'analyse (coeur) |
+| `/observatoire` | Observatoire | Référence critique des médias : propriété, couverture, fiches, mécanismes |
+| `/observatoire/:section` | Observatoire | Section : mecanismes, medias, fiches, couverture, sources |
+| `/activites` | Activites | Hub des activités d'éducation populaire |
+| `/debunkages[/:id]` | Debunkages, Debunkage | Activité débunkage |
+| `/dossiers[/:id]` | Dossiers, Dossier | Activité dossier / décryptage à chaud |
+| `/arpentages[/:id]` | Arpentages, Arpentage | Activité arpentage |
+| `/parcours[/:id]` | Parcours, ParcoursSession | Cursus Apprendre : quiz de repérage (carte nue) |
+| `/ateliers[/:section]` | Ateliers | Pipeline atelier : vivier, préparation, en cours, archives |
+| `/perso[/:section]` | MonEspace | Espace personnel |
+| `/apprendre[/:categorie[/:slug]]` | Mecanismes | Parcours/quiz, Manuel, Aide (sans catalogue mécanismes, déplacé sous Observatoire) |
+| `/admin/:section` | AdminParametrage | Paramétrage (rôle admin) |
+| `/projection/:atelierId` | Projection | Mode projection plein écran en atelier (cartes nues) |
 
-Redirections de compatibilité : `/`→`/sujets`, `/decrypter`→`/observatoire`, `/becs-rouges`→`/perso/chaines`, `/mecanismes[...]`→`/apprendre`, `/aide`→`/apprendre/aide`, `/admin`→`/admin/parametrage`, `/projection`→`/ateliers/en-cours`. `/veille` et `/flux` rendent tous deux la page Flux.
+Redirections de compatibilité : `/decrypter` vers `/observatoire`, `/becs-rouges` vers `/perso/chaines`, `/mecanismes[...]` vers `/apprendre`, `/aide` vers `/apprendre/aide`, `/admin` vers `/admin/parametrage`, `/projection` vers `/ateliers/en-cours`, `/archiver` et `/a-archiver` vers `/inbox?manque=copie_locale`.
 
 ## Diffusion hors appli
 
-Deux canaux pour partager le contenu publié sans connexion à l'appli (route `partage.ts`, montée avant le fallback SPA) :
-
-- **Pages publiques OpenGraph** : `GET /partage/debunkage/:id`, `GET /partage/dossier/:id`, `GET /partage/sujet/:slug`. Pages HTML autoportantes (CSS inline, aucune dépendance React), balises OpenGraph + `twitter:card` (titre, description, url, image de la 1re source) pour l'unfurl Discord. Rendues seulement si l'objet est publié, sinon page « non disponible ». **Pour les rouvrir sans SSO : ajouter une exception sans auth sur `/partage/` dans l'hôte NPM** (équivalent des `skipped_uris` de l'ancien SSO), sans quoi Authentik intercepte la requête.
-- **Exports YesWiki** : `GET /api/debunkages/:id/yeswiki`, `GET /api/dossiers/:id/yeswiki`, `GET /api/sujets/:idOrSlug/yeswiki` (lib `yeswiki.ts`). Conversion en syntaxe YesWiki à coller dans becs-rouges.fr / rouge-coquelicot.fr.
+Route `partage.ts`, montée avant le fallback SPA :
+- **Pages publiques OpenGraph** : `GET /partage/debunkage/:id`, `GET /partage/dossier/:id`, `GET /partage/sujet/:slug`. Pages HTML autoportantes (CSS inline), balises OpenGraph + `twitter:card`. Rendues uniquement si l'objet est publié. Ajouter une exception sans auth sur `/partage/` dans l'hôte NPM pour les rouvrir sans SSO.
+- **Exports YesWiki** : `GET /api/debunkages/:id/yeswiki`, `GET /api/dossiers/:id/yeswiki`, `GET /api/sujets/:idOrSlug/yeswiki` (lib `yeswiki.ts`).
 
 ## Modules fonctionnels (rappel produit)
 
-1. Sujets (refonte v3) : thèmes durables, objet pivot éditorial, couverture multisource, publication.
-2. Veille collaborative (substrat), URL-first avec auto-fetch et archivage anti-linkrot ; Inbox à qualifier (dont Discord).
-3. Lecture et analyse (Lire), reader + sidebar interactive.
-4. Activités d'éducation populaire sur socle commun : atelier, dossier, décryptage, débunkage, parcours, arpentage.
-5. Identification des mécanismes (25 mécanismes de référence, fiches dans Apprendre).
-6. Observatoire (matrice média x mécanisme, confiance, fiches et propriété des médias).
-7. Diffusion hors appli (pages publiques OpenGraph + exports YesWiki).
+1. Accueil pédagogique : point d'entrée, explique le parcours d'une source.
+2. Inbox-hub de qualification : tunnel à la carte, jalons factuels, score 0-100.
+3. Sujets : thèmes durables, objet pivot éditorial.
+4. Veille collaborative (substrat), URL-first, archivage anti-linkrot.
+5. Lecture et analyse (Lire), reader + sidebar interactive.
+6. Activités d'éducation populaire sur socle commun : atelier, dossier, décryptage, débunkage, parcours, arpentage.
+7. Observatoire : référence critique des médias (propriété, couverture comparée, fiches, mécanismes).
+8. Diffusion hors appli (pages publiques OpenGraph + exports YesWiki).
 
 ## Déploiement
 
