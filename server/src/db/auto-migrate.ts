@@ -12,6 +12,7 @@ import { seedSujets } from './seed-sujets.js'
 import { migrateActivites } from './migrate-activites.js'
 import { migrateDebunkage } from './migrate-debunkage.js'
 import { migrateParcours } from './migrate-parcours.js'
+import { migrateRevisions } from './migrate-revisions.js'
 import { migrateDossiers } from './migrate-dossiers.js'
 import { migrateArpentage } from './migrate-arpentage.js'
 import { migrateDiscord } from './migrate-discord.js'
@@ -142,6 +143,9 @@ export function autoMigrate(): void {
 
   // Parcours / Quiz (cursus d'apprentissage)
   migrateParcours()
+
+  // Répétition espacée (SM-2) : planification de réancrage par personne × mécanisme
+  migrateRevisions()
 
   // Extension Dossier (contenu de fond + flag à chaud / lien événement pour les décryptages)
   migrateDossiers()

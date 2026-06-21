@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { GraduationCap, Shuffle } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { GraduationCap, Shuffle, RefreshCw, Plus } from 'lucide-react'
 import { api } from '../api/client'
+import { useAuth } from '../store/useAuth'
 import type { ParcoursListItem } from '../types/parcours'
 import '../styles/parcours.css'
 
@@ -14,16 +15,42 @@ interface GroupeQuiz {
   quiz: ParcoursListItem[]
 }
 
+interface SujetOption { id: number; titre: string }
+interface MecaARevoir { mecanisme_id: number; mecanisme_nom: string }
+
 export default function Parcours() {
+  const navigate = useNavigate()
+  const user = useAuth((s) => s.user)
+  const estAnimateur = !!user && (user.role === 'animateur' || user.role === 'admin')
+
   const [parcours, setParcours] = useState<ParcoursListItem[]>([])
   const [chargement, setChargement] = useState(true)
 
-  useEffect(() => {
-    api.get<ParcoursListItem[]>('/parcours')
+  // Repetition espacee : mecanismes a reancrer pour la personne connectee.
+  const [aRevoir, setARevoir] = useState<MecaARevoir[]>([])
+  const [lanceRevision, setLanceRevision] = useState(false)
+
+  // Back-office (animateur/admin) : creer un quiz adosse a un theme.
+  const [sujets, setSujets] = useState<SujetOption[]>([])
+  const [formOuvert, setFormOuvert] = useState(false)
+  const [sujetChoisi, setSujetChoisi] = useState('')
+  const [titreQuiz, setTitreQuiz] = useState('')
+  const [creation, setCreation] = useState(false)
+
+  function chargerParcours() {
+    return api.get<ParcoursListItem[]>('/parcours')
       .then(setParcours)
       .catch(() => setParcours([]))
-      .finally(() => setChargement(false))
+  }
+
+  useEffect(() => {
+    chargerParcours().finally(() => setChargement(false))
+    api.get<MecaARevoir[]>('/parcours/revisions/a-revoir').then(setARevoir).catch(() => setARevoir([]))
   }, [])
+
+  useEffect(() => {
+    if (estAnimateur) api.get<SujetOption[]>('/sujets').then(setSujets).catch(() => setSujets([]))
+  }, [estAnimateur])
 
   // Regroupement par sujet : un bloc par theme, plus un bloc « transversaux »
   // (sujet_id null) en fin de liste. Plusieurs quiz peuvent partager un theme.
@@ -47,6 +74,31 @@ export default function Parcours() {
     return liste
   }, [parcours])
 
+  async function lancerRevision() {
+    setLanceRevision(true)
+    try {
+      const r = await api.post<{ id: number; nb_questions: number }>('/parcours/revisions/quiz', {})
+      if (r?.id) navigate(`/parcours/${r.id}`)
+    } finally {
+      setLanceRevision(false)
+    }
+  }
+
+  async function creerQuiz(e: React.FormEvent) {
+    e.preventDefault()
+    if (!sujetChoisi) return
+    setCreation(true)
+    try {
+      const r = await api.post<{ id: number }>('/parcours/from-sujet', {
+        sujet_id: Number(sujetChoisi),
+        titre: titreQuiz.trim() || undefined,
+      })
+      if (r?.id) navigate(`/parcours/${r.id}`)
+    } finally {
+      setCreation(false)
+    }
+  }
+
   return (
     <div className="parcours-page">
       <header className="parcours-page-header">
@@ -58,6 +110,42 @@ export default function Parcours() {
           n'est pas note.
         </p>
       </header>
+
+      {aRevoir.length > 0 && (
+        <div className="parcours-revoir">
+          <span className="parcours-revoir-texte">
+            {aRevoir.length} mecanisme{aRevoir.length > 1 ? 's' : ''} a reancrer aujourd'hui.
+          </span>
+          <button type="button" className="parcours-btn" onClick={lancerRevision} disabled={lanceRevision}>
+            <RefreshCw size={16} /> {lanceRevision ? 'Preparation...' : 'Reancrer'}
+          </button>
+        </div>
+      )}
+
+      {estAnimateur && (
+        <div className="parcours-backoffice">
+          <button type="button" className="parcours-backoffice-toggle" onClick={() => setFormOuvert((v) => !v)}>
+            <Plus size={14} /> Creer un quiz par theme
+          </button>
+          {formOuvert && (
+            <form className="parcours-backoffice-form" onSubmit={creerQuiz}>
+              <select value={sujetChoisi} onChange={(e) => setSujetChoisi(e.target.value)} required>
+                <option value="">Choisir un theme...</option>
+                {sujets.map((s) => <option key={s.id} value={s.id}>{s.titre}</option>)}
+              </select>
+              <input
+                type="text"
+                value={titreQuiz}
+                onChange={(e) => setTitreQuiz(e.target.value)}
+                placeholder="Titre du quiz (optionnel)"
+              />
+              <button type="submit" className="parcours-btn" disabled={!sujetChoisi || creation}>
+                {creation ? 'Creation...' : 'Creer'}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
 
       {chargement ? (
         <div className="parcours-loading">Chargement...</div>
