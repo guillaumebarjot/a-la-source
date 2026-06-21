@@ -1,0 +1,39 @@
+/* Corriger l'acces a une source depuis la lecture (lien mort, bot, paywall). Dark-safe. */
+.lire-corriger {
+  margin: var(--space-sm) 0 var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2, var(--color-surface));
+}
+.lire-corriger > summary {
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+.lire-corriger-corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md) var(--space-md);
+}
+.lire-corriger-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+.lire-corriger-corps input[type="url"],
+.lire-corriger-corps textarea {
+  width: 100%;
+  font: inherit;
+  padding: var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.lire-corriger-corps input[type="url"] { flex: 1 1 260px; width: auto; }
+.lire-corriger-corps textarea { resize: vertical; }
+.lire-corriger-corps label.btn { cursor: pointer; }
+.lire-corriger-msg { color: var(--color-text-secondary); font-size: 0.85rem; }

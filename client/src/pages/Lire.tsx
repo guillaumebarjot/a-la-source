@@ -7,6 +7,7 @@ import { useAuth } from '../store/useAuth'
 import type { SourceDetail } from '../types'
 import Reader from '../components/reader/Reader'
 import Sidebar from '../components/sidebar/Sidebar'
+import '../styles/lire.css'
 
 type ReaderMode = 'original' | 'archive'
 
@@ -27,6 +28,12 @@ export default function Lire() {
   const [dossiers, setDossiers] = useState<{ id: number; titre: string; sujet_titre?: string | null }[]>([])
   const [dossierMsg, setDossierMsg] = useState('')
 
+  // Corriger l'acces : remettre un lien ou une copie locale (lien mort, bot, paywall)
+  const [lien, setLien] = useState('')
+  const [colle, setColle] = useState('')
+  const [corrMsg, setCorrMsg] = useState<string | null>(null)
+  const [corrSaving, setCorrSaving] = useState(false)
+
   const loadSource = useCallback(async () => {
     if (!id) return
     setLoading(true)
@@ -36,6 +43,7 @@ export default function Lire() {
   }, [id])
 
   useEffect(() => { loadSource() }, [loadSource])
+  useEffect(() => { setLien(source?.url ?? '') }, [source?.url])
 
   if (loading) return <div className="loading">Chargement...</div>
   if (!source) return <div className="error">Source introuvable.</div>
@@ -90,6 +98,27 @@ export default function Lire() {
     await api.post(`/dossiers/${dossierId}/sources`, { source_id: source!.id })
     setDossierMsg('Rangee dans le dossier !')
     setTimeout(() => setDossierMsg(''), 1800)
+  }
+
+  // Corriger l'acces a une source bloquee (lien mort, bot, paywall) : tout est
+  // contextuel a source.id, jamais a re-saisir.
+  async function corriger(fn: () => Promise<void>, ok: string) {
+    setCorrSaving(true); setCorrMsg(null)
+    try { await fn(); setCorrMsg(ok); await loadSource() }
+    catch (e) { setCorrMsg(e instanceof Error ? e.message : 'Echec') }
+    finally { setCorrSaving(false) }
+  }
+  function remettreLien() {
+    if (!lien.trim()) return
+    corriger(() => api.patch(`/sources/${source!.id}`, { url: lien.trim() }), 'Lien d\'acces mis a jour.')
+  }
+  function collerCopie() {
+    if (!colle.trim()) return
+    corriger(async () => { await api.post(`/sources/${source!.id}/archive-manuelle`, { contenu: colle, type: 'html' }); setColle('') }, 'Copie locale enregistree.')
+  }
+  function joindreFichier(file: File | null) {
+    if (!file) return
+    corriger(async () => { const fd = new FormData(); fd.append('fichier', file); await api.upload(`/sources/${source!.id}/archive-fichier`, fd) }, 'Copie locale enregistree.')
   }
 
   return (
@@ -174,17 +203,60 @@ export default function Lire() {
               </DropdownMenu.Root>
             </>
           )}
-          <Link to={`/archiver/contribuer?source=${source.id}`} className="btn-action-sm" title="Deposer une copie locale de cette source"><FileUp size={14} /> Contribuer</Link>
+          <a href="#corriger-acces" className="btn-action-sm" title="Remettre un lien ou une copie locale"><FileUp size={14} /> Corriger l'acces</a>
         </div>
       </div>
+
+      {/* Corriger l'acces : remettre un lien ou une copie locale, contextuel a la source. */}
+      <details id="corriger-acces" className="lire-corriger" open={isPaywall || archivePartielle}>
+        <summary>
+          Corriger l'acces : remettre un lien ou une copie locale (lien mort, bot, paywall)
+        </summary>
+        <div className="lire-corriger-corps">
+          <div className="lire-corriger-ligne">
+            <input
+              type="url"
+              value={lien}
+              onChange={(e) => setLien(e.target.value)}
+              placeholder="Lien d'acces (source originale, version sans paywall...)"
+            />
+            <button type="button" className="btn btn-sm btn-secondary" disabled={corrSaving || !lien.trim()} onClick={remettreLien}>
+              Mettre a jour le lien
+            </button>
+          </div>
+          <textarea
+            value={colle}
+            onChange={(e) => setColle(e.target.value)}
+            placeholder="Coller ici le texte integral (Europresse, archive...)"
+            rows={4}
+          />
+          <div className="lire-corriger-ligne">
+            <button type="button" className="btn btn-sm btn-primary" disabled={corrSaving || !colle.trim()} onClick={collerCopie}>
+              Enregistrer le texte colle
+            </button>
+            <label className="btn btn-sm btn-secondary">
+              Joindre un PDF
+              <input
+                type="file"
+                accept=".pdf,.md,.png,.jpg,.jpeg,.webp"
+                style={{ display: 'none' }}
+                disabled={corrSaving}
+                onChange={(e) => joindreFichier(e.target.files?.[0] ?? null)}
+              />
+            </label>
+            {corrMsg && <span className="lire-corriger-msg">{corrMsg}</span>}
+          </div>
+        </div>
+      </details>
+
       <div className="lire-body">
         <div className="lire-reader">
           {mode === 'original' && hasUrl ? (
             <div className="reader-original">
               {isPaywall && !hasArchive && (
                 <div className="reader-archive-warning">
-                  Source protegee par un paywall — aucune copie locale complete disponible.{' '}
-                  <Link to={`/archiver/contribuer?source=${source.id}`}>Deposer une archive</Link>
+                  Source protegee par un paywall, aucune copie locale complete disponible.{' '}
+                  <a href="#corriger-acces">Remettre un lien ou une copie locale</a>
                 </div>
               )}
               <iframe
