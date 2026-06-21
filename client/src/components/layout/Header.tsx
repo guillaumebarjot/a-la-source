@@ -13,24 +13,26 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
     { label: 'Dossiers', to: '/dossiers' },
     { label: 'Debunkages', to: '/debunkages' },
   ],
-  // Observatoire — Référence critique des médias (phase 3a).
-  // Quatre sections factuelles, zéro score-verdict :
+  // Observatoire — deux temps (phase 3a + 3b) :
+  //   Tableau de bord : miroir factuel de notre veille (volumes, medias, mecanismes, sujets)
   //   Propriété : cartographie de la concentration des médias
   //   Couverture : comparaison multisource d'un même fait
   //   Fiches médias : propriété + transparence + mécanismes repérés
   //   Catalogue : référence des mécanismes + exemples réels
-  // La section Mécanismes (timeline + matrice) est gardée pour le tableau de bord (phase 3b).
   '/observatoire': [
+    { label: 'Tableau de bord', to: '/observatoire/tableau-de-bord' },
     { label: 'Propriété', to: '/observatoire/propriete' },
     { label: 'Couverture comparée', to: '/observatoire/couverture' },
     { label: 'Fiches médias', to: '/observatoire/fiches' },
     { label: 'Catalogue mécanismes', to: '/observatoire/catalogue' },
   ],
+  // Ateliers : on arrive sur les ateliers (a venir et en cours), puis les passes ;
+  // le vivier (reserve de sources, utilisee a la preparation) passe en dernier.
   '/ateliers': [
-    { label: 'Vivier', to: '/ateliers/vivier' },
+    { label: 'A venir et en cours', to: '/ateliers/en-cours' },
+    { label: 'Passes', to: '/ateliers/archives' },
     { label: 'Preparation', to: '/ateliers/preparation' },
-    { label: 'En cours', to: '/ateliers/en-cours' },
-    { label: 'Archives', to: '/ateliers/archives' },
+    { label: 'Vivier', to: '/ateliers/vivier' },
   ],
   // Apprendre : garde Parcours/quiz, Manuel, Aide (Mecanismes deplaces vers Observatoire).
   '/apprendre': [

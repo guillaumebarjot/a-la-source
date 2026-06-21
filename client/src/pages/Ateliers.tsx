@@ -238,7 +238,9 @@ export default function Ateliers() {
 
   /* ---------- Redirect par defaut ---------- */
 
-  if (!section) return <Navigate to="/ateliers/vivier" replace />
+  // On atterrit sur la liste des ateliers (a venir et en cours), pas sur le vivier.
+  // Le vivier est la reserve de sources, utilisee a la preparation d'un atelier.
+  if (!section) return <Navigate to="/ateliers/en-cours" replace />
 
   if (loading) return (
     <div className="page-ateliers">
