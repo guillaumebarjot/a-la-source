@@ -17,6 +17,10 @@ export interface ParcoursQuestion {
   source_titre: string
   source_accroche: string | null
   source_image_url: string | null
+  /* Champs facultatifs : presents seulement si le serveur les expose un jour.
+     Le front degrade proprement quand ils manquent (placeholder, pas de lien media). */
+  source_media_nom?: string | null
+  source_url?: string | null
 }
 
 export interface MecanismeChoix {

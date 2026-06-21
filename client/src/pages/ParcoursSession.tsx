@@ -1,13 +1,38 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { BookOpen } from 'lucide-react'
 import { api } from '../api/client'
 import type {
   ParcoursDetail,
+  ParcoursQuestion,
   SessionDemarree,
   ReponseResultat,
   MecanismeChoix,
 } from '../types/parcours'
 import '../styles/parcours.css'
+
+// Visuel de la source : l'image est TOUJOURS presente. A defaut d'illustration
+// (image_url nulle) ou si le chargement echoue (lien externe mort, hotlink 403,
+// chemin /images/source-N introuvable), on bascule sur un placeholder sobre
+// (initiale du media ou du titre), comme les cartes-sources du reste de l'app.
+// C'est ce qui corrige le ressenti « images invisibles » : plus jamais de carte
+// vide ni d'icone d'image cassee.
+function SourceVisuel({ question }: { question: ParcoursQuestion }) {
+  const [enErreur, setEnErreur] = useState(false)
+  const initiale = (question.source_media_nom || question.source_titre || '?').charAt(0).toUpperCase()
+  if (!question.source_image_url || enErreur) {
+    return <div className="parcours-source-image parcours-source-image--fallback">{initiale}</div>
+  }
+  return (
+    <img
+      className="parcours-source-image"
+      src={question.source_image_url}
+      alt=""
+      loading="lazy"
+      onError={() => setEnErreur(true)}
+    />
+  )
+}
 
 export default function ParcoursSession() {
   const { id } = useParams()
@@ -125,16 +150,27 @@ export default function ParcoursSession() {
         <Link to="/parcours" className="parcours-btn--secondary parcours-btn">Quitter</Link>
       </div>
 
-      {/* Carte-source NUE : image + titre + chapo, aucun indice du mecanisme. */}
+      {/* Carte-source NUE : image + titre + chapo, aucun indice du mecanisme.
+          L'image est toujours rendue (placeholder a defaut) et la source est
+          lisible en plein : on peut ouvrir l'article archive avant de repondre. */}
       <article className="parcours-source-card">
-        {question.source_image_url && (
-          <img className="parcours-source-image" src={question.source_image_url} alt="" loading="lazy" />
-        )}
+        <SourceVisuel key={question.id} question={question} />
         <div className="parcours-source-body">
+          {question.source_media_nom && (
+            <span className="parcours-source-media">{question.source_media_nom}</span>
+          )}
           <h2 className="parcours-source-titre">{question.source_titre}</h2>
           {question.source_accroche && (
             <p className="parcours-source-chapo">{question.source_accroche}</p>
           )}
+          <Link
+            to={`/lire/${question.source_id}`}
+            className="parcours-source-lire"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <BookOpen size={15} /> Lire la source en entier
+          </Link>
         </div>
       </article>
 

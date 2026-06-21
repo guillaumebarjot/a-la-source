@@ -149,11 +149,49 @@
   display: block;
   background: var(--color-border);
 }
+/* Placeholder dark-safe quand l'image manque ou ne charge pas : initiale du
+   media, jamais de carte vide ni d'icone d'image cassee. */
+.parcours-source-image--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  background: var(--color-border);
+  text-transform: uppercase;
+  user-select: none;
+}
 .parcours-source-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
   padding: var(--space-lg);
 }
+.parcours-source-media {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+/* Acces a la source en plein : lire l'article archive avant de repondre. */
+.parcours-source-lire {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.parcours-source-lire:hover {
+  text-decoration: underline;
+}
+.dark .parcours-source-lire { color: var(--color-primary); }
 .parcours-source-titre {
-  margin: 0 0 var(--space-sm);
+  margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-text);
