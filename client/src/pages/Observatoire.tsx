@@ -7,7 +7,7 @@ import {
 import { api } from '../api/client'
 import FichesMedias from '../components/observatoire/FichesMedias'
 import Couverture from '../components/observatoire/Couverture'
-import type { MecanismeStat } from '../types'
+import type { MecanismeStat, TableauDeBordData } from '../types'
 
 /* ---------- Types locaux ---------- */
 
@@ -549,6 +549,164 @@ function SectionMecanismes({
 }
 
 /* =============================================================================
+   Section Tableau de bord — miroir factuel de notre veille (phase 3b)
+   Quatre blocs : volumes globaux, evolution par mois, top medias, top sujets.
+   Doctrine « decrire, ne pas noter » : zero score-verdict, que des compteurs.
+   ============================================================================= */
+
+function SectionTableauDeBord({
+  mecanismes,
+  timeline,
+  matrice,
+}: {
+  mecanismes: MecanismeStat[]
+  timeline: TimelineRow[]
+  matrice: MatriceRow[]
+}) {
+  const [tdb, setTdb] = useState<TableauDeBordData | null>(null)
+
+  useEffect(() => {
+    api.get<TableauDeBordData>('/sources/tableau-de-bord').then(setTdb)
+  }, [])
+
+  if (!tdb) return <p className="loading">Chargement...</p>
+
+  const { compteurs, volumes_par_mois, top_medias, top_sujets } = tdb
+  const maxMediaSources = top_medias[0]?.nb_sources ?? 1
+
+  return (
+    <>
+      <div className="obs-intro-bloc">
+        <p>
+          Miroir factuel de notre travail collectif : ce que notre veille contient, les medias que nous suivons le plus,
+          les sujets que nous instruisons, les mecanismes que nous repérons. Ces chiffres decrivent notre activite,
+          ils ne notent pas les medias.
+        </p>
+      </div>
+
+      {/* Bloc 1 — Volumes globaux */}
+      <section className="obs-section obs-tdb-volumes">
+        <h2>Notre corpus en chiffres</h2>
+        <div className="stats-global">
+          <div className="stat-box">
+            <span className="stat-number">{compteurs.nb_sources}</span>
+            <span className="stat-label">sources dans la veille</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-number">{compteurs.nb_medias}</span>
+            <span className="stat-label">medias repertories</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-number">{compteurs.nb_sujets}</span>
+            <span className="stat-label">sujets instruits</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-number">{compteurs.nb_activites}</span>
+            <span className="stat-label">
+              activites
+              {compteurs.nb_ateliers > 0 && compteurs.nb_dossiers > 0 && (
+                <> ({compteurs.nb_ateliers} ateliers, {compteurs.nb_dossiers} dossiers)</>
+              )}
+            </span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-number">{mecanismes.reduce((s, m) => s + m.nb_sources, 0)}</span>
+            <span className="stat-label">mecanismes identifies</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Bloc 2 — Evolution par mois */}
+      <section className="obs-section">
+        <h2>Sources ajoutees par mois</h2>
+        <p className="obs-intro-mini">
+          Nombre de sources entrees dans la veille chaque mois. Reflète le rythme de notre travail de collecte.
+        </p>
+        {volumes_par_mois.length === 0 ? (
+          <p className="obs-empty">Pas encore assez de donnees pour afficher l'evolution.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={volumes_par_mois} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+              <XAxis dataKey="mois" tickFormatter={(v: string) => v.slice(5)} />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="nb" name="Sources" fill="var(--color-accent, #D91E2E)" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </section>
+
+      {/* Bloc 3 — Top medias */}
+      <section className="obs-section">
+        <h2>Medias les plus presents</h2>
+        <p className="obs-intro-mini">
+          Classement des medias par nombre de sources dans notre veille. Reflete nos choix de collecte,
+          pas la qualite des medias.
+        </p>
+        {top_medias.length === 0 ? (
+          <p className="obs-empty">Pas encore de donnees.</p>
+        ) : (
+          <ol className="obs-tdb-toplist">
+            {top_medias.map((m) => (
+              <li key={m.media_nom} className="obs-tdb-toplist-item">
+                <span className="obs-tdb-toplist-nom">{m.media_nom}</span>
+                <span className="obs-tdb-toplist-bar-wrap">
+                  <span
+                    className="obs-tdb-toplist-bar"
+                    style={{ width: `${Math.round((m.nb_sources / maxMediaSources) * 100)}%` }}
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="obs-tdb-toplist-nb">
+                  {m.nb_sources} source{m.nb_sources > 1 ? 's' : ''}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      {/* Bloc 4 — Mecanismes reperes (timeline + matrice) */}
+      <SectionMecanismes
+        mecanismes={mecanismes}
+        timeline={timeline}
+        matrice={matrice}
+      />
+
+      {/* Bloc 5 — Sujets actifs */}
+      <section className="obs-section">
+        <h2>Sujets instruits</h2>
+        <p className="obs-intro-mini">
+          Sujets suivis par notre veille, par nombre de sources rattachees. Un sujet peut regrouper des sources
+          de medias et de periodes differents.
+        </p>
+        {top_sujets.length === 0 ? (
+          <p className="obs-empty">Aucun sujet renseigne pour l'instant.</p>
+        ) : (
+          <div className="obs-tdb-sujets">
+            {top_sujets.map((s) => (
+              <div key={s.slug} className="obs-tdb-sujet-item">
+                <span className="obs-tdb-sujet-titre">{s.titre}</span>
+                <span className="obs-tdb-sujet-meta">
+                  <span className="obs-prop-badge obs-prop-badge--sources">
+                    {s.nb_sources} source{s.nb_sources > 1 ? 's' : ''}
+                  </span>
+                  {s.nb_evenements > 0 && (
+                    <span className="obs-prop-badge">
+                      {s.nb_evenements} evenement{s.nb_evenements > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  )
+}
+
+/* =============================================================================
    Composant principal
    ============================================================================= */
 
@@ -566,10 +724,18 @@ export default function Observatoire() {
     api.get<GroupePropriete[]>('/medias/propriete-groupee').then(setGroupesPropriete)
   }, [])
 
-  if (!section) return <Navigate to="/observatoire/propriete" replace />
+  if (!section) return <Navigate to="/observatoire/tableau-de-bord" replace />
 
   return (
     <div className="page-observatoire">
+
+      {section === 'tableau-de-bord' && (
+        <SectionTableauDeBord
+          mecanismes={mecanismes}
+          timeline={timeline}
+          matrice={matrice}
+        />
+      )}
 
       {section === 'propriete' && (
         <SectionProprietaire groupes={groupesPropriete} />

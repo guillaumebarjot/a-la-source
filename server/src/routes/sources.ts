@@ -76,6 +76,58 @@ router.get('/', (req, res) => {
   res.json(sources)
 })
 
+// GET /api/sources/tableau-de-bord — agrégats pour l'Observatoire (lecture seule).
+// Contrat :
+//   compteurs : { nb_sources, nb_medias, nb_sujets, nb_activites }
+//   volumes_par_mois : [{ mois: 'YYYY-MM', nb: n }]  — sources ajoutées par mois
+//   top_medias : [{ media_nom, nb_sources }]           — top 10 médias par nb de sources
+//   top_sujets : [{ titre, slug, nb_sources, nb_evenements }] — top sujets par nb de sources
+// Aucun score, aucun classement-verdict : que des compteurs factuels.
+router.get('/tableau-de-bord', (_req, res) => {
+  const nb_sources = (db.prepare(`SELECT COUNT(*) as n FROM sources`).get() as { n: number }).n
+  const nb_medias = (db.prepare(`SELECT COUNT(*) as n FROM medias`).get() as { n: number }).n
+  const nb_sujets = (db.prepare(`SELECT COUNT(*) as n FROM sujets`).get() as { n: number }).n
+  // Activites = ateliers + dossiers (les deux types d'activite en production).
+  const nb_ateliers = (db.prepare(`SELECT COUNT(*) as n FROM activites WHERE type = 'atelier'`).get() as { n: number }).n
+  const nb_dossiers = (db.prepare(`SELECT COUNT(*) as n FROM activites WHERE type = 'dossier'`).get() as { n: number }).n
+
+  const volumes_par_mois = db.prepare(`
+    SELECT strftime('%Y-%m', soumis_le) as mois, COUNT(*) as nb
+    FROM sources
+    WHERE soumis_le IS NOT NULL
+    GROUP BY mois
+    ORDER BY mois ASC
+  `).all()
+
+  const top_medias = db.prepare(`
+    SELECT m.nom as media_nom, COUNT(s.id) as nb_sources
+    FROM medias m
+    JOIN sources s ON s.media_id = m.id
+    GROUP BY m.id
+    ORDER BY nb_sources DESC
+    LIMIT 10
+  `).all()
+
+  const top_sujets = db.prepare(`
+    SELECT sj.titre, sj.slug,
+           COUNT(DISTINCT ss.source_id) as nb_sources,
+           COUNT(DISTINCT se.evenement_id) as nb_evenements
+    FROM sujets sj
+    LEFT JOIN sujet_sources ss ON ss.sujet_id = sj.id
+    LEFT JOIN sujet_evenements se ON se.sujet_id = sj.id
+    GROUP BY sj.id
+    ORDER BY nb_sources DESC
+    LIMIT 10
+  `).all()
+
+  res.json({
+    compteurs: { nb_sources, nb_medias, nb_sujets, nb_activites: nb_ateliers + nb_dossiers, nb_ateliers, nb_dossiers },
+    volumes_par_mois,
+    top_medias,
+    top_sujets,
+  })
+})
+
 // GET /api/sources/top-evaluees — top 10 sources par richesse pedagogique
 router.get('/top-evaluees', (_req, res) => {
   const rows = db.prepare(`

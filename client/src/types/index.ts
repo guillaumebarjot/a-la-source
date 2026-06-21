@@ -316,3 +316,37 @@ export interface MecanismeStat {
   description: string | null
   nb_sources: number
 }
+
+/* Tableau de bord de la veille (Observatoire phase 3b) */
+export interface TableauDeBordCompteurs {
+  nb_sources: number
+  nb_medias: number
+  nb_sujets: number
+  nb_activites: number
+  nb_ateliers: number
+  nb_dossiers: number
+}
+
+export interface VolumeMois {
+  mois: string
+  nb: number
+}
+
+export interface TopMedia {
+  media_nom: string
+  nb_sources: number
+}
+
+export interface TopSujet {
+  titre: string
+  slug: string
+  nb_sources: number
+  nb_evenements: number
+}
+
+export interface TableauDeBordData {
+  compteurs: TableauDeBordCompteurs
+  volumes_par_mois: VolumeMois[]
+  top_medias: TopMedia[]
+  top_sujets: TopSujet[]
+}

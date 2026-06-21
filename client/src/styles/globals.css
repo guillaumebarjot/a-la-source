@@ -2429,3 +2429,108 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .mecanisme-exemple-par { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 2px; }
 
 /* Accueil : styles déplacés dans styles/accueil.css (page d'accueil pédagogique). */
+
+/* =============================================================================
+   Observatoire — Tableau de bord de la veille (phase 3b)
+   Doctrine : compteurs factuels, zero score-verdict, dark-safe absolu.
+   ============================================================================= */
+
+/* Top medias : liste horizontale avec barre de proportion */
+.obs-tdb-toplist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.obs-tdb-toplist-item {
+  display: grid;
+  grid-template-columns: 11rem 1fr 5.5rem;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.obs-tdb-toplist-nom {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.obs-tdb-toplist-bar-wrap {
+  height: 10px;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.obs-tdb-toplist-bar {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  min-width: 4px;
+  transition: width 0.3s ease;
+}
+
+.obs-tdb-toplist-nb {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Sujets actifs : grille compacte */
+.obs-tdb-sujets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.obs-tdb-sujet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.obs-tdb-sujet-titre {
+  font-size: 0.88rem;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obs-tdb-sujet-meta {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+/* Volumes : section sans marge supplementaire */
+.obs-tdb-volumes .stats-global {
+  flex-wrap: wrap;
+}
+
+/* Dark-safe : la barre de proportion reprend l'accent dark-safe */
+.dark .obs-tdb-toplist-bar {
+  background: var(--color-accent);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .obs-tdb-toplist-item {
+    grid-template-columns: 8rem 1fr 4.5rem;
+  }
+}
