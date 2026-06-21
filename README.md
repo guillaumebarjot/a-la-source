@@ -28,7 +28,7 @@ La page d'accueil explique le parcours d'une source de bout en bout (de l'Inbox 
 
 L'Inbox est le **hub collectif de qualification des sources** (entrée H1). Qualifier une source n'est plus un simple « envoyer en veille » : c'est un **tunnel d'enrichissement à la carte**, non bloquant, en six étapes (accepter, fiabiliser, situer, analyser, mobiliser, commenter). Chaque source affiche ses **jalons factuels** (copie locale, accroche, image, sujet, mécanisme, activité, commentaire) et un **score d'avancement 0-100** (copie locale 25 pts, accroche 20, image 15, sujet 20, mécanisme 10, activité 5, commentaire 5). Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
 
-Les **filtres par ce qui manque** (sans copie locale, sans accroche, sans image, sans sujet, à accepter, lien mort) remplacent l'ancienne page Archiver. La copie locale s'ajoute inline sur la carte de la source (archivage automatique, collage de texte Europresse ou PDF joint) sans ressaisir l'identifiant de la source. Endpoint serveur : `GET /api/sources/qualification`.
+Les **filtres par ce qui manque** (à accepter, sans copie locale, sans accroche, sans image, sans sujet, non analysée) remplacent l'ancienne page Archiver. La copie locale s'ajoute inline sur la carte de la source (archivage automatique, collage de texte Europresse ou PDF joint) sans ressaisir l'identifiant de la source. Endpoint serveur : `GET /api/sources/qualification`.
 
 La page Archiver est redirigée vers `/inbox?manque=copie_locale`.
 
@@ -40,7 +40,7 @@ Thème durable, objet pivot éditorial : couverture multisource, événements, s
 
 Un **socle commun** (table `activites`) avec un pipeline par type. 6 types : **atelier, dossier, décryptage (à chaud), débunkage, parcours, arpentage**. Le hub `/activites` les réunit avec une entrée « Créer une activité ». Le **Parcours** ne vit plus que sous **Apprendre** (retiré du hub Activités).
 
-- **Atelier** : vivier de sources, préparation, projection plein écran, synthèse, export PDF.
+- **Atelier** : liste unique (à venir, en cours, puis passés) + page objet par atelier (stepper de jalons, onglets Préparation / Pilotage / Synthèse, projection plein écran, export PDF). Vivier accessible depuis la liste ou directement.
 - **Dossier / décryptage** : mise en perspective et contenu rédigé ; le décryptage est un dossier « à chaud » rattaché à un événement.
 - **Débunkage** : démonstration, sources pour/contre, liens de posts réseaux.
 - **Parcours** : cursus Apprendre, quiz de repérage des mécanismes sur cartes-sources nues (score).
@@ -52,7 +52,7 @@ Le substrat de la veille (distinct de l'Inbox). Affiche les sources soumises et 
 
 ### Observatoire (`/observatoire`)
 
-La **référence critique des médias** : qui possède quoi (propriété et concentration), couverture comparée d'un même fait, fiches médias détaillées, catalogue des mécanismes. Outils d'analyse, jamais de notation de média. Le **catalogue des 25 mécanismes** vit désormais sous Observatoire (retiré d'Apprendre). Refonte en cours (phase 3a).
+La **référence critique des médias** : qui possède quoi (propriété et concentration), couverture comparée d'un même fait, fiches médias factuelles, catalogue des mécanismes. Outils d'analyse, jamais de notation de média. Le **catalogue des 25 mécanismes** vit désormais sous Observatoire (retiré d'Apprendre). Cinq sections (sous-nav H2) : **Tableau de bord** (miroir factuel de notre veille : volumes, médias, mécanismes, sujets), **Propriété** (cartographie des actionnaires), **Couverture comparée**, **Fiches médias** (propriété + transparence), **Catalogue mécanismes** (fiches pédagogiques avec exemples réels). Doctrine : décrire, ne pas noter.
 
 ### Apprendre (`/apprendre`)
 
@@ -78,6 +78,10 @@ Extraction automatique (Mozilla Readability, règles FTR par site). 65 sites fra
 ### Espace personnel (`/perso`)
 
 Mon compte (identité SSO, rôle, pseudo Discord), mes contributions, mes lectures, recommandations reçues, chaînes partenaires suivies.
+
+### Lecture (`/lire/:id`)
+
+Reader avec sidebar interactive (métadonnées, tags, mécanismes, évaluation, commentaires). Panneau **« Corriger l'accès »** (toujours disponible, pré-ouvert si paywall ou archive partielle) pour remettre un lien d'accès, coller le texte intégral ou joindre un PDF, sans ressaisir l'identifiant. Actions rapides : lire plus tard, recommander, ranger dans un dossier, proposer au vivier, partager sur Discord.
 
 ### Intégration Discord
 
@@ -117,7 +121,7 @@ L'interface s'organise en 3 niveaux de header :
 |---|---|
 | H0 | Bandeau Rouge Coquelicot (logo + titre) |
 | H1 | Navigation principale : **Accueil · Mon espace · Inbox · Veille · Sujets · Activités · Apprendre · Observatoire** (+ Admin) |
-| H2 | Sous-navigation contextuelle selon la page (ex. Activités > Ateliers · Dossiers · Débunkages ; Observatoire > Mécanismes · Médias · Fiches médias · Couverture · Sources ; Apprendre > Parcours · Manuel · Aide) |
+| H2 | Sous-navigation contextuelle selon la page (ex. Activités > Ateliers · Dossiers · Débunkages ; Ateliers > Liste · Vivier ; Observatoire > Tableau de bord · Propriété · Couverture comparée · Fiches médias · Catalogue mécanismes ; Apprendre > Parcours · Manuel · Aide & Ressources) |
 
 Redirections de compatibilité : `/` vers `/accueil`, `/archiver` et `/a-archiver` vers `/inbox?manque=copie_locale`, `/mecanismes` vers `/apprendre`, `/decrypter` vers `/observatoire`, `/aide` vers `/apprendre/aide`, `/becs-rouges` vers `/perso/chaines`.
 

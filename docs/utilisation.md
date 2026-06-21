@@ -6,12 +6,12 @@
 
 ## Parcours type (refonte v3, par sujets)
 
-1. **Accueil** — Point d'entrée pédagogique : comprendre où se déroule quoi, reprendre là où on en était.
-2. **Inbox** — Qualifier les sources entrantes ensemble : enrichir (copie locale, accroche, image, sujet, mécanisme).
-3. **Veille** — Explorer et soumettre des sources partagées par la communauté.
-4. **Sujets** — Retrouver les sources par thème durable, voir la couverture multisource.
-5. **Lire** — Lire en détail une source, identifier des mécanismes, évaluer.
-6. **Activités** — Préparer un atelier, un dossier, un débunkage, un arpentage.
+1. **Accueil** : point d'entrée pédagogique. Comprendre où se déroule quoi, reprendre là où on en était.
+2. **Inbox** : qualifier les sources entrantes ensemble (copie locale, accroche, image, sujet, mécanisme).
+3. **Veille** : explorer et soumettre des sources partagées par la communauté.
+4. **Sujets** : retrouver les sources par thème durable, voir la couverture multisource.
+5. **Lire** : lire en détail une source, identifier des mécanismes, évaluer.
+6. **Activités** : préparer un atelier, un dossier, un débunkage, un arpentage.
 
 ## Navigation
 
@@ -42,7 +42,7 @@ Le **hub collectif de qualification des sources**. Qualifier une source n'est pl
 
 Aucune étape n'est bloquante. Chaque source affiche ses **jalons factuels** (faits/à faire) et un **score d'avancement** de 0 à 100. Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
 
-**Filtres par ce qui manque** : à accepter · sans copie locale · sans accroche · sans image · sans sujet · non analysée · lien mort. Ces filtres remplacent l'ancienne page Archiver (`/archiver` et `/a-archiver` redirigent ici).
+**Filtres par ce qui manque** : à accepter · sans copie locale · sans accroche · sans image · sans sujet · non analysée. Ces filtres remplacent l'ancienne page Archiver (`/archiver` et `/a-archiver` redirigent ici).
 
 La copie locale s'ajoute directement sur la carte de la source, sans ressaisir l'identifiant : « Archiver » (readability automatique), « Coller le texte » (Europresse), « Joindre un PDF ».
 
@@ -73,8 +73,9 @@ Coeur de l'application. Affiche le contenu archivé d'une source avec une sideba
 - Recommander à un·e autre membre
 - Proposer au vivier (pour les ateliers)
 - **Ranger dans un dossier existant** (parcours inverse veille vers dossier)
-- Archiver (si pas encore fait), coller le texte Europresse, joindre un PDF
 - Partager (copier le lien, Discord)
+
+**Panneau « Corriger l'accès »** : toujours disponible, pré-ouvert si la source est signalée paywall ou si l'archive est partielle. Permet de remettre un lien d'accès (source originale, version sans paywall), de coller le texte intégral (Europresse, archive), ou de joindre un PDF, sans ressaisir l'identifiant de la source.
 
 ### Sujets (`/sujets`)
 
@@ -102,24 +103,25 @@ Lecture collective **fragmentée** d'un document : découpage en fragments, **at
 
 ### Ateliers (`/ateliers`)
 
-Pipeline de préparation et gestion des ateliers. 4 onglets :
+La page `/ateliers` affiche la **liste unique** de tous les ateliers (à venir et en cours, puis passés), avec un accès direct au **vivier** (`/ateliers/vivier`). Cliquer sur un atelier ouvre sa **page objet** (`/ateliers/:id`), qui comporte :
 
-- **Vivier** : sources proposées, triées par **récence** par défaut (le score reste un tri optionnel, jamais un verdict). On lit des **facettes factuelles** (nombre d'évaluations, complétude, mécanismes pressentis, fraîcheur).
-- **Préparation** : composer un atelier en glisser-déposer (vivier à gauche, corpus à droite). Panneau « Profil du corpus » : on **décrit l'ensemble** (diversité de médias, de propriété, de mécanismes, profil de durée) avec des alertes douces et des suggestions de diversification.
-- **En cours** : atelier actif, table de pilotage, accès au mode projection plein écran.
-- **Archives** : historique des ateliers terminés avec compte-rendu.
+- un **stepper de jalons factuels** (corpus, source choisie, mécanismes, synthèse, terminé) ;
+- trois **onglets internes** (uniquement pour les ateliers actifs) :
+  - **Préparation** : composer le corpus en glisser-déposer (vivier à gauche, corpus à droite). Panneau « Profil du corpus » : on **décrit l'ensemble** (diversité de médias, de propriété, de mécanismes, profil de durée) avec des alertes douces et des suggestions de diversification.
+  - **Pilotage** : table de pilotage de l'atelier, transitions de statut (prêt, en cours, terminé), accès au mode projection plein écran.
+  - **Synthèse** : mécanismes identifiés par le groupe, observations, questions restantes, nombre de participant·es.
+
+Le **vivier** (`/ateliers/vivier`) liste les sources candidates triées par **récence** par défaut (le score reste un tri optionnel, jamais un verdict). On y lit des **facettes factuelles** (fraîcheur, complétude, mécanismes pressentis). Plusieurs ateliers peuvent être actifs simultanément.
 
 ### Observatoire (`/observatoire`)
 
-La **référence critique des médias** : qui possède quoi, couverture comparée d'un même fait, fiches médias, catalogue des mécanismes. 5 onglets (sous-nav H2) :
+La **référence critique des médias** : qui possède quoi, couverture comparée d'un même fait, fiches médias factuelles, catalogue des mécanismes. 5 sections (sous-nav H2) :
 
-- **Mécanismes** : les 25 mécanismes de référence (fiches pédagogiques, anciennement sous Apprendre)
-- **Médias** : nombre de sources par média, indice de confiance par média
-- **Fiches médias** : propriétaire, actionnaire ultime, type de propriété, financement, ligne revendiquée
-- **Couverture** : couverture comparée d'un même fait/sujet par différents médias
-- **Sources** : top sources les plus évaluées
-
-Doctrine : on décrit les médias et les sources par des faits ; on ne les note pas.
+- **Tableau de bord** : miroir factuel de notre veille (volumes globaux, sources ajoutées par mois, médias les plus présents, mécanismes identifiés, sujets instruits). Zéro score-verdict, que des compteurs.
+- **Propriété** : cartographie des actionnaires ultimes des médias présents dans la veille, regroupés par groupe propriétaire, avec type de propriété et financement.
+- **Couverture comparée** : comment un même fait est couvert différemment selon les médias.
+- **Fiches médias** : propriétaire, actionnaire ultime, type de propriété, financement, ligne revendiquée, mécanismes repérés. Pas de score de confiance : on décrit, on ne note pas.
+- **Catalogue mécanismes** : les 25 mécanismes de référence (fiches pédagogiques avec définition, exemple type, questions guidées et analyses réelles de la veille).
 
 ### Apprendre (`/apprendre`)
 
@@ -127,7 +129,7 @@ Section pédagogique. 3 onglets (sous-nav H2) :
 
 - **Parcours** : quiz de repérage des mécanismes sur cartes-sources nues (score). Génération automatique depuis `source_mecanismes`.
 - **Manuel** : le Manuel de déconstruction médiatique, guide complet pour les facilitateur·ices (biais cognitifs, mécaniques de fabrication, grille d'analyse, glossaire, ressources).
-- **Aide et Ressources** : fonctionnement de l'outil, contrat d'epoché, guidelines d'évaluation, système de score.
+- **Aide & Ressources** : fonctionnement de l'outil, contrat d'epoché, guidelines d'évaluation, système de score.
 
 Le catalogue des 25 mécanismes est désormais sous **Observatoire > Mécanismes**.
 

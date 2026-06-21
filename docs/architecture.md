@@ -33,7 +33,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/tags` | tags.ts | Tags manuels (thématique/mécanisme/média/libre) |
 | `/api/evaluations` | evaluations.ts | Scores écho (0-40) et pédagogie (0-50) par évaluateur |
 | `/api/commentaires` | commentaires.ts | Commentaires/analyses/questions sur les sources |
-| `/api/medias` | medias.ts | Liste, détail, stats, matrice média × mécanisme, indice de confiance |
+| `/api/medias` | medias.ts | Liste, détail, stats, matrice média × mécanisme, propriété groupée. Doctrine : décrire (compteurs factuels), pas noter. |
 | `/api/ateliers` | ateliers.ts | Pipeline atelier (vivier, préparation, en cours, synthèse, impression). A1 terminée : lit/écrit exclusivement depuis `activites` + `atelier_pipeline` + `activite_sources` + `activite_mecanismes`. `GET /vivier` expose un bloc `facettes` factuel (doctrine « décrire, ne pas noter ») et trie par récence de soumission par défaut. |
 | `/api/sujets` | sujets.ts | Sujets (thèmes durables) : CRUD, publication, rattachement sources/événements |
 | `/api/debunkages` | debunkages.ts | Activité débunkage : démonstration, sources pour/contre, liens de posts réseaux, publier |
@@ -51,7 +51,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 
 ### Bibliothèques (`server/src/lib/`)
 
-- `db.ts` : connexion better-sqlite3, mode DELETE (pas WAL -- incompatible OneDrive), `foreign_keys = ON`.
+- `db.ts` : connexion better-sqlite3, mode DELETE (pas WAL, incompatible OneDrive), `foreign_keys = ON`.
 - `auth.ts` : middleware d'authentification (Authentik forward-auth : lit `X-authentik-username` / `X-authentik-groups`, repli `Remote-User` puis `?_user=` en dev ; rôle dérivé des groupes, élevable en base).
 - `readability.ts` + `opengraph.ts` : extraction d'articles (Mozilla Readability, OpenGraph).
 - `ftr-site-config.ts` : règles FullTextRSS par site (65 sites configurés).
@@ -146,9 +146,9 @@ Changements par rapport à la v3 initiale :
 
 Sous-navigation H2 (SUBNAV_CONFIG dans `Header.tsx`) :
 - Activités : Ateliers · Dossiers · Débunkages
-- Observatoire : Mécanismes · Médias · Fiches médias · Couverture · Sources
-- Ateliers : Vivier · Préparation · En cours · Archives
-- Apprendre : Parcours · Manuel · Aide et Ressources
+- Observatoire : Tableau de bord · Propriété · Couverture comparée · Fiches médias · Catalogue mécanismes
+- Ateliers : Liste · Vivier
+- Apprendre : Parcours · Manuel · Aide & Ressources
 - Mon espace : Mon compte · Mes contributions · Mes lectures · Chaînes amies
 
 ### Socle glisser-déposer : `CorpusDnD`
@@ -166,20 +166,22 @@ Sous-navigation H2 (SUBNAV_CONFIG dans `Header.tsx`) :
 | `/veille`, `/flux` | Flux | Veille collaborative de sources (substrat secondaire) |
 | `/inbox` | Inbox | Hub de qualification des sources : jalons factuels, score, actions inline |
 | `/lire/:id` | Lire | Reader + sidebar d'analyse (coeur) |
-| `/observatoire` | Observatoire | Référence critique des médias : propriété, couverture, fiches, mécanismes |
-| `/observatoire/:section` | Observatoire | Section : mecanismes, medias, fiches, couverture, sources |
+| `/observatoire` | Observatoire | Redirige vers `/observatoire/tableau-de-bord` |
+| `/observatoire/:section` | Observatoire | Section : `tableau-de-bord`, `propriete`, `couverture`, `fiches`, `catalogue` |
 | `/activites` | Activites | Hub des activités d'éducation populaire |
 | `/debunkages[/:id]` | Debunkages, Debunkage | Activité débunkage |
 | `/dossiers[/:id]` | Dossiers, Dossier | Activité dossier / décryptage à chaud |
 | `/arpentages[/:id]` | Arpentages, Arpentage | Activité arpentage |
 | `/parcours[/:id]` | Parcours, ParcoursSession | Cursus Apprendre : quiz de repérage (carte nue) |
-| `/ateliers[/:section]` | Ateliers | Pipeline atelier : vivier, préparation, en cours, archives |
+| `/ateliers` | Ateliers | Liste de tous les ateliers (à venir/en cours, puis passés) + accès au vivier |
+| `/ateliers/vivier` | Ateliers | Vivier de sources candidates |
+| `/ateliers/:id` | Atelier | Page objet : stepper, onglets Préparation / Pilotage / Synthèse |
 | `/perso[/:section]` | MonEspace | Espace personnel |
 | `/apprendre[/:categorie[/:slug]]` | Mecanismes | Parcours/quiz, Manuel, Aide (sans catalogue mécanismes, déplacé sous Observatoire) |
 | `/admin/:section` | AdminParametrage | Paramétrage (rôle admin) |
 | `/projection/:atelierId` | Projection | Mode projection plein écran en atelier (cartes nues) |
 
-Redirections de compatibilité : `/decrypter` vers `/observatoire`, `/becs-rouges` vers `/perso/chaines`, `/mecanismes[...]` vers `/apprendre`, `/aide` vers `/apprendre/aide`, `/admin` vers `/admin/parametrage`, `/projection` vers `/ateliers/en-cours`, `/archiver` et `/a-archiver` vers `/inbox?manque=copie_locale`.
+Redirections de compatibilité : `/decrypter` vers `/observatoire`, `/becs-rouges` vers `/perso/chaines`, `/mecanismes[...]` vers `/apprendre`, `/aide` vers `/apprendre/aide`, `/admin` vers `/admin/parametrage`, `/projection` vers `/ateliers`, `/archiver`, `/archiver/:section` et `/a-archiver` vers `/inbox?manque=copie_locale`, `/ateliers/en-cours` et `/ateliers/preparation` et `/ateliers/archives` vers `/ateliers`.
 
 ## Diffusion hors appli
 

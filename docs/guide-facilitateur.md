@@ -14,10 +14,10 @@ Un atelier « À la source » est un moment d'éducation populaire où un groupe
 
 ### Préparer le vivier
 
-1. Consulter la page **Ateliers** > onglet Vivier.
+1. Consulter la page **Ateliers** > **Vivier** (lien en haut de la liste, ou `/ateliers/vivier`).
 2. Les sources sont triées par **récence** par défaut (le score reste un tri optionnel, jamais un verdict). On lit leurs **facettes factuelles**.
 3. Repérer le profil de durée (zone atelier confortable : 5-10 min).
-4. Vérifier que la source est archivée (badge « Archivée »).
+4. Vérifier que la source est archivée (copie locale disponible).
 
 Si des sources manquent de copie locale ou d'accroche, passer par l'**Inbox** (filtres « sans copie locale » ou « sans accroche ») pour compléter collectivement avant l'atelier.
 
@@ -38,11 +38,11 @@ Si des sources manquent de copie locale ou d'accroche, passer par l'**Inbox** (f
 
 ### Déroulement type (1h)
 
-1. **Accueil** (5 min) -- présenter le format, rappeler les règles (bienveillance, écoute).
-2. **Découverte** (10-15 min) -- lecture/visionnage collectif de la source (écran projection).
-3. **Identification** (15 min) -- « Qu'avez-vous remarqué ? » Laisser le groupe nommer les mécanismes.
-4. **Approfondissement** (15 min) -- questions guidées, croisement avec d'autres sources.
-5. **Synthèse** (10 min) -- que retient-on ? Comment se prémunir ?
+1. **Accueil** (5 min) : présenter le format, rappeler les règles (bienveillance, écoute).
+2. **Découverte** (10-15 min) : lecture/visionnage collectif de la source (écran projection).
+3. **Identification** (15 min) : « Qu'avez-vous remarqué ? » Laisser le groupe nommer les mécanismes.
+4. **Approfondissement** (15 min) : questions guidées, croisement avec d'autres sources.
+5. **Synthèse** (10 min) : que retient-on ? Comment se prémunir ?
 
 ### L'écran projection
 
@@ -50,18 +50,13 @@ Si des sources manquent de copie locale ou d'accroche, passer par l'**Inbox** (f
 - Naviguer avec les flèches entre les sources de l'atelier.
 - Les mécanismes identifiés s'affichent en surbrillance dans le texte.
 
-### Le tableau de bord facilitateur·ice
+### Le tableau de bord facilitateur·ice (onglet Pilotage)
 
-- Sur téléphone ou tablette.
-- Timer de l'atelier visible.
-- Notes en direct (texte libre).
-- Vue des mécanismes identifiés par les participant·es en temps réel.
+Depuis la page objet de l'atelier (`/ateliers/:id`, onglet **Pilotage**), le·la facilitateur·ice dispose de la fiche de l'atelier (date, lieu, nombre de sources, de participant·es), des boutons de transition de statut (prêt, en cours, terminé) et du lien de lancement de la projection plein écran.
 
 ## Après l'atelier
 
-- Compléter le compte-rendu dans l'app (page Ateliers > édition).
-- Noter les observations et le mécanisme principal identifié.
-- Renseigner le nombre de participant·es.
+- Compléter la synthèse dans l'app (page objet de l'atelier, onglet **Synthèse**) : mécanismes identifiés par le groupe, observations surprenantes, questions restantes, nombre de participant·es.
 - Les participant·es peuvent continuer à commenter et identifier des mécanismes sur la source.
 - Envisager de créer un **dossier** ou un **débunkage** si le sujet mérite une mise en perspective.
 

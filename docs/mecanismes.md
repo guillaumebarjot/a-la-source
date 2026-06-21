@@ -39,7 +39,7 @@ L'objectif n'est pas de « dénoncer les médias » mais de **développer le sen
 - A-t-on une comparaison pertinente (évolution, moyenne, contexte) ?
 - Qui a produit ce chiffre ? Dans quel but ?
 
-**Exemple** : « La France dépense 800 milliards en protection sociale » -- chiffre vrai, mais sans préciser que ça représente un pourcentage du PIB comparable aux autres pays européens, ni ce que ça finance (retraites, maladie, famille).
+**Exemple** : « La France dépense 800 milliards en protection sociale » : chiffre vrai, mais sans préciser que ça représente un pourcentage du PIB comparable aux autres pays européens, ni ce que ça finance (retraites, maladie, famille).
 
 **Questions guidées** :
 - Ce chiffre est-il contextualisé ?
@@ -57,7 +57,7 @@ L'objectif n'est pas de « dénoncer les médias » mais de **développer le sen
 - Son avis représente-t-il un consensus ou une position isolée ?
 - L'argument est-il « c'est vrai parce que X le dit » ou y a-t-il une démonstration ?
 
-**Exemple** : « Selon un prix Nobel d'économie, il faut baisser les impôts » -- sans préciser si c'est son domaine d'expertise, ni si d'autres prix Nobel pensent le contraire.
+**Exemple** : « Selon un prix Nobel d'économie, il faut baisser les impôts » : sans préciser si c'est son domaine d'expertise, ni si d'autres prix Nobel pensent le contraire.
 
 **Questions guidées** :
 - Qui est cité comme autorité ? Est-ce son domaine ?
@@ -75,7 +75,7 @@ L'objectif n'est pas de « dénoncer les médias » mais de **développer le sen
 - Cette émotion est-elle nécessaire à la compréhension des faits ?
 - Les images, titres ou témoignages sont-ils choisis pour leur charge émotionnelle ?
 
-**Exemple** : Montrer la photo d'un enfant en pleurs pour illustrer un débat sur la politique migratoire -- l'émotion empêche de discuter sereinement des enjeux.
+**Exemple** : Montrer la photo d'un enfant en pleurs pour illustrer un débat sur la politique migratoire : l'émotion empêche de discuter sereinement des enjeux.
 
 **Questions guidées** :
 - Quelle émotion cette source provoque-t-elle ?
@@ -93,7 +93,7 @@ L'objectif n'est pas de « dénoncer les médias » mais de **développer le sen
 - Existe-t-il des options intermédiaires, des nuances, des alternatives ?
 - Qui a intérêt à réduire le débat à deux options ?
 
-**Exemple** : « C'est la croissance ou le chômage » -- comme si aucun autre modèle économique n'était envisageable.
+**Exemple** : « C'est la croissance ou le chômage » : comme si aucun autre modèle économique n'était envisageable.
 
 **Questions guidées** :
 - Quelles sont les deux options présentées ?
@@ -147,7 +147,7 @@ L'objectif n'est pas de « dénoncer les médias » mais de **développer le sen
 - Reconnaîtrait-on sa propre position dans la façon dont elle est décrite ?
 - La réfutation porte-t-elle sur l'argument réel ou sur une caricature ?
 
-**Exemple** : « Les écologistes veulent nous ramener à l'âge de pierre » -- personne ne défend cette position.
+**Exemple** : « Les écologistes veulent nous ramener à l'âge de pierre » : personne ne défend cette position.
 
 **Questions guidées** :
 - La position adverse est-elle présentée avec nuance ?

@@ -1,6 +1,6 @@
 # Schéma de la base `a-la-source.db`
 
-Carte lisible du schéma SQLite (mode DELETE, pas WAL -- incompatible OneDrive). La référence technique reste `server/src/db/schema.sql` ; les évolutions additives sont appliquées au boot par `server/src/db/auto-migrate.ts` (idempotent). État vérifié le 21/06/2026 (modèle v3, refonte par sujets ; socle `activites` en place ; complétion BDD appliquée à la canonique : dédoublonnage, accroches, images, rattachement aux sujets, cf. `docs/audit-bdd-2026-06-21.md` et `docs/completion-bdd-plan.md`).
+Carte lisible du schéma SQLite (mode DELETE, pas WAL, incompatible OneDrive). La référence technique reste `server/src/db/schema.sql` ; les évolutions additives sont appliquées au boot par `server/src/db/auto-migrate.ts` (idempotent). État vérifié le 21/06/2026 (modèle v3, refonte par sujets ; socle `activites` en place ; complétion BDD appliquée à la canonique : dédoublonnage, accroches, images, rattachement aux sujets, cf. `docs/audit-bdd-2026-06-21.md` et `docs/completion-bdd-plan.md`).
 
 > Le `schema.sql` est un dump : ses dernières lignes recrèent à tort les tables
 > shadow FTS5 (`sources_fts_*`) avec un double `IF NOT EXISTS`. Ces tables sont
