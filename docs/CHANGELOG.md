@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Phase parallèle 2 : quiz multi-thème, stepper, Discord v3, dossiers, docs
+
+Quatre chantiers menés en parallèle puis intégrés (typecheck client + serveur et build complet OK avant commit).
+
+- **Quiz multi-thème** : un thème peut porter plusieurs quiz (colonne `parcours.sujet_id`, migration additive). La liste des parcours est rangée par sujet avec une section transversale. Nouveau mode `tirage` (`parcours.mode`, `parcours.regle_tirage`) qui instancie les questions depuis la banque `source_mecanismes` (sujet, catégories, exclusions), en plus du mode curaté existant. Posture éducation populaire conservée : progression « exploré N/M », pas de note-sanction.
+- **Stepper d'activité** : composant client `EtapesActivite` (barre d'étapes + encart « Prochaine action ») branché sur Dossier, Débunkage, Atelier et Arpentage, alimenté par des `jalons` de complétude factuels calculés côté serveur, non bloquants et sans score.
+- **Bot Discord v3** : `!evaluer` / `!analyser` / `!taguer` créditent le membre rapproché (fin du `1` codé en dur, refus propre sinon) ; `!archiver` archive réellement (pipeline readability) ; nouvelle commande `!abandon` (`!annuler` / `!stop`) pour quitter une discussion en cours. BDD : index `UNIQUE` partiel sur `sources.url` (dédoublonnage préalable) et colonne `commentaires.origine`. Les **commentaires créés via Discord sont éditables dans l'appli** (route `PUT /api/commentaires/:id`, auteur rapproché ou admin) ; le panneau de commentaires affiche « Modifier » / « Supprimer » et un badge « via Discord ».
+- **Trois dossiers thématiques réels** : script idempotent `server/src/scripts/seed-dossiers.ts` amorçant « Pesticides et fabrique de la loi », « Qui possède quoi ? Concentration des médias » et « PFAS dans la nappe rhénane », adossés à leurs sujets, corpus ordonné tiré de `sujet_sources` + mise en perspective rédigée (ton éducation populaire, sans rôle pour/contre).
+- **Documentation** : README assaini (section dupliquée retirée), `docs/mecanismes.md` recadré sur les 25 mécanismes du catalogue, doc interne alignée sur le socle `activites` et le glisser-déposer `CorpusDnD`, et discipline merge request formalisée dans `docs/workflow-git.md` (branche par chantier, PR via `gh`, checklist de revue, base canonique = copie + dry-run + swap).
+
 ## 2026-06-21 — Complétion BDD appliquée à la base canonique
 
 Application supervisée des scripts de complétion sur la base canonique (OneDrive), après backup horodaté (`_backups-alasource/a-la-source-PREcompletion-20260621.db`). Méthode : backup, copie de travail hors OneDrive, `--apply` sur la copie, vérifications, puis remise en place de la copie. `PRAGMA integrity_check : ok`.
