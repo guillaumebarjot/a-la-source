@@ -2,6 +2,13 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Observatoire (phase 3a), durcissement de l'Inbox, attribution des contributions
+
+- **Observatoire, référence critique des médias** : nouvelle section **Propriété** (qui possède quoi, médias regroupés par actionnaire ultime ou propriétaire, type de propriété, financement, ligne revendiquée), endpoint `GET /api/medias/propriete-groupee`. Nouveau **catalogue des mécanismes** par catégorie (définition, exemple type, questions de guidage, exemples réels issus de la veille). Fiches médias factuelles (mécanismes repérés, sans note). **Score de confiance des médias retiré** côté client et serveur (doctrine « décrire, ne pas noter »). Le tableau de bord de notre veille reste pour la phase 3b.
+- **Inbox-hub durci** : une **archive anti-bot** (mur JavaScript, support ID, contenu dérisoire) ne compte plus comme copie locale (la source ressort donc comme à refaire). On peut **redonner un lien d'accès et refaire la copie locale même quand le jalon est déjà fait** (corriger une erreur : lien mort, mauvaise archive), directement sur la carte, sans re-saisir le numéro de la source.
+- **Attribution des contributions** : le contenu sans auteur (sources, sujets, activités, évaluations, commentaires non attribués, plus le compte de seed) est rattaché au compte courant (guillaume en prod, HydroLooney en base de dev), pour que « Mes contributions » se remplisse. Les autres membres (JonLuk, Aurélie) sont préservés ; les analyses de mécanismes restent anonymes (`identifie_par = NULL`).
+- **Documentation** : README et docs internes mis à jour (nav refondue, Inbox-hub, accueil pédagogique, données fiabilisées, Observatoire, workflow `main` = dev déployé).
+
 ## 2026-06-21 — Accueil pédagogique (phase 2)
 
 L'accueil explique tout, pour que personne ne soit jamais perdu.
