@@ -2,6 +2,11 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Ateliers : liste + objet atelier, copies anti-bot refaites
+
+- **Ateliers, modèle liste + objet** : `/ateliers` est la liste de tous les ateliers (à venir et en cours, puis passés), chaque carte mène à sa page. `/ateliers/:id` est la page objet d'un atelier : fiche, stepper de jalons, et trois onglets (Préparation avec corpus en glisser-déposer et profil de diversité, Pilotage avec transitions de statut et projection, Synthèse). On peut donc avoir plusieurs ateliers en simultané et entrer dans chacun pour le préparer, le mener, le projeter, le modifier. Les anciennes sections (`en-cours`, `preparation`, `archives`) redirigent vers la liste ; le vivier reste la réserve de sources (`/ateliers/vivier`, et accès depuis la liste). Sous-nav simplifiée (Liste, Vivier).
+- **Copies locales anti-bot refaites** : les archives qui n'étaient que des murs anti-bot (Imperva, DataDome) sont refaites via la Wayback Machine quand un instantané existe (script `refaire-archives-wayback.ts`) : 3 articles Libération récupérés en texte intégral. Les sources sans instantané public voient leur archive-mur retirée et ressortent dans le filtre Inbox « sans copie locale », à compléter depuis Europresse via le panneau « Corriger l'accès ».
+
 ## 2026-06-21 — Observatoire (phase 3b), correction d'accès en lecture, atterrissage Ateliers
 
 - **Observatoire, tableau de bord de notre veille** (phase 3b, le second temps) : à `/observatoire/tableau-de-bord` (première entrée de la sous-nav, l'Observatoire y atterrit par défaut). Quatre blocs factuels : notre corpus en chiffres (sources, médias, sujets, activités, mécanismes), sources ajoutées par mois, médias les plus présents, mécanismes les plus repérés (timeline et matrice réutilisées), sujets instruits. Endpoint `GET /api/sources/tableau-de-bord` (lecture seule). Aucun score, que des volumes de notre travail.
