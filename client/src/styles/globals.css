@@ -49,11 +49,23 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  /* Alias historique : plusieurs regles utilisent var(--radius) sans suffixe.
+     Sans cette definition elles tombaient a 0 (coins droits). On l'aligne sur md. */
+  --radius: var(--radius-md);
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
   --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+
+  /* Tokens semantiques transverses (clair). En sombre, surcharges plus bas.
+     Couleur de focus unique (accessibilite) et fond de surface attenuee
+     pour les zones secondaires (chips, en-tetes de section, lignes de liste). */
+  --color-focus: var(--rc-lavande);
+  --color-surface-2: var(--rc-beige);
+  --color-success: var(--rc-vert);
+  --color-warning: var(--rc-orange);
+  --color-info: var(--rc-bleu);
 }
 
 .dark {
@@ -73,6 +85,13 @@
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
   --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+  /* Tokens semantiques (sombre) : surface attenuee distincte du fond, et
+     versions eclaircies des couleurs de statut pour rester lisibles (AA) sur
+     fond sombre. Le focus reste sur la lavande, deja contrastee. */
+  --color-surface-2: #2E2E46;
+  --color-success: #4EC38A;
+  --color-warning: #E8A04A;
+  --color-info: #7B9CF0;
 }
 .dark .header-band { background: #731018; }
 .dark .header-nav { background: #111; }
@@ -136,7 +155,20 @@ a:visited { color: var(--rc-bordeaux); }
 a:focus-visible { outline: 2px solid var(--rc-lavande); outline-offset: 2px; border-radius: 2px; }
 img { max-width: 100%; height: auto; }
 button { cursor: pointer; font: inherit; }
-input, select, textarea { font: inherit; }
+input, select, textarea { font: inherit; color: var(--color-text); }
+/* Focus visible homogene sur tous les controles de formulaire (accessibilite).
+   Anneau lavande coherent avec les liens/boutons, jamais de rouge sur sombre. */
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+/* Champs de saisie generiques (modales, panneaux, formulaires) : fond et bordure
+   de surface, pour qu'ils restent lisibles en mode sombre (sinon fond blanc force). */
+input[type="text"], input[type="search"], input[type="url"], input[type="email"],
+input[type="number"], input[type="date"], select, textarea {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
 
 /* App layout — header fixe + main scrollable */
 html, body { height: 100%; margin: 0; overflow: hidden; }
@@ -306,7 +338,11 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%);
 }
 .source-card-body { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-xs); }
-.source-card-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; }
+/* Un titre de carte est un titre, pas un lien de prose : en clair il etait rouge
+   (herite de `a`), incoherent avec les cartes Sujets a titre sombre. On force la
+   couleur de texte, le rouge revient au survol. Le garde-fou .dark existe deja. */
+.source-card-title { font-size: 0.95rem; font-weight: 600; line-height: 1.3; color: var(--color-text); }
+.source-card-title:hover { color: var(--color-primary); text-decoration: none; }
 .source-card-meta { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
 .source-card-media { font-size: 0.8rem; color: var(--color-text-secondary); font-weight: 500; }
 .source-card-type { font-size: 0.75rem; color: var(--color-text-secondary); }
@@ -600,6 +636,71 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .lecture-item:hover { background: var(--color-border); text-decoration: none; }
 .lecture-media { color: var(--color-text-secondary); font-size: 0.8rem; }
 
+/* Mon compte — fiche identite + reglage pseudo Discord.
+   Ces classes n'avaient aucun style : la page rendait brut. On lui donne la
+   meme grammaire que le reste (surfaces, titres display, boutons systeme). */
+.page-perso h3 { font-size: 0.95rem; margin-bottom: var(--space-sm); }
+.compte { max-width: 42rem; }
+.compte-infos {
+  display: grid; grid-template-columns: max-content 1fr;
+  gap: var(--space-xs) var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+.compte-infos > div { display: contents; }
+.compte-infos dt { color: var(--color-text-secondary); font-size: 0.85rem; align-self: center; }
+.compte-infos dd { font-size: 0.95rem; font-weight: 600; }
+.compte-note, .compte-aide { color: var(--color-text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: var(--space-md); max-width: 38rem; }
+.compte-pseudo { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
+.compte-pseudo input {
+  flex: 1; min-width: 14rem; padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+  background: var(--color-surface); font-size: 0.9rem;
+}
+.compte-pseudo button {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: var(--color-primary); color: #fff;
+  font-size: 0.875rem; font-weight: 500;
+  transition: background 0.15s ease;
+}
+.compte-pseudo button:hover { background: var(--color-primary-hover); }
+.compte-ok { color: var(--color-success); font-size: 0.85rem; font-weight: 600; }
+
+/* Mes contributions — compteurs factuels (decrire, pas noter) + listes. */
+.contrib-compteurs {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-md); margin-top: var(--space-sm);
+}
+.contrib-compteur {
+  display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center;
+  padding: var(--space-md) var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.contrib-compteur strong {
+  font-family: var(--font-display); font-size: 1.6rem; line-height: 1;
+  color: var(--color-text);
+}
+.contrib-compteur span { font-size: 0.78rem; color: var(--color-text-secondary); }
+.contrib-liste { list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-xs); }
+.contrib-liste li {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+.contrib-meta { color: var(--color-text-secondary); font-size: 0.8rem; }
+
+/* Chaines amies — intro coherente avec les autres en-tetes de section. */
+.chaines-intro h2 { font-size: 1rem; margin-bottom: var(--space-xs); }
+.br-presentation { color: var(--color-text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: var(--space-md); max-width: 46rem; }
+
 /* Aide */
 .page-aide h1 { font-family: var(--font-display); margin-bottom: var(--space-lg); }
 .aide-section { margin-bottom: var(--space-xl); padding: var(--space-lg); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
@@ -646,10 +747,20 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .submit-done { text-align: center; padding: var(--space-lg); color: var(--rc-vert); font-weight: 500; }
 
 /* Utilities */
-.empty { color: var(--color-text-secondary); text-align: center; padding: var(--space-xl); }
+/* Etat vide soigne : bloc sobre, centre, surface attenuee et liseré pointillé.
+   Donne du corps a un « rien a afficher » sans esbroufe (education populaire). */
+.empty {
+  color: var(--color-text-secondary); text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem; line-height: 1.5;
+}
 .empty-small { color: var(--color-text-secondary); font-size: 0.8rem; }
 .loading { color: var(--color-text-secondary); text-align: center; padding: var(--space-xl); }
 .error { color: var(--rc-crimson); text-align: center; padding: var(--space-xl); }
+.dark .error { color: var(--color-accent); }
 .info { color: var(--color-text-secondary); font-size: 0.85rem; }
 .form-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
 

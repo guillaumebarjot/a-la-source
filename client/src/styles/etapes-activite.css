@@ -115,6 +115,16 @@
   background: var(--color-primary);
   color: #fff;
 }
+/* Sombre : le crimson en TEXTE/bordure ne passe pas le contraste AA sur fond
+   sombre. On reprend l'accent dark-safe ; le survol garde le fond plein. */
+.dark .etapes-prochaine-btn {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.dark .etapes-prochaine-btn:hover {
+  background: var(--color-accent);
+  color: #1A1A2E;
+}
 
 .etapes-prochaine-compte {
   margin-left: auto;

@@ -51,7 +51,9 @@
   white-space: nowrap;
 }
 .parcours-groupe-lien:hover { text-decoration: underline; }
-.dark .parcours-groupe-lien { color: var(--color-primary); }
+/* Lien d'action : en sombre, l'accent dark-safe (#F25D68) passe le contraste AA,
+   la le crimson --color-primary restait sous le seuil. */
+.dark .parcours-groupe-lien { color: var(--color-accent); }
 
 /* Etiquette « tirage » sur la carte de quiz. */
 .parcours-tag-tirage {
@@ -251,7 +253,7 @@
 .parcours-source-lire:hover {
   text-decoration: underline;
 }
-.dark .parcours-source-lire { color: var(--color-primary); }
+.dark .parcours-source-lire { color: var(--color-accent); }
 .parcours-source-titre {
   margin: 0;
   font-size: 1.2rem;
@@ -357,3 +359,42 @@
   text-align: center;
   color: var(--color-text-secondary);
 }
+
+/* Repetition espacee : bandeau « a reancrer » */
+.parcours-revoir {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2, var(--color-surface));
+}
+.parcours-revoir-texte { font-weight: 600; }
+
+/* Back-office (animateur/admin) : creer un quiz par theme */
+.parcours-backoffice { margin-bottom: var(--space-lg); }
+.parcours-backoffice-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.parcours-backoffice-toggle:hover { color: var(--color-text); }
+.parcours-backoffice-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  align-items: center;
+}
+.parcours-backoffice-form select,
+.parcours-backoffice-form input { min-width: 200px; }
