@@ -1,22 +1,43 @@
 /**
- * backfill-accroche.ts — renseigne l'accroche manquante depuis le texte archivé.
+ * backfill-accroche.ts -- renseigne l'accroche manquante depuis le texte archive.
  *
- * Pour chaque source sans accroche disposant d'une archive non vide, on dérive
- * un extrait propre (~200-300 caractères, sans couper un mot) à partir du texte
- * de l'archive readability (HTML nettoyé en texte brut).
+ * Pour chaque source sans accroche disposant d'une archive non vide, on derive
+ * un extrait propre (~200-300 caracteres, sans couper un mot) a partir du texte
+ * de l'archive readability (HTML nettoye en texte brut).
  *
- * Idempotent : ne touche que les sources dont l'accroche est NULL/vide. Relancer
- * le script ne re-modifie pas une accroche déjà posée.
+ * Ameliorations v2 du nettoyage :
+ *  - nettoyerAmorce() enrichi dans _shared.ts : capture les fragments horaires
+ *    « HH:MM Mis a jour », les auteurs « Par Prenom NOM · », les heures isolees
+ *    « a 14h57 ».
+ *  - Second passage nettoyerInterne() pour les residus de boilerplate qui
+ *    tombent au milieu du texte apres conversion HTML (ex. « Temps de lecture :
+ *    6min » insere par readability entre deux paragraphes).
+ *
+ * Idempotent : ne touche que les sources dont l'accroche est NULL/vide.
  *
  * Modes :
- *   (défaut) --dry-run : liste id + accroche proposée, n'écrit rien.
- *   --apply             : applique sur la base A_LA_SOURCE_DB (jamais canonique).
+ *   (defaut) --dry-run : liste id + accroche proposee, n'ecrit rien.
+ *   --apply            : applique sur la base A_LA_SOURCE_DB (jamais canonique).
  *
  * Usage dry-run :
- *   A_LA_SOURCE_DB=/tmp/als-completion.db npx tsx \
+ *   A_LA_SOURCE_DB=/tmp/als-fix.db npx tsx \
  *     server/src/scripts/completion/backfill-accroche.ts
  */
 import { parseMode, openGuarded, banner, htmlToText, extraitPropre, nettoyerAmorce } from './_shared.js'
+
+/**
+ * Retire les residus de boilerplate qui peuvent apparaitre en milieu de texte
+ * apres la conversion HTML->texte (readability insere parfois des meta-blocs
+ * entre paragraphes). On ne retire que des patterns tres specifiques pour rester
+ * best-effort.
+ */
+function nettoyerInterne(texte: string): string {
+  return texte
+    .replace(/\bTemps de lecture\s*:?\s*\d+\s*min(?:utes?)?\b\s*/gi, ' ')
+    .replace(/\(DR\)\s*/gi, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 
 interface Ligne {
   id: number
@@ -29,7 +50,9 @@ function main(): void {
   const db = openGuarded(mode)
   banner('Backfill accroche depuis le texte archivé', mode)
 
-  // Une archive par source (la plus complète et la plus longue d'abord).
+  // Une archive par source (la plus complete et la plus longue d'abord).
+  // On exclut les archives anti-bot (readability bloque par JS) : si le contenu
+  // contient "enable JS" ou "disable any ad blocker" c'est un faux-positif.
   const lignes = db
     .prepare(
       `SELECT s.id AS id, s.titre AS titre, a.contenu AS contenu
@@ -38,10 +61,15 @@ function main(): void {
        WHERE (s.accroche IS NULL OR trim(s.accroche) = '')
          AND a.contenu IS NOT NULL
          AND length(trim(a.contenu)) > 50
+         AND a.contenu NOT LIKE '%enable JS%'
+         AND a.contenu NOT LIKE '%disable any ad blocker%'
+         AND a.contenu NOT LIKE '%Please enable JavaScript%'
        GROUP BY s.id
        HAVING a.contenu = (
          SELECT a2.contenu FROM archives a2
          WHERE a2.source_id = s.id
+           AND a2.contenu NOT LIKE '%enable JS%'
+           AND a2.contenu NOT LIKE '%disable any ad blocker%'
          ORDER BY (a2.statut = 'complete') DESC, length(a2.contenu) DESC
          LIMIT 1
        )
@@ -55,7 +83,9 @@ function main(): void {
 
   const propositions: { id: number; titre: string; accroche: string }[] = []
   for (const l of lignes) {
-    const texte = nettoyerAmorce(htmlToText(l.contenu))
+    // Pipeline de nettoyage : HTML -> texte brut -> purge residus internes -> purge amorce tete
+    const brut = nettoyerInterne(htmlToText(l.contenu))
+    const texte = nettoyerAmorce(brut)
     if (texte.length < 80) continue // trop court pour une accroche utile
     const accroche = extraitPropre(texte)
     if (accroche.length < 60) continue

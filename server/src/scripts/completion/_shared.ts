@@ -112,18 +112,33 @@ export function htmlToText(html: string): string {
 /**
  * Retire les amorces de boilerplate fréquentes en tête d'article (dates de
  * publication, temps de lecture, mentions « Publié le… / Mis à jour… »,
- * crédits photo isolés). Best-effort : on ne retire que des motifs sûrs, pour
- * éviter de manger du vrai contenu. Itère tant qu'une amorce est trouvée.
+ * crédits photo isolés, fragments horaires « HH:MM Mis à jour »). Best-effort :
+ * on ne retire que des motifs sûrs pour éviter de manger du vrai contenu.
+ * Itère tant qu'une amorce est trouvée.
  */
 export function nettoyerAmorce(texte: string): string {
   let t = texte.trim()
   const motifs: RegExp[] = [
+    // « Publié le … » suivi optionnellement de « Mis à jour … »
     /^Publi[ée]\s+le\s+[^.]*?(?:\d{1,2}\s*[hH:]\s*\d{2}|\d{4})\s*(?:,?\s*mis\s+à\s+jour[^.]*?(?:\d{1,2}\s*[hH:]\s*\d{2}|\d{4}))?\s*[.,·•|–-]?\s*/i,
+    // « Mis à jour le … »
     /^Mis\s+à\s+jour\s+le[^.]*?(?:\d{1,2}\s*[hH:]\s*\d{2}|\d{4})\s*[.,·•|–-]?\s*/i,
-    /^Temps\s+de\s+lecture\s*:?\s*\d+\s*min\s*[.,·•|–-]?\s*/i,
+    // Fragment horaire seul en tête : « 06:26 Mis à jour le 28/11/2025 06:28 »
+    /^\d{1,2}:\d{2}\s+(?:Mis\s+à\s+jour[^.]*?(?:\d{1,2}\s*[hH:]\s*\d{2}|\d{4})\s*)?/i,
+    // Temps de lecture : 6min
+    /^Temps\s+de\s+lecture\s*:?\s*\d+\s*min(?:utes?)?\s*[.,·•|–-]?\s*/i,
+    // Date ISO ou française en tête : « 28/11/2025 06:28 »
     /^\d{1,2}\/\d{1,2}\/\d{2,4}\s+\d{1,2}[:hH]\d{2}\s*[.,·•|–-]?\s*/,
+    // Crédit photo (DR)
     /^\(DR\)\s*/i,
+    // Boilerplate éditeur : « Informations Présenté par … »
     /^Informations\s+Présenté\s+par[^.]*?\.\s*/i,
+    // Horodatage « à 14h57 » ou « à 14 h 57 » en début
+    /^à\s+\d{1,2}\s*h\s*\d{0,2}\s+/i,
+    // Flux : « Le HH:MM » ou « le JJ/MM/YYYY à HHhMM »
+    /^le\s+\d{1,2}\/\d{1,2}\/\d{2,4}\s+à\s+\d{1,2}[hH]\d{0,2}\s*[.,·•|–-]?\s*/i,
+    // Auteur / rédaction isolé en tête court (< 40 car.) : « Par Prénom NOM · »
+    /^Par\s+[A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-Ÿ]+)?\s*[·•|–-]\s*/,
   ]
   let change = true
   while (change) {
@@ -137,6 +152,22 @@ export function nettoyerAmorce(texte: string): string {
     }
   }
   return t
+}
+
+/**
+ * Décode les entités HTML courantes dans une URL (og:image peut contenir
+ * &amp;, &quot;, &#39;, &#38; etc. selon l'encodage de la page source).
+ * Sans ce décodage l'URL est cassée et renvoie 404.
+ */
+export function decoderEntitesUrl(url: string): string {
+  if (!url) return url
+  return url
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#38;/gi, '&')
+    .replace(/&#34;/gi, '"')
+    .replace(/&apos;/gi, "'")
 }
 
 /**
