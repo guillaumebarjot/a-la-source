@@ -2,6 +2,12 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Phase 3 : design général, répétition espacée, back-office quiz
+
+- **Amélioration générale du design** : token `--radius` manquant rétabli (coins arrondis), tokens sémantiques ajoutés (focus, surface-2, success/warning/info, dark-safe). Titres de cartes-sources en couleur de texte (le rouge reste réservé aux actions), états vides soignés (bloc sobre), anneau de focus homogène sur les formulaires, champs de saisie lisibles en sombre. Deux violations rouge-sur-fond-sombre corrigées (bouton du stepper, liens Parcours) vers l'accent dark-safe. Pages Mon espace (Mon compte, Mes contributions) entièrement stylées.
+- **Répétition espacée (SM-2)** : nouvelle table `revisions_mecanismes` (migration additive), planification par personne × mécanisme à la clôture de chaque réponse de quiz (succès allonge l'intervalle, « à revoir » le remet à 1 ; jamais de note ni de streak). Endpoints `GET /api/parcours/revisions/a-revoir` et `POST /api/parcours/revisions/quiz` (mini-quiz de réancrage tiré de la banque). Bandeau « N mécanismes à réancrer » sur la page Parcours.
+- **Back-office quiz** : `POST /api/parcours/from-sujet` (quiz adossé à un sujet, sources jouables sélectionnables) et `POST /api/parcours/from-dossier` (quiz depuis le corpus d'un dossier), plus `GET /api/parcours/sources-jouables` (sources à mécanisme identifié, image en priorité). Formulaire « Créer un quiz par thème » sur la page Parcours pour les animateurs et admins.
+
 ## 2026-06-21 — Phase parallèle 2 : quiz multi-thème, stepper, Discord v3, dossiers, docs
 
 Quatre chantiers menés en parallèle puis intégrés (typecheck client + serveur et build complet OK avant commit).
