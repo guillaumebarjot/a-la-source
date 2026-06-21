@@ -7,12 +7,13 @@ interface SubNavItem {
 }
 
 const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
+  // Activites : Parcours retire (ne vit plus que sous Apprendre).
   '/activites': [
     { label: 'Ateliers', to: '/ateliers' },
     { label: 'Dossiers', to: '/dossiers' },
     { label: 'Debunkages', to: '/debunkages' },
-    { label: 'Parcours', to: '/parcours' },
   ],
+  // Observatoire : porte les Mecanismes (retires d'Apprendre).
   '/observatoire': [
     { label: 'Mecanismes', to: '/observatoire/mecanismes' },
     { label: 'Medias', to: '/observatoire/medias' },
@@ -26,20 +27,13 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
     { label: 'En cours', to: '/ateliers/en-cours' },
     { label: 'Archives', to: '/ateliers/archives' },
   ],
-  '/archiver': [
-    { label: 'A archiver', to: '/archiver/priorite' },
-    { label: 'Sans copie locale', to: '/a-archiver' },
-    { label: 'Archives partielles', to: '/archiver/partielles' },
-    { label: 'Completer', to: '/archiver/contribuer' },
-  ],
+  // Apprendre : garde Parcours/quiz, Manuel, Aide (Mecanismes deplaces vers Observatoire).
   '/apprendre': [
-    { label: 'Catalogue', to: '/apprendre' },
     { label: 'Parcours', to: '/parcours' },
     { label: 'Manuel', to: '/apprendre/manuel' },
     { label: 'Aide & Ressources', to: '/apprendre/aide' },
   ],
   '/parcours': [
-    { label: 'Catalogue', to: '/apprendre' },
     { label: 'Parcours', to: '/parcours' },
     { label: 'Manuel', to: '/apprendre/manuel' },
     { label: 'Aide & Ressources', to: '/apprendre/aide' },
@@ -57,8 +51,6 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
 }
 
 function getSubNavItems(pathname: string): SubNavItem[] | null {
-  // « Sans copie locale » vit hors de /archiver mais appartient au meme groupe.
-  if (pathname === '/a-archiver') return SUBNAV_CONFIG['/archiver']
   // Match the longest prefix
   const keys = Object.keys(SUBNAV_CONFIG).sort((a, b) => b.length - a.length)
   for (const key of keys) {
@@ -89,9 +81,25 @@ export default function Header() {
           {user && <span className="header-user">{user.nom}</span>}
         </div>
       </div>
+      {/* Nav H1 : Accueil · Mon espace · Inbox · Veille · Sujets · Activites · Apprendre · Observatoire.
+          Archiver retire (fondu dans l'Inbox-hub via filtres). */}
       <nav className="header-nav">
         <NavLink to="/accueil" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Accueil
+        </NavLink>
+        <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Mon espace
+        </NavLink>
+        <NavLink
+          to="/inbox"
+          className={({ isActive }) =>
+            (isActive || location.pathname === '/a-archiver' || location.pathname.startsWith('/archiver')) ? 'nav-link active' : 'nav-link'
+          }
+        >
+          Inbox
+        </NavLink>
+        <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Veille
         </NavLink>
         <NavLink to="/sujets" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Sujets
@@ -104,20 +112,6 @@ export default function Header() {
         >
           Activites
         </NavLink>
-        <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Veille
-        </NavLink>
-        <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Observatoire
-        </NavLink>
-        <NavLink
-          to="/archiver"
-          className={({ isActive }) =>
-            (isActive || location.pathname === '/a-archiver') ? 'nav-link active' : 'nav-link'
-          }
-        >
-          Archiver
-        </NavLink>
         <NavLink
           to="/apprendre"
           className={({ isActive }) =>
@@ -126,8 +120,8 @@ export default function Header() {
         >
           Apprendre
         </NavLink>
-        <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Mon espace
+        <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Observatoire
         </NavLink>
         {isAdmin && (
           <NavLink to="/admin/parametrage" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>

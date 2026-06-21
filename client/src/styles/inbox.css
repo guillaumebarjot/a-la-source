@@ -168,3 +168,326 @@
   color: var(--color-text);
   text-decoration: underline;
 }
+
+/* ================================================================== */
+/* Inbox-hub : tunnel de qualification des sources.                    */
+/* Dark-safe absolu : uniquement des tokens --color-*. Sobriete :      */
+/* jauge et stepper factuels, jamais un gros chiffre-verdict.          */
+/* ================================================================== */
+
+.hub-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.hub-header { margin-bottom: var(--space-lg); }
+.hub-header h1 { color: var(--color-text); margin: 0 0 var(--space-sm); }
+.hub-intro {
+  color: var(--color-text-secondary);
+  max-width: 70ch;
+  line-height: 1.55;
+}
+.hub-intro strong { color: var(--color-text); }
+
+/* Barre de filtres par ce qui manque */
+.hub-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.hub-filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.hub-filtre:hover { border-color: var(--color-primary); }
+.hub-filtre--actif {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.hub-filtre-compteur {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4em;
+  padding: 0 0.35em;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.hub-filtre--actif .hub-filtre-compteur {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.hub-toggle-tout {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* Etat vide soigne */
+.hub-vide {
+  text-align: center;
+  padding: var(--space-xl);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+.hub-vide h2 { color: var(--color-text); margin: 0 0 var(--space-sm); }
+
+/* Liste de cartes */
+.hub-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.hub-carte {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  color: var(--color-text);
+}
+.hub-carte--ok { border-color: var(--color-success, var(--color-border)); }
+
+.hub-carte-tete {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+/* Vignette : image TOUJOURS presente (placeholder initiale dark-safe) */
+.hub-carte-vignette {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  text-decoration: none;
+}
+.hub-carte-vignette img { width: 100%; height: 100%; object-fit: cover; }
+.hub-carte-initiale {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.hub-carte-corps {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Titre-lien neutralise contre .dark a (jamais de rouge sur fond sombre) */
+.hub-carte-titre,
+.hub-carte-titre:hover {
+  color: var(--color-text);
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  word-break: break-word;
+}
+.hub-carte-titre:hover { text-decoration: underline; }
+.dark .hub-carte-titre,
+.dark .hub-carte-titre:hover { color: var(--color-text); }
+
+.hub-carte-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: 0.78rem;
+}
+.hub-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+.hub-badge--alerte {
+  border-color: var(--color-warning, var(--color-border));
+  color: var(--color-warning, var(--color-text-secondary));
+}
+
+/* Jauge de score sobre */
+.hub-jauge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+.hub-jauge-piste {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+.hub-jauge-remplie {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.25s ease;
+}
+.dark .hub-jauge-remplie { background: var(--color-accent, var(--color-primary)); }
+.hub-jauge-valeur {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Stepper de jalons compact */
+.hub-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  margin: var(--space-xs) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.hub-pas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+.hub-pas-puce {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+.hub-pas--fait { color: var(--color-text); }
+.hub-pas--fait .hub-pas-puce {
+  background: var(--color-success, var(--color-primary));
+  border-color: var(--color-success, var(--color-primary));
+  color: #fff;
+}
+
+.hub-carte-plier {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.hub-carte-plier:hover { border-color: var(--color-primary); }
+
+/* Zone d'actions inline (repliable) */
+.hub-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.hub-message {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
+.hub-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+.hub-action-titre {
+  flex: 0 0 9.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.hub-champ {
+  flex: 1;
+  min-width: 12rem;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.hub-champ:focus-visible {
+  outline: 2px solid var(--color-focus, var(--color-primary));
+  outline-offset: 1px;
+}
+textarea.hub-champ { resize: vertical; }
+
+.hub-btn {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.hub-btn:hover { border-color: var(--color-primary); }
+.hub-btn:disabled { opacity: 0.55; cursor: default; }
+.hub-btn--primaire {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.hub-btn--primaire:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+/* Lien-bouton neutralise contre .dark a */
+.hub-btn--lien,
+.hub-btn--lien:hover { color: var(--color-text); }
+.dark .hub-btn--lien,
+.dark .hub-btn--lien:hover { color: var(--color-text); }
+
+/* Copie locale contextuelle : ligne d'actions sous le champ collé */
+.hub-action-ligne { display: flex; flex-wrap: wrap; gap: var(--space-xs); align-items: center; margin-top: var(--space-xs); }
+.hub-action-ligne .hub-btn--lien { cursor: pointer; }

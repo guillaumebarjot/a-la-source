@@ -122,6 +122,54 @@ export interface SujetDetail extends Sujet {
   evenements: Evenement[]
 }
 
+// Inbox-hub : tunnel de qualification des sources (GET /api/sources/qualification).
+// Jalons factuels + score d'avancement, jamais un verdict editorial.
+export interface JalonsQualification {
+  accepte: boolean
+  copie_locale: boolean
+  accroche: boolean
+  image: boolean
+  sujet: boolean
+  analysee: boolean
+  mobilisee: boolean
+  commentee: boolean
+}
+
+export interface SourceQualification {
+  id: number
+  titre: string
+  url: string | null
+  image_url: string | null
+  accroche: string | null
+  date_publication: string | null
+  paywall: number
+  completude: 'libre' | 'partiel' | 'integral_offline' | null
+  type_source: string | null
+  statut: Source['statut']
+  a_qualifier: number
+  origine?: Source['origine']
+  media_nom: string | null
+  jalons: JalonsQualification
+  score: number
+  bien_qualifiee: boolean
+}
+
+export interface CompteursQualification {
+  a_qualifier: number
+  accepter: number
+  copie_locale: number
+  accroche: number
+  image: number
+  sujet: number
+  analyse: number
+  total: number
+}
+
+export interface QualificationReponse {
+  sources: SourceQualification[]
+  compteurs: CompteursQualification
+}
+
 export interface MecanismeReference {
   id: number
   nom: string

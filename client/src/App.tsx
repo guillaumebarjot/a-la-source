@@ -10,8 +10,6 @@ const Inbox = lazy(() => import('./pages/Inbox'))
 const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
 const Ateliers = lazy(() => import('./pages/Ateliers'))
-const Archiver = lazy(() => import('./pages/Archiver'))
-const SansCopie = lazy(() => import('./pages/SansCopie'))
 const Accueil = lazy(() => import('./pages/Accueil'))
 // BecsRouges: route redirects to /perso/chaines, component kept but not lazy-loaded
 const MonEspace = lazy(() => import('./pages/MonEspace'))
@@ -62,10 +60,13 @@ export default function App() {
             <Route path="/arpentages/:id" element={<Arpentage />} />
             <Route path="/ateliers" element={<Ateliers />} />
             <Route path="/ateliers/:section" element={<Ateliers />} />
-            <Route path="/archiver" element={<Archiver />} />
-            <Route path="/archiver/:section" element={<Archiver />} />
-            {/* Sources sans copie locale (hors video/audio) : ce qu'il reste a archiver */}
-            <Route path="/a-archiver" element={<SansCopie />} />
+            {/* Archiver a fondu dans l'Inbox-hub : ses fonctions sont des filtres.
+                On redirige les anciennes routes vers l'Inbox avec le bon filtre,
+                pour ne casser aucun lien. */}
+            <Route path="/archiver" element={<Navigate to="/inbox?manque=copie_locale" replace />} />
+            <Route path="/archiver/:section" element={<Navigate to="/inbox?manque=copie_locale" replace />} />
+            {/* Ancienne route « sans copie locale » : redirige vers le filtre de l'Inbox. */}
+            <Route path="/a-archiver" element={<Navigate to="/inbox?manque=copie_locale" replace />} />
             <Route path="/becs-rouges" element={<Navigate to="/perso/chaines" replace />} />
             <Route path="/perso" element={<MonEspace />} />
             <Route path="/perso/:section" element={<MonEspace />} />

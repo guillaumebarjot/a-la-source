@@ -164,6 +164,132 @@ router.get('/sans-copie-locale', (_req, res) => {
   res.json(rows)
 })
 
+// GET /api/sources/qualification — HUB de qualite des sources (Inbox-hub).
+// Lecture seule. Placee AVANT la route parametree /:id pour ne pas etre avalee.
+//
+// Modele (docs/conception-inbox-qualification.md) : « qualifier » une source est un
+// tunnel d'enrichissement a la carte, jamais bloquant, avec un score d'avancement.
+// On expose pour chaque source ses JALONS booleens factuels, son SCORE 0-100 pondere,
+// le drapeau `bien_qualifiee` (le minimum : copie_locale && accroche && image) et les
+// champs d'edition utiles aux actions inline.
+//
+// Jalons (faits, jamais un verdict de qualite) :
+//   accepte      : sortie de l'inbox (a_qualifier = 0)
+//   copie_locale : archive 'complete' OU completude = 'integral_offline'
+//   accroche     : accroche non vide
+//   image        : image_url non vide
+//   sujet        : rattachee a >= 1 sujet (sujet_sources)
+//   analysee     : >= 1 mecanisme identifie (source_mecanismes)
+//   mobilisee    : versee dans >= 1 activite (activite_sources)
+//   commentee    : >= 1 commentaire
+//
+// Score pondere : copie_locale 25, accroche 20, image 15, sujet 20, analysee 10,
+// mobilisee 5, commentee 5 (total 100).
+//
+// Filtres :
+//   ?tout=1            : toutes les sources (reprise), sinon seulement les pas-encore-bien-qualifiees
+//   ?manque=<jalon>    : copie_locale | accroche | image | sujet | analyse | accepter
+//
+// Tri : a accepter d'abord, puis score d'avancement croissant (le plus a faire en tete).
+router.get('/qualification', (req, res) => {
+  const { tout, manque } = req.query
+
+  const rows = db.prepare(`
+    SELECT
+      s.id, s.titre, s.url, s.image_url, s.accroche, s.date_publication,
+      s.paywall, s.completude, s.type_source, s.statut, s.a_qualifier, s.origine,
+      m.nom as media_nom,
+      EXISTS (SELECT 1 FROM archives ar WHERE ar.source_id = s.id AND ar.statut = 'complete') as a_archive_complete,
+      (SELECT COUNT(*) FROM sujet_sources ss WHERE ss.source_id = s.id) as nb_sujets,
+      (SELECT COUNT(*) FROM source_mecanismes sm WHERE sm.source_id = s.id) as nb_mecanismes,
+      (SELECT COUNT(*) FROM activite_sources asrc WHERE asrc.source_id = s.id) as nb_activites,
+      (SELECT COUNT(*) FROM commentaires c WHERE c.source_id = s.id) as nb_commentaires
+    FROM sources s
+    LEFT JOIN medias m ON s.media_id = m.id
+    ORDER BY s.soumis_le DESC
+  `).all() as Array<Record<string, unknown>>
+
+  const PONDS = { copie_locale: 25, accroche: 20, image: 15, sujet: 20, analysee: 10, mobilisee: 5, commentee: 5 }
+
+  const enrichies = rows.map((s) => {
+    const accepte = Number(s.a_qualifier) === 0
+    const copie_locale = Number(s.a_archive_complete) === 1 || s.completude === 'integral_offline'
+    const accroche = typeof s.accroche === 'string' && s.accroche.trim().length > 0
+    const image = typeof s.image_url === 'string' && s.image_url.trim().length > 0
+    const sujet = Number(s.nb_sujets) > 0
+    const analysee = Number(s.nb_mecanismes) > 0
+    const mobilisee = Number(s.nb_activites) > 0
+    const commentee = Number(s.nb_commentaires) > 0
+
+    const score =
+      (copie_locale ? PONDS.copie_locale : 0) +
+      (accroche ? PONDS.accroche : 0) +
+      (image ? PONDS.image : 0) +
+      (sujet ? PONDS.sujet : 0) +
+      (analysee ? PONDS.analysee : 0) +
+      (mobilisee ? PONDS.mobilisee : 0) +
+      (commentee ? PONDS.commentee : 0)
+
+    const bien_qualifiee = copie_locale && accroche && image
+
+    return {
+      id: s.id,
+      titre: s.titre,
+      url: s.url,
+      image_url: s.image_url,
+      accroche: s.accroche,
+      date_publication: s.date_publication,
+      paywall: s.paywall,
+      completude: s.completude,
+      type_source: s.type_source,
+      statut: s.statut,
+      a_qualifier: s.a_qualifier,
+      origine: s.origine,
+      media_nom: s.media_nom,
+      jalons: { accepte, copie_locale, accroche, image, sujet, analysee, mobilisee, commentee },
+      score,
+      bien_qualifiee,
+    }
+  })
+
+  // Filtre « pas encore bien qualifiee » par defaut ; ?tout=1 montre tout.
+  let liste = tout === '1' ? enrichies : enrichies.filter((s) => !s.bien_qualifiee)
+
+  // Filtre par ce qui manque.
+  if (typeof manque === 'string') {
+    switch (manque) {
+      case 'accepter': liste = liste.filter((s) => !s.jalons.accepte); break
+      case 'copie_locale': liste = liste.filter((s) => !s.jalons.copie_locale); break
+      case 'accroche': liste = liste.filter((s) => !s.jalons.accroche); break
+      case 'image': liste = liste.filter((s) => !s.jalons.image); break
+      case 'sujet': liste = liste.filter((s) => !s.jalons.sujet); break
+      case 'analyse': liste = liste.filter((s) => !s.jalons.analysee); break
+    }
+  }
+
+  // Tri : a accepter d'abord (jalon accepte faux), puis score croissant.
+  liste.sort((a, b) => {
+    if (a.jalons.accepte !== b.jalons.accepte) return a.jalons.accepte ? 1 : -1
+    return a.score - b.score
+  })
+
+  // Compteurs « ce qui manque » sur l'ensemble pas-encore-bien-qualifie (filtre par
+  // ce qui manque exclu, pour que les compteurs restent stables quand on filtre).
+  const base = enrichies.filter((s) => !s.bien_qualifiee)
+  const compteurs = {
+    a_qualifier: base.length,
+    accepter: base.filter((s) => !s.jalons.accepte).length,
+    copie_locale: base.filter((s) => !s.jalons.copie_locale).length,
+    accroche: base.filter((s) => !s.jalons.accroche).length,
+    image: base.filter((s) => !s.jalons.image).length,
+    sujet: base.filter((s) => !s.jalons.sujet).length,
+    analyse: base.filter((s) => !s.jalons.analysee).length,
+    total: enrichies.length,
+  }
+
+  res.json({ sources: liste, compteurs })
+})
+
 // GET /api/sources/inbox — sources entrantes a qualifier (inbox)
 // Placee AVANT la route parametree /:id pour ne pas etre avalee par celle-ci.
 router.get('/inbox', (_req, res) => {
