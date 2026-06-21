@@ -38,7 +38,7 @@ export default function App() {
       <main className="main-content">
         <Suspense fallback={<div className="loading">Chargement...</div>}>
           <Routes>
-            <Route path="/" element={<Navigate to="/sujets" replace />} />
+            <Route path="/" element={<Navigate to="/perso" replace />} />
             <Route path="/sujets" element={<Sujets />} />
             <Route path="/sujets/:slug" element={<Sujet />} />
             <Route path="/veille" element={<Flux />} />

@@ -2096,3 +2096,53 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .mecanisme-exemple-media { font-size: 0.72rem; color: var(--color-text-secondary); }
 .mecanisme-exemple-extrait { font-size: 0.78rem; color: var(--color-text-secondary); font-style: italic; border-left: 2px solid var(--color-border); padding-left: var(--space-xs); margin: 4px 0 0; }
 .mecanisme-exemple-par { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 2px; }
+
+/* ---------- Accueil personnel (page d'atterrissage) ---------- */
+.accueil-hello { margin-bottom: var(--space-lg); }
+.accueil-hello h2 { margin: 0 0 4px; }
+.accueil-sous { color: var(--color-text-secondary); margin: 0; }
+
+.accueil-inbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2, var(--color-surface));
+  text-decoration: none;
+  color: var(--color-text);
+  transition: border-color 0.15s;
+}
+.accueil-inbox:hover { border-color: var(--color-focus, var(--color-text-secondary)); }
+.accueil-inbox-n { font-size: 2rem; font-weight: 700; min-width: 2.2rem; text-align: center; }
+.accueil-inbox-texte { display: flex; flex-direction: column; }
+.accueil-inbox-texte strong { font-size: 1rem; }
+.accueil-inbox-texte small { color: var(--color-text-secondary); }
+
+.accueil-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-md);
+}
+.accueil-tuile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-decoration: none;
+  color: var(--color-text);
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.accueil-tuile:hover { border-color: var(--color-focus, var(--color-text-secondary)); }
+.accueil-tuile strong { font-size: 1.5rem; font-weight: 700; }
+.accueil-tuile span { font-size: 0.8rem; color: var(--color-text-secondary); }
+.accueil-tuile--lien { justify-content: center; }
+.accueil-tuile--lien span { font-size: 0.9rem; color: var(--color-text); }
