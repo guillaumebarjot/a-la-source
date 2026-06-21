@@ -14,6 +14,7 @@ import { migrateDebunkage } from './migrate-debunkage.js'
 import { migrateParcours } from './migrate-parcours.js'
 import { migrateDossiers } from './migrate-dossiers.js'
 import { migrateArpentage } from './migrate-arpentage.js'
+import { migrateDiscord } from './migrate-discord.js'
 
 function colonnes(table: string): string[] {
   return (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(c => c.name)
@@ -147,6 +148,9 @@ export function autoMigrate(): void {
 
   // Arpentage (lecture collective fragmentee)
   migrateArpentage()
+
+  // Discord : dedoublonnage URL + index unique sources.url + commentaires.origine
+  migrateDiscord()
 
   console.log('Auto-migration: schéma à jour.')
 }

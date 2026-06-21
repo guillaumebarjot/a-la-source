@@ -15,7 +15,7 @@
  */
 
 import db from '../lib/db.js'
-import { getDiscordConfig, handleCommand, handleReply, hasActiveConversation, texteSourceChunks } from './bot.js'
+import { getDiscordConfig, handleCommand, handleReply, hasActiveConversation, texteSourceChunks, archiverSource } from './bot.js'
 import { traiterMessage, sourcePourMessage, type PieceJointe } from './ingestion.js'
 
 // Le bot invite toujours a faire la meme chose, en mieux, dans l'app.
@@ -117,6 +117,12 @@ export async function startDiscordBot(): Promise<void> {
           if (cmd === '!texte') {
             const blocs = texteSourceChunks(args)
             for (const bloc of blocs) await message.reply(bloc).catch(() => {})
+            return
+          }
+          // !archiver : archivage reel (readability), asynchrone -> await dedie.
+          if (cmd === '!archiver') {
+            const rep = await archiverSource(args, auteurMembre(message))
+            if (rep) await message.reply(avecAstuce(rep)).catch(() => {})
             return
           }
           const { response } = handleCommand(authorId, auteurMembre(message), cmd, args)

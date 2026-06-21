@@ -14,6 +14,7 @@
 
 import db from '../lib/db.js'
 import { calculerScoreSource } from '../lib/score.js'
+import { extractReadability, detecterArchivePartielle, compterMots } from '../lib/readability.js'
 
 // Types pour le bot (sans importer discord.js tant que pas installe)
 interface DiscordConfig {
@@ -75,16 +76,19 @@ export function handleCommand(userId: string, appUserId: number | null, command:
   switch (cmd) {
     case '!source': return cmdSource(appUserId, args)
     case '!fiche': return cmdFiche(args)
-    case '!analyser': return cmdAnalyser(userId, args)
-    case '!evaluer': return cmdEvaluer(userId, args)
+    case '!analyser': return cmdAnalyser(userId, appUserId, args)
+    case '!evaluer': return cmdEvaluer(userId, appUserId, args)
     case '!commenter': return cmdCommenter(userId, appUserId, args)
     case '!editcom':
     case '!modifcom': return cmdEditCommentaire(appUserId, args)
-    case '!taguer': return cmdTaguer(userId, args)
-    case '!archiver': return cmdArchiver(userId, args)
+    case '!taguer': return cmdTaguer(userId, appUserId, args)
+    case '!archiver': return cmdArchiverHint(args)
     case '!score': return cmdScore(args)
     case '!vivier': return cmdVivier()
     case '!atelier': return cmdAtelier()
+    case '!abandon':
+    case '!annuler':
+    case '!stop': return cmdAbandon(userId)
     case '!aide':
     case '!manuel':
     case '!guide': return cmdAide()
@@ -239,16 +243,23 @@ function cmdAide(): { response: string; expectsReply: boolean } {
 
 **Commandes** :
 \`!aide\` ce manuel · \`!vivier\` top 5 du vivier · \`!atelier\` prochain atelier
-\`!score <id>\` · \`!analyser <id>\` · \`!evaluer <id>\` · \`!commenter <id>\` · \`!taguer <id>\``,
+\`!score <id>\` · \`!analyser <id>\` · \`!evaluer <id>\` · \`!commenter <id>\` · \`!taguer <id>\` · \`!archiver <id>\`
+\`!abandon\` (ou \`!annuler\` / \`!stop\`) pour quitter une discussion en cours`,
     expectsReply: false
   }
 }
 
 // --- Commandes conversationnelles ---
 
-function cmdAnalyser(userId: string, args: string): { response: string; expectsReply: boolean } {
+function cmdAnalyser(userId: string, appUserId: number | null, args: string): { response: string; expectsReply: boolean } {
   const id = parseInt(args)
   if (isNaN(id)) return { response: 'Usage : `!analyser <id>`', expectsReply: false }
+
+  // L'analyse crédite son auteur (source_mecanismes.identifie_par) : sans membre
+  // rapproché, on refuse proprement plutôt que de poser une contribution anonyme.
+  if (appUserId == null) {
+    return { response: 'Pour analyser via le bot, renseigne d\'abord ton pseudo Discord dans l\'app (Mon espace → Mon compte).', expectsReply: false }
+  }
 
   const source = db.prepare('SELECT titre FROM sources WHERE id = ?').get(id) as { titre: string } | undefined
   if (!source) return { response: `Source #${id} introuvable.`, expectsReply: false }
@@ -256,7 +267,7 @@ function cmdAnalyser(userId: string, args: string): { response: string; expectsR
   const mecanismes = db.prepare('SELECT id, nom FROM mecanismes_reference ORDER BY id').all() as { id: number; nom: string }[]
   const list = mecanismes.map((m) => `${m.id}. ${m.nom}`).join('\n')
 
-  conversations.set(userId, { userId, command: 'analyser', sourceId: id, step: 1, data: {} })
+  conversations.set(userId, { userId, command: 'analyser', sourceId: id, step: 1, data: { appUserId } })
 
   return {
     response: `**Analyse de : ${source.titre}**\n\nQuel mecanisme identifiez-vous ?\n${list}\n\n(Repondez avec le numero)`,
@@ -280,11 +291,24 @@ function stepAnalyser(conv: ConversationState, message: string): { response: str
     }
     case 3: {
       conv.data.justification = message
-      // Enregistrer en BDD
-      db.prepare(`
-        INSERT INTO source_mecanismes (source_id, mecanisme_id, justification, extrait)
-        VALUES (?, ?, ?, ?)
-      `).run(conv.sourceId, conv.data.mecanisme_id, conv.data.justification, conv.data.extrait)
+      const auteurId = (conv.data.appUserId as number | null) ?? null
+      if (auteurId == null) {
+        conversations.delete(conv.userId)
+        return { response: 'Analyse non enregistrée : renseigne ton pseudo Discord dans l\'app (Mon espace → Mon compte).', expectsReply: false, done: true }
+      }
+      // Dédup : une seule justification par couple source / mécanisme / auteur.
+      // Réanalyser le même mécanisme met à jour la justification et l'extrait.
+      const ex = db.prepare('SELECT id FROM source_mecanismes WHERE source_id = ? AND mecanisme_id = ? AND identifie_par = ?')
+        .get(conv.sourceId, conv.data.mecanisme_id, auteurId) as { id: number } | undefined
+      if (ex) {
+        db.prepare('UPDATE source_mecanismes SET justification = ?, extrait = ? WHERE id = ?')
+          .run(conv.data.justification, conv.data.extrait, ex.id)
+      } else {
+        db.prepare(`
+          INSERT INTO source_mecanismes (source_id, mecanisme_id, identifie_par, justification, extrait)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(conv.sourceId, conv.data.mecanisme_id, auteurId, conv.data.justification, conv.data.extrait)
+      }
 
       conv.step = 4
       return { response: 'Mecanisme enregistre ! Un autre mecanisme ? (oui/non)', expectsReply: true, done: false }
@@ -292,7 +316,7 @@ function stepAnalyser(conv: ConversationState, message: string): { response: str
     case 4: {
       if (message.toLowerCase().startsWith('oui')) {
         conv.step = 1
-        conv.data = {}
+        conv.data = { appUserId: conv.data.appUserId }
         const mecanismes = db.prepare('SELECT id, nom FROM mecanismes_reference ORDER BY id').all() as { id: number; nom: string }[]
         const list = mecanismes.map((m) => `${m.id}. ${m.nom}`).join('\n')
         return { response: `Quel mecanisme ?\n${list}`, expectsReply: true, done: false }
@@ -306,14 +330,20 @@ function stepAnalyser(conv: ConversationState, message: string): { response: str
   }
 }
 
-function cmdEvaluer(userId: string, args: string): { response: string; expectsReply: boolean } {
+function cmdEvaluer(userId: string, appUserId: number | null, args: string): { response: string; expectsReply: boolean } {
   const id = parseInt(args)
   if (isNaN(id)) return { response: 'Usage : `!evaluer <id>`', expectsReply: false }
+
+  // L'évaluation est attribuée à son auteur (evaluateur_id, NOT NULL, UNIQUE par
+  // source). Sans membre rapproché, on refuse plutôt que de tout créditer au #1.
+  if (appUserId == null) {
+    return { response: 'Pour évaluer via le bot, renseigne d\'abord ton pseudo Discord dans l\'app (Mon espace → Mon compte).', expectsReply: false }
+  }
 
   const source = db.prepare('SELECT titre FROM sources WHERE id = ?').get(id) as { titre: string } | undefined
   if (!source) return { response: `Source #${id} introuvable.`, expectsReply: false }
 
-  conversations.set(userId, { userId, command: 'evaluer', sourceId: id, step: 1, data: {} })
+  conversations.set(userId, { userId, command: 'evaluer', sourceId: id, step: 1, data: { appUserId } })
 
   return {
     response: `**Evaluation de : ${source.titre}**\n\nComplexite du sujet ? (0-10)`,
@@ -347,16 +377,22 @@ function stepEvaluer(conv: ConversationState, message: string): { response: stri
       const viraliteMap: Record<string, string> = { '1': 'confidentiel', '2': 'circule', '3': 'viral', '4': 'tres_viral' }
       const viralite = viraliteMap[message.trim()] || 'confidentiel'
 
-      // Enregistrer evaluation (utilisateur Discord = ID 1 par defaut, a ameliorer)
+      // Évaluation attribuée au membre rapproché (plus de #1 codé en dur). Refus
+      // propre si l'auteur n'est pas identifié, pour ne pas écraser une autre éval.
+      const evaluateurId = (conv.data.appUserId as number | null) ?? null
+      if (evaluateurId == null) {
+        conversations.delete(conv.userId)
+        return { response: 'Évaluation non enregistrée : renseigne ton pseudo Discord dans l\'app (Mon espace → Mon compte).', expectsReply: false, done: true }
+      }
       db.prepare(`
         INSERT INTO evaluations (source_id, evaluateur_id, complexite, bonus_expert, resonance)
-        VALUES (?, 1, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(source_id, evaluateur_id) DO UPDATE SET
           complexite = excluded.complexite,
           bonus_expert = excluded.bonus_expert,
           resonance = excluded.resonance,
           evaluee_le = CURRENT_TIMESTAMP
-      `).run(conv.sourceId, conv.data.complexite, conv.data.bonus_expert, conv.data.resonance)
+      `).run(conv.sourceId, evaluateurId, conv.data.complexite, conv.data.bonus_expert, conv.data.resonance)
 
       // Mettre a jour viralite sur la source
       db.prepare('UPDATE sources SET viralite_qualitative = ? WHERE id = ?').run(viralite, conv.sourceId)
@@ -399,11 +435,11 @@ function stepCommenter(conv: ConversationState, message: string): { response: st
         return { response: 'Pour commenter via le bot, renseigne d\'abord ton pseudo Discord dans l\'app (Mon espace → Mon compte).', expectsReply: false, done: true }
       }
       db.prepare(`
-        INSERT INTO commentaires (source_id, auteur_id, type, contenu) VALUES (?, ?, ?, ?)
+        INSERT INTO commentaires (source_id, auteur_id, type, contenu, origine) VALUES (?, ?, ?, ?, 'discord')
       `).run(conv.sourceId, auteurId, conv.data.type, message)
 
       conversations.delete(conv.userId)
-      return { response: 'Commentaire enregistre !', expectsReply: false, done: true }
+      return { response: 'Commentaire enregistre ! Tu peux le modifier ici avec `!editcom`, ou dans l\'app.', expectsReply: false, done: true }
     }
     default:
       conversations.delete(conv.userId)
@@ -411,7 +447,7 @@ function stepCommenter(conv: ConversationState, message: string): { response: st
   }
 }
 
-function cmdTaguer(userId: string, args: string): { response: string; expectsReply: boolean } {
+function cmdTaguer(userId: string, appUserId: number | null, args: string): { response: string; expectsReply: boolean } {
   const id = parseInt(args)
   if (isNaN(id)) return { response: 'Usage : `!taguer <id>`', expectsReply: false }
 
@@ -420,7 +456,7 @@ function cmdTaguer(userId: string, args: string): { response: string; expectsRep
     SELECT t.nom FROM tags t JOIN source_tags st ON st.tag_id = t.id WHERE st.source_id = ?
   `).all(id) as { nom: string }[]
 
-  conversations.set(userId, { userId, command: 'taguer', sourceId: id, step: 1, data: {} })
+  conversations.set(userId, { userId, command: 'taguer', sourceId: id, step: 1, data: { appUserId } })
 
   const existingStr = existing.length > 0 ? `Tags actuels : ${existing.map(t => t.nom).join(', ')}` : 'Aucun tag actuellement.'
   const list = tags.map(t => t.nom).join(', ')
@@ -445,25 +481,67 @@ function stepTaguer(conv: ConversationState, message: string): { response: strin
     tagRow = { id: Number(r.lastInsertRowid) }
   }
 
-  db.prepare('INSERT OR IGNORE INTO source_tags (source_id, tag_id) VALUES (?, ?)').run(conv.sourceId, tagRow.id)
+  const ajoutePar = (conv.data.appUserId as number | null) ?? null
+  db.prepare('INSERT OR IGNORE INTO source_tags (source_id, tag_id, ajoute_par) VALUES (?, ?, ?)').run(conv.sourceId, tagRow.id, ajoutePar)
 
   return { response: `Tag "${tagNom}" ajoute ! Un autre ? (ou "fin" pour terminer)`, expectsReply: true, done: false }
 }
 
-function cmdArchiver(_userId: string, args: string): { response: string; expectsReply: boolean } {
+// Validation synchrone de `!archiver <id>` (usage / source introuvable / pas d'URL).
+// L'archivage réel est fait par archiverSource() (async), appelé par le client.
+function cmdArchiverHint(args: string): { response: string; expectsReply: boolean } {
   const id = parseInt(args)
   if (isNaN(id)) return { response: 'Usage : `!archiver <id>`', expectsReply: false }
+  return { response: '', expectsReply: false }
+}
 
-  const source = db.prepare('SELECT url, titre FROM sources WHERE id = ?').get(id) as { url: string; titre: string } | undefined
-  if (!source) return { response: `Source #${id} introuvable.`, expectsReply: false }
-  if (!source.url) return { response: `Source #${id} n'a pas d'URL. Vous pouvez joindre un fichier (PDF, capture) en piece jointe.`, expectsReply: false }
+/**
+ * Archive RÉELLEMENT une source via le pipeline readability (le même que la route
+ * POST /api/sources/:id/archiver). Extrait le texte, insère une archive 'readability'
+ * et renvoie un compte rendu honnête (succès, déjà archivé, échec). Synchrone côté
+ * appelant via await ; à brancher depuis le client Discord.
+ */
+export async function archiverSource(args: string, appUserId: number | null): Promise<string> {
+  const id = parseInt(args)
+  if (isNaN(id)) return 'Usage : `!archiver <id>`'
 
-  // L'archivage est asynchrone — on le lance et on repond immediatement
-  // En vrai usage, on ferait un appel API. Ici on retourne juste le message.
-  return {
-    response: `Archivage lance pour : **${source.titre}**\nSi l'archivage echoue, vous pouvez joindre un fichier (PDF, image, texte) en piece jointe et je le lierai a la source.`,
-    expectsReply: false
+  const source = db.prepare('SELECT url, titre, paywall FROM sources WHERE id = ?').get(id) as { url: string | null; titre: string; paywall: number } | undefined
+  if (!source) return `Source #${id} introuvable.`
+  if (!source.url) return `Source #${id} n'a pas d'URL. Joins un fichier (PDF, capture) en pièce jointe et je le lierai à la source.`
+
+  // Déjà archivée (texte présent) : ne pas réécraser, le signaler.
+  const dejaTexte = db.prepare("SELECT 1 FROM archives WHERE source_id = ? AND contenu IS NOT NULL AND contenu != '' LIMIT 1").get(id)
+  if (dejaTexte) return `Source #${id} déjà archivée. Texte intégral : \`!texte ${id}\` · ${baseApp()}/lire/${id}`
+
+  try {
+    const article = await extractReadability(source.url)
+    if (!article) {
+      return `Échec de l'archivage de **${source.titre}** (extraction impossible). Joins un PDF/capture en pièce jointe et je le lierai à la source.`
+    }
+    const nbMots = compterMots(article.content)
+    const statut = detecterArchivePartielle(article.textContent, source.paywall)
+    if (article.motsCles && article.motsCles.length > 0) {
+      try { db.prepare('UPDATE sources SET mots_cles = ? WHERE id = ?').run(article.motsCles.join(', '), id) } catch { /* colonne optionnelle */ }
+    }
+    db.prepare(`
+      INSERT INTO archives (source_id, type, contenu, cree_par, nb_mots, statut)
+      VALUES (?, 'readability', ?, ?, ?, ?)
+    `).run(id, article.content, appUserId, nbMots, statut)
+    const mention = statut === 'partielle' ? ' _(archive partielle — paywall probable, joins un PDF pour le texte intégral)_' : ''
+    return `📦 Archivé : **${source.titre}** (${nbMots} mots)${mention}\n${baseApp()}/lire/${id}`
+  } catch (err) {
+    console.error('Discord: echec archiverSource', err)
+    return `Échec de l'archivage de **${source.titre}**. Réessaie, ou joins un fichier en pièce jointe.`
   }
+}
+
+// Abandon de la conversation/assistant en cours pour l'utilisateur.
+function cmdAbandon(userId: string): { response: string; expectsReply: boolean } {
+  if (conversations.has(userId)) {
+    conversations.delete(userId)
+    return { response: 'Discussion abandonnée. Tu peux repartir d\'une commande quand tu veux (`!aide`).', expectsReply: false }
+  }
+  return { response: 'Aucune discussion en cours.', expectsReply: false }
 }
 
 /**

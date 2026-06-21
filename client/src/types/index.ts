@@ -163,6 +163,7 @@ export interface Commentaire {
   url: string | null
   cree_le: string
   auteur_nom?: string
+  origine?: 'app' | 'discord'
 }
 
 export interface Archive {

@@ -526,6 +526,10 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .commentaire-header strong { font-size: 0.8rem; }
 .commentaire-type { font-size: 0.7rem; background: var(--rc-gris-100); padding: 1px 4px; border-radius: 2px; }
 .commentaire-header time { font-size: 0.7rem; color: var(--color-text-secondary); }
+.commentaire-origine { font-size: 0.65rem; color: var(--color-text-secondary); border: 1px solid var(--color-border); padding: 1px 4px; border-radius: 2px; }
+.commentaire-actions { display: flex; gap: var(--space-xs); margin-top: 4px; }
+.commentaire-edition { display: flex; flex-direction: column; gap: var(--space-xs); margin-top: 4px; }
+.commentaire-edition textarea, .commentaire-edition input { width: 100%; }
 .commentaire-form { display: flex; flex-direction: column; gap: var(--space-xs); }
 .commentaire-form select { padding: var(--space-xs); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.8rem; }
 .commentaire-form textarea { padding: var(--space-xs); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.85rem; resize: vertical; }

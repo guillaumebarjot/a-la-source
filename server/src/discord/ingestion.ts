@@ -172,7 +172,7 @@ function ajouterCommentaire(sourceId: number, contenu: string, auteurId: number 
     const ex = db.prepare("SELECT 1 FROM commentaires WHERE source_id = ? AND type = 'commentaire' AND contenu = ?")
       .get(sourceId, contenu)
     if (ex) return true
-    db.prepare("INSERT INTO commentaires (source_id, auteur_id, type, contenu) VALUES (?, ?, 'commentaire', ?)")
+    db.prepare("INSERT INTO commentaires (source_id, auteur_id, type, contenu, origine) VALUES (?, ?, 'commentaire', ?, 'discord')")
       .run(sourceId, auteurId, contenu)
     return true
   } catch (err) { console.error('Discord: echec commentaire', err); return false }
@@ -187,7 +187,7 @@ function ajouterLienAlternatif(sourceId: number, url: string, auteurId: number |
     const ex = db.prepare("SELECT 1 FROM commentaires WHERE source_id = ? AND type = 'lien' AND url = ?")
       .get(sourceId, url)
     if (ex) return false
-    db.prepare("INSERT INTO commentaires (source_id, auteur_id, type, contenu, url) VALUES (?, ?, 'lien', ?, ?)")
+    db.prepare("INSERT INTO commentaires (source_id, auteur_id, type, contenu, url, origine) VALUES (?, ?, 'lien', ?, ?, 'discord')")
       .run(sourceId, auteurId, 'Version accessible (sans paywall)', url)
     return true
   } catch (err) { console.error('Discord: echec lien alternatif', err); return false }
