@@ -2,6 +2,14 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Accueil pédagogique (phase 2)
+
+L'accueil explique tout, pour que personne ne soit jamais perdu.
+- **Le parcours d'une source** en six étapes (Inbox, Veille, Sujets, Activités, Apprendre, Observatoire), chacune en **bloc repliable** (résumé visible, détail au dépli) et cliquable vers la rubrique.
+- **Le menu en un coup d'œil** : une légende repliable des huit entrées, qui rappelle où se déroule quoi.
+- **Aide au survol** (info-bulles) sur les accès rapides, et un bloc « reprendre » (Inbox à qualifier, à lire, à réancrer, mes sources).
+- Styles d'accueil isolés dans `styles/accueil.css`, dark-safe.
+
 ## 2026-06-21 — Inbox-hub : tunnel de qualification des sources + refonte de la navigation
 
 Phase 1 d'une refonte (conception : `docs/conception-inbox-qualification.md`). L'Inbox partagée devient le hub de la qualité des sources.
