@@ -2,6 +2,14 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Débunkage : glisser-déposer du corpus (fin du chantier)
+
+Fin du chantier ouvert la veille (l'endpoint serveur `PATCH /debunkages/:id/sources/order` était posé, « client à finir »).
+
+- **Page Débunkage refondue sur `CorpusDnD`** : la section « Sources mobilisées » abandonne la saisie d'id + les listes manuelles `SourceCards` au profit du socle commun de glisser-déposer (vivier « Veille » à gauche, corpus à droite). On promène une carte (image + titre) de la veille vers le corpus, on choisit son **rôle pour / contre** par un sélecteur de carte, on réordonne par la poignée. Repli accessible « + Ajouter » / « Retirer » conservé.
+- **Réordonnancement persisté** : la poignée appelle `PATCH /debunkages/:id/sources/order`, l'ordre survit au rechargement (plus de régression d'ordre). Lien lecture (`/lire/:id`) sur le visuel de chaque carte du corpus.
+- Validé en local sur copie de base (Playwright + API) : ajout, rôle pour/contre et ordre persistés de bout en bout. Typecheck client + serveur OK. Débunkage aligné sur Dossier et Sujet (même socle DnD).
+
 ## 2026-06-20 — Déploiement PIAF (Docker + Authentik) et espace personnel
 
 Mise en production sur l'infra PIAF (serveur Bomp4rd), sur le modèle de Prisme, et premier bloc de finition « espace perso ».

@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { api } from '../api/client'
-import type { DebunkageDetail, DebunkageSource, ReseauPost } from '../types/debunkage'
+import type { DebunkageDetail, ReseauPost } from '../types/debunkage'
+import type { Source } from '../types'
+import CorpusDnD from '../components/corpus/CorpusDnD'
 import '../styles/debunkage.css'
 
 /**
@@ -23,9 +25,8 @@ export default function Debunkage() {
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
-  // Ajout de source
-  const [sourceId, setSourceId] = useState('')
-  const [sourceRole, setSourceRole] = useState<'pour' | 'contre'>('pour')
+  // Vivier de candidates (veille) pour le glisser-déposer
+  const [veille, setVeille] = useState<Source[]>([])
 
   // Ajout de post
   const [postReseau, setPostReseau] = useState<ReseauPost>('instagram')
@@ -46,6 +47,7 @@ export default function Debunkage() {
 
   useEffect(() => {
     recharger()?.finally(() => setLoading(false))
+    api.get<Source[]>('/sources?limit=40').then(setVeille).catch(() => setVeille([]))
   }, [recharger])
 
   async function sauverTexte() {
@@ -62,14 +64,9 @@ export default function Debunkage() {
     }
   }
 
-  async function ajouterSource(e: React.FormEvent) {
-    e.preventDefault()
-    if (!id || !sourceId.trim()) return
-    await api.post(`/debunkages/${id}/sources`, {
-      source_id: Number(sourceId.trim()),
-      role: sourceRole,
-    })
-    setSourceId('')
+  async function ajouterSource(sid: number, role?: string) {
+    if (!id) return
+    await api.post(`/debunkages/${id}/sources`, { source_id: sid, role: role || undefined })
     await recharger()
   }
 
@@ -77,6 +74,11 @@ export default function Debunkage() {
     if (!id) return
     await api.delete(`/debunkages/${id}/sources/${sid}`)
     await recharger()
+  }
+
+  async function reordonner(ids: number[]) {
+    if (!id) return
+    await api.patch(`/debunkages/${id}/sources/order`, { source_ids: ids })
   }
 
   async function ajouterPost(e: React.FormEvent) {
@@ -133,9 +135,8 @@ export default function Debunkage() {
   if (!data) return <div className="debunkage-page"><p className="debunkage-empty">Debunkage introuvable.</p></div>
 
   const estPublie = data.pipeline?.statut === 'publie'
-  const sourcesPour = data.sources.filter((s) => s.role === 'pour')
-  const sourcesContre = data.sources.filter((s) => s.role === 'contre')
-  const sourcesAutres = data.sources.filter((s) => s.role !== 'pour' && s.role !== 'contre')
+  const roleById = new Map(data.sources.map((s) => [s.id, s.role]))
+  const candidates = veille.filter((s) => !data.sources.some((d) => d.id === s.id))
 
   return (
     <div className="debunkage-page">
@@ -181,43 +182,31 @@ export default function Debunkage() {
 
       <section className="debunkage-section">
         <h2>Sources mobilisees</h2>
-        <form className="debunkage-row" onSubmit={ajouterSource} style={{ marginBottom: 'var(--space-md)' }}>
-          <input
-            className="debunkage-input"
-            style={{ maxWidth: 140 }}
-            value={sourceId}
-            onChange={(e) => setSourceId(e.target.value)}
-            placeholder="id source"
-            inputMode="numeric"
-          />
-          <select
-            className="debunkage-select"
-            style={{ maxWidth: 160 }}
-            value={sourceRole}
-            onChange={(e) => setSourceRole(e.target.value as 'pour' | 'contre')}
-          >
-            <option value="pour">Pour</option>
-            <option value="contre">Contre</option>
-          </select>
-          <button type="submit" className="btn btn-secondary" disabled={!sourceId.trim()}>Rattacher</button>
-        </form>
-
-        <div className="debunkage-sources-cols">
-          <div className="debunkage-sources-col">
-            <h3>Pour</h3>
-            <SourceCards sources={sourcesPour} onRemove={retirerSource} />
-          </div>
-          <div className="debunkage-sources-col">
-            <h3>Contre</h3>
-            <SourceCards sources={sourcesContre} onRemove={retirerSource} />
-          </div>
-        </div>
-        {sourcesAutres.length > 0 && (
-          <div className="debunkage-sources-col" style={{ marginTop: 'var(--space-md)' }}>
-            <h3>Sans role attribue</h3>
-            <SourceCards sources={sourcesAutres} onRemove={retirerSource} />
-          </div>
-        )}
+        <p className="debunkage-card-meta">Promène une carte de la veille vers le corpus, choisis son rôle pour / contre, réordonne par la poignée.</p>
+        <CorpusDnD
+          vivier={candidates}
+          corpus={data.sources}
+          onAdd={(sid) => ajouterSource(sid)}
+          onRemove={retirerSource}
+          onReorder={reordonner}
+          lienSource={(sid) => `/lire/${sid}`}
+          titreVivier="Veille"
+          titreCorpus="Sources du débunkage"
+          videVivier="Aucune source disponible."
+          videCorpus="Aucune source rattachée."
+          renderExtra={(c) => (
+            <select
+              className="debunkage-select"
+              style={{ maxWidth: 160, marginTop: 4 }}
+              value={roleById.get(c.id) || ''}
+              onChange={(e) => ajouterSource(c.id, e.target.value)}
+            >
+              <option value="">Sans rôle</option>
+              <option value="pour">Pour</option>
+              <option value="contre">Contre</option>
+            </select>
+          )}
+        />
       </section>
 
       <section className="debunkage-section">
@@ -319,30 +308,5 @@ export default function Debunkage() {
         </div>
       </section>
     </div>
-  )
-}
-
-/** Liste de cartes source (image + titre), rôle dark-safe. */
-function SourceCards({ sources, onRemove }: { sources: DebunkageSource[]; onRemove: (id: number) => void }) {
-  if (sources.length === 0) return <p className="debunkage-empty">Aucune source.</p>
-  return (
-    <>
-      {sources.map((s) => (
-        <div key={s.id} className="debunkage-source-card">
-          <div className="debunkage-source-visuel">
-            {s.image_url
-              ? <img src={s.image_url} alt="" loading="lazy" />
-              : <span className="debunkage-source-initiale">{s.titre.charAt(0)}</span>}
-          </div>
-          <div className="debunkage-source-body">
-            {s.url
-              ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="debunkage-source-titre">{s.titre}</a>
-              : <span className="debunkage-source-titre">{s.titre}</span>}
-            {s.media_nom && <span className="debunkage-source-media">{s.media_nom}</span>}
-          </div>
-          <button className="btn btn-secondary btn-sm" onClick={() => onRemove(s.id)}>Retirer</button>
-        </div>
-      ))}
-    </>
   )
 }
