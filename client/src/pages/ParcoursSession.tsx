@@ -116,16 +116,29 @@ export default function ParcoursSession() {
   if (erreur) return <div className="parcours-session"><div className="parcours-empty">{erreur}</div></div>
   if (!parcours) return null
 
-  // Ecran de fin
+  // Ecran de fin : on affiche une progression (« explore N/M »), pas un verdict.
+  // Le score chiffre reste indicatif, jamais presente comme une note-sanction.
   if (scoreFinal) {
     return (
       <div className="parcours-session">
         <div className="parcours-resultat">
           <h1>{parcours.titre}</h1>
-          <p className="parcours-resultat-score">{scoreFinal.score} / {scoreFinal.total}</p>
-          <p>Parcours termine. Continuez a entrainer votre oeil.</p>
+          {parcours.sujet_titre && (
+            <p className="parcours-resultat-sujet">Theme : {parcours.sujet_titre}</p>
+          )}
+          <p className="parcours-resultat-score">{scoreFinal.total} source{scoreFinal.total > 1 ? 's' : ''} explorée{scoreFinal.total > 1 ? 's' : ''}</p>
+          <p>
+            Vous avez reconnu le mecanisme attendu sur {scoreFinal.score} d'entre elles.
+            L'essentiel n'est pas le compte : c'est d'avoir croise ces mecanismes sur des
+            cas reels. Continuez a entrainer votre oeil.
+          </p>
           <div className="parcours-resultat-actions">
             <Link to="/parcours" className="parcours-btn parcours-btn--secondary">Retour aux parcours</Link>
+            {parcours.sujet_slug && (
+              <Link to={`/sujets/${parcours.sujet_slug}`} className="parcours-btn parcours-btn--secondary">
+                Voir le theme
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -144,8 +157,13 @@ export default function ParcoursSession() {
 
   return (
     <div className="parcours-session">
+      {parcours.sujet_titre && (
+        <p className="parcours-session-sujet">
+          {parcours.titre} · <span>{parcours.sujet_titre}</span>
+        </p>
+      )}
       <div className="parcours-progress">
-        <span>{index + 1} / {questions.length}</span>
+        <span>explore {index} / {questions.length}</span>
         <div className="parcours-progress-bar"><span style={{ width: `${progression}%` }} /></div>
         <Link to="/parcours" className="parcours-btn--secondary parcours-btn">Quitter</Link>
       </div>

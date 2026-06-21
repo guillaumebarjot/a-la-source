@@ -48,7 +48,7 @@ router.get('/:id', (req, res) => {
   const pipeline = db.prepare('SELECT * FROM debunkage_pipeline WHERE activite_id = ?').get(activite.id)
   const posts = db.prepare(
     'SELECT * FROM debunkage_posts WHERE activite_id = ? ORDER BY publie_le DESC'
-  ).all(activite.id)
+  ).all(activite.id) as Array<{ id: number }>
   const sources = db.prepare(`
     SELECT s.id, s.titre, s.url, s.accroche, s.image_url, s.date_publication,
            m.nom AS media_nom, m.type_propriete,
@@ -58,9 +58,26 @@ router.get('/:id', (req, res) => {
     LEFT JOIN medias m ON m.id = s.media_id
     WHERE asr.activite_id = ?
     ORDER BY asr.ordre, s.titre
-  `).all(activite.id)
+  `).all(activite.id) as Array<{ id: number; role: string | null }>
 
-  res.json({ ...activite, pipeline, posts, sources })
+  // Jalons de completude FACTUELS (chantier #1, tunnelisation §3.3). Le debunkage
+  // se distingue par un corpus a roles opposes (pour/contre). Booleens factuels,
+  // jamais bloquants, jamais un verdict.
+  const p = pipeline as {
+    affirmation_visee_md?: string | null
+    demonstration_md?: string | null
+  } | undefined
+  const roles = new Set(sources.map((s) => s.role).filter(Boolean))
+  const jalons = {
+    a_affirmation: !!(p?.affirmation_visee_md && p.affirmation_visee_md.trim()),
+    a_demonstration: !!(p?.demonstration_md && p.demonstration_md.trim()),
+    a_corpus: sources.length > 0,
+    a_roles_opposes: roles.has('pour') && roles.has('contre'),
+    a_post: posts.length > 0,
+    est_publie: (activite as { statut_activite?: string }).statut_activite === 'publie',
+  }
+
+  res.json({ ...activite, pipeline, posts, sources, jalons })
 })
 
 // GET /api/debunkages/:id/yeswiki — export du débunkage en syntaxe YesWiki (text/plain)

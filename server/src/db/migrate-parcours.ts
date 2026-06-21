@@ -59,6 +59,30 @@ export function migrateParcours(): void {
     CREATE INDEX IF NOT EXISTS idx_parcours_reponses_session ON parcours_reponses(session_id);
   `)
 
+  // --- Multi-quiz par theme : colonnes additives sur `parcours`. ---
+  // ADDITIF, NON DESTRUCTIF : on n'ajoute la colonne que si elle manque, le
+  // parcours existant garde sujet_id NULL et mode 'curate' (rien ne casse).
+  //   - sujet_id     : rattache un quiz a un grand theme (FK nullable vers sujets).
+  //                    Plusieurs quiz par sujet = relation naturelle 1 sujet -> N parcours.
+  //   - mode         : 'curate' (questions figees, defaut, comportement actuel)
+  //                    ou 'tirage' (questions instanciees au demarrage depuis la banque).
+  //   - regle_tirage : JSON de la regle de tirage (n, categories de mecanismes,
+  //                    exclusions). Le sujet vient de sujet_id ; null en mode curate.
+  const colsParcours = (db.prepare('PRAGMA table_info(parcours)').all() as { name: string }[])
+    .map((c) => c.name)
+  if (!colsParcours.includes('sujet_id')) {
+    db.exec('ALTER TABLE parcours ADD COLUMN sujet_id INTEGER REFERENCES sujets(id) ON DELETE SET NULL')
+  }
+  if (!colsParcours.includes('mode')) {
+    // SQLite refuse un CHECK dans ALTER ADD COLUMN avec contrainte non constante ;
+    // on garde un DEFAULT simple et on valide cote route (mode in curate|tirage).
+    db.exec("ALTER TABLE parcours ADD COLUMN mode TEXT NOT NULL DEFAULT 'curate'")
+  }
+  if (!colsParcours.includes('regle_tirage')) {
+    db.exec('ALTER TABLE parcours ADD COLUMN regle_tirage TEXT')
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_parcours_sujet ON parcours(sujet_id)')
+
   // Generation d'un parcours par defaut a partir des identifications reelles,
   // une seule fois (si aucun parcours et si des donnees existent).
   const nbParcours = (db.prepare('SELECT COUNT(*) AS c FROM parcours').get() as { c: number }).c

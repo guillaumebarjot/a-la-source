@@ -23,6 +23,53 @@
   line-height: 1.5;
 }
 
+/* Regroupement par theme : un bloc par sujet, plus un bloc transversal. */
+.parcours-groupes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+.parcours-groupe-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+.parcours-groupe-titre {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
+.parcours-groupe-lien {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.parcours-groupe-lien:hover { text-decoration: underline; }
+.dark .parcours-groupe-lien { color: var(--color-primary); }
+
+/* Etiquette « tirage » sur la carte de quiz. */
+.parcours-tag-tirage {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: var(--space-sm);
+  padding: 1px var(--space-xs);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
 /* Liste des parcours */
 .parcours-list {
   display: grid;
@@ -109,6 +156,21 @@
   max-width: 720px;
   margin: 0 auto;
   padding: var(--space-lg) var(--space-md);
+}
+
+.parcours-session-sujet {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+.parcours-session-sujet span {
+  font-weight: 600;
+  color: var(--color-text);
+}
+.parcours-resultat-sujet {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
 }
 
 .parcours-progress {

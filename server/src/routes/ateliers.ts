@@ -162,16 +162,35 @@ router.get('/:id', (req, res) => {
   `).get(req.params.id)
   if (!atelier) { res.status(404).json({ error: 'Atelier introuvable' }); return }
 
-  const sources = sourcesAtelier(req.params.id)
+  const sources = sourcesAtelier(req.params.id) as Array<{ id: number }>
 
   const mecanismes_identifies = db.prepare(`
     SELECT am.mecanisme_id, mr.nom as mecanisme_nom
     FROM activite_mecanismes am
     JOIN mecanismes_reference mr ON mr.id = am.mecanisme_id
     WHERE am.activite_id = ?
-  `).all(req.params.id)
+  `).all(req.params.id) as Array<{ mecanisme_id: number }>
 
-  res.json({ ...atelier, sources, mecanismes_identifies })
+  // Jalons de completude FACTUELS (chantier #1, tunnelisation §3.1). L'atelier a
+  // un cycle logistique propre (preparation/pret/en_cours/termine) ; les jalons
+  // decrivent le deroule (corpus, source choisie, synthese), sans verdict.
+  const a = atelier as {
+    statut?: string
+    source_choisie_id?: number | null
+    observations_surprise?: string | null
+    questions_restantes?: string | null
+  }
+  const jalons = {
+    a_corpus: sources.length > 0,
+    a_source_choisie: a.source_choisie_id != null,
+    a_mecanismes: mecanismes_identifies.length > 0,
+    a_synthese: !!(a.observations_surprise && a.observations_surprise.trim())
+      || !!(a.questions_restantes && a.questions_restantes.trim())
+      || mecanismes_identifies.length > 0,
+    est_termine: a.statut === 'termine',
+  }
+
+  res.json({ ...atelier, sources, mecanismes_identifies, jalons })
 })
 
 // POST /api/ateliers — create a workshop (auto-number)

@@ -76,9 +76,27 @@ router.get('/:id', (req, res) => {
     JOIN arpentage_fragments f ON f.id = r.fragment_id
     WHERE f.activite_id = ?
     ORDER BY r.cree_le ASC, r.id ASC
-  `).all(activite.id)
+  `).all(activite.id) as Array<{ id: number }>
 
-  res.json({ ...activite, pipeline, fragments, restitutions })
+  // Jalons de completude FACTUELS (chantier #1, tunnelisation §3.4). Booleens
+  // deduits de la presence de donnees (source + decoupage, fragments, attribution,
+  // restitutions, synthese), jamais bloquants, jamais un verdict.
+  const p = pipeline as {
+    source_id?: number | null
+    mode_decoupage?: string | null
+    synthese_md?: string | null
+  } | undefined
+  const fragsTypes = fragments as Array<{ id: number; attribue_a?: number | null }>
+  const jalons = {
+    a_document: p?.source_id != null || !!(p?.mode_decoupage && p.mode_decoupage.trim()),
+    a_fragments: fragsTypes.length > 0,
+    a_attribution: fragsTypes.some((f) => f.attribue_a != null),
+    a_restitutions: restitutions.length > 0,
+    a_synthese: !!(p?.synthese_md && p.synthese_md.trim()),
+    est_publie: (activite as { statut_activite?: string }).statut_activite === 'publie',
+  }
+
+  res.json({ ...activite, pipeline, fragments, restitutions, jalons })
 })
 
 // POST /api/arpentages — creer un arpentage (tout membre authentifie)

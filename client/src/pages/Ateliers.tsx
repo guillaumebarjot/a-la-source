@@ -23,10 +23,20 @@ import { CSS } from '@dnd-kit/utilities'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import SourceCard from '../components/cards/SourceCard'
+import EtapesActivite, { type Etape } from '../components/activite/EtapesActivite'
 import type { Source, Atelier, AtelierDetail, Tag, Facettes } from '../types'
 import '../styles/ateliers-prep.css'
 import '../styles/ateliers-encours.css'
 import '../styles/slider-saisie.css'
+
+// Jalons de completude FACTUELS renvoyes par GET /ateliers/:id (chantier #1).
+interface AtelierJalons {
+  a_corpus: boolean
+  a_source_choisie: boolean
+  a_mecanismes: boolean
+  a_synthese: boolean
+  est_termine: boolean
+}
 
 /* ---------- Types ---------- */
 
@@ -1058,6 +1068,37 @@ function EnCoursTableau({
   )
 }
 
+/**
+ * Stepper de l'atelier (chantier #1, livrable B). Les jalons factuels ne sont
+ * exposes que par GET /ateliers/:id (pas par /ateliers/en-cours), on les charge
+ * donc ici a la demande. Souple, non bloquant, sans score.
+ */
+function AtelierStepper({ atelierId, refreshKey }: { atelierId: number; refreshKey: string }) {
+  const [jalons, setJalons] = useState<AtelierJalons | null>(null)
+  useEffect(() => {
+    let actif = true
+    api.get<{ jalons?: AtelierJalons }>(`/ateliers/${atelierId}`)
+      .then((d) => { if (actif) setJalons(d.jalons ?? null) })
+      .catch(() => { if (actif) setJalons(null) })
+    return () => { actif = false }
+  }, [atelierId, refreshKey])
+
+  if (!jalons) return null
+  const etapes: Etape[] = [
+    { cle: 'corpus', label: 'Corpus', fait: jalons.a_corpus,
+      invitation: 'composer un corpus de sources' },
+    { cle: 'source', label: 'Source de seance', fait: jalons.a_source_choisie,
+      invitation: 'choisir la source a projeter' },
+    { cle: 'meca', label: 'Mecanismes', fait: jalons.a_mecanismes,
+      invitation: 'noter les mecanismes identifies par le groupe' },
+    { cle: 'synthese', label: 'Synthese', fait: jalons.a_synthese,
+      invitation: 'saisir la synthese de la seance' },
+    { cle: 'termine', label: 'Termine', fait: jalons.est_termine,
+      invitation: 'marquer l\'atelier comme termine' },
+  ]
+  return <EtapesActivite etapes={etapes} titreFin="La seance est complete. Sa synthese peut nourrir un dossier ou un quiz." />
+}
+
 function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese, onTerminer }: {
   atelier: AtelierDetail
   isFacilitateur: boolean
@@ -1067,9 +1108,12 @@ function EnCoursPilote({ atelier, isFacilitateur, onChangeStatut, onSaveSynthese
 }) {
   const nbSources = atelier.sources.length
   const projectionDispo = nbSources > 0
+  // Cle de rafraichissement du stepper : change quand le corpus ou la synthese bougent.
+  const stepperKey = `${atelier.statut}:${nbSources}:${(atelier.mecanismes_identifies ?? []).length}`
 
   return (
     <div className="encours-grille">
+      <AtelierStepper atelierId={atelier.id} refreshKey={stepperKey} />
       {/* ---- Carte d'identité de l'atelier ---- */}
       <div className="encours-fiche">
         <div className="encours-fiche-tete">

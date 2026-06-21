@@ -1,11 +1,19 @@
 // Types du module Parcours / Quiz (cursus d'apprentissage).
 
+export type ParcoursMode = 'curate' | 'tirage'
+
 export interface ParcoursListItem {
   id: number
   titre: string
   description: string | null
   cree_le: string
   nb_questions: number
+  /* Multi-quiz par theme : rattachement optionnel a un sujet + mode du quiz.
+     sujet_id null = quiz transversal (le parcours historique). */
+  sujet_id: number | null
+  sujet_titre: string | null
+  sujet_slug: string | null
+  mode: ParcoursMode
 }
 
 // Question telle qu'envoyee pour jouer : carte-source NUE, aucun indice
@@ -33,6 +41,10 @@ export interface ParcoursDetail {
   id: number
   titre: string
   description: string | null
+  sujet_id?: number | null
+  sujet_titre?: string | null
+  sujet_slug?: string | null
+  mode?: ParcoursMode
   questions: ParcoursQuestion[]
   mecanismes: MecanismeChoix[]
 }

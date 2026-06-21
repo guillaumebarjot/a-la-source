@@ -5,7 +5,18 @@ import type {
   ArpentageDetail, ArpentageFragment, ArpentageRestitution,
   UtilisateurOption, MecanismeOption,
 } from '../types/arpentage'
+import EtapesActivite, { type Etape } from '../components/activite/EtapesActivite'
 import '../styles/arpentage.css'
+
+// Jalons de completude FACTUELS renvoyes par GET /arpentages/:id (chantier #1).
+interface ArpentageJalons {
+  a_document: boolean
+  a_fragments: boolean
+  a_attribution: boolean
+  a_restitutions: boolean
+  a_synthese: boolean
+  est_publie: boolean
+}
 
 /**
  * Arpentage (detail) — l'etabli de la lecture collective.
@@ -97,6 +108,29 @@ export default function Arpentage() {
   const restitutionsParFragment = (fid: number): ArpentageRestitution[] =>
     data.restitutions.filter((r) => r.fragment_id === fid)
 
+  // Stepper : jalons factuels exposes par le serveur (cast local). Souple, non bloquant.
+  const jalons = (data as ArpentageDetail & { jalons?: ArpentageJalons }).jalons
+  const allerVers = (sel: string) => {
+    document.getElementById(sel)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const etapes: Etape[] = jalons ? [
+    { cle: 'document', label: 'Document', fait: jalons.a_document,
+      invitation: 'choisir le document et le mode de decoupage',
+      action: { libelle: 'Aller au document', onClick: () => allerVers('arp-document') } },
+    { cle: 'fragments', label: 'Fragments', fait: jalons.a_fragments,
+      invitation: 'decouper le document en fragments',
+      action: { libelle: 'Aller au decoupage', onClick: () => allerVers('arp-decouper') } },
+    { cle: 'attribution', label: 'Attributions', fait: jalons.a_attribution,
+      invitation: 'attribuer les fragments aux lecteurs',
+      action: { libelle: 'Aller aux fragments', onClick: () => allerVers('arp-fragments') } },
+    { cle: 'restitutions', label: 'Restitutions', fait: jalons.a_restitutions,
+      invitation: 'collecter les restitutions des lecteurs',
+      action: { libelle: 'Aller aux fragments', onClick: () => allerVers('arp-fragments') } },
+    { cle: 'synthese', label: 'Synthese', fait: jalons.a_synthese,
+      invitation: 'rediger la synthese collective',
+      action: { libelle: 'Aller a la synthese', onClick: () => allerVers('arp-synthese') } },
+  ] : []
+
   return (
     <div className="arp-page">
       <header className="arp-header">
@@ -113,8 +147,10 @@ export default function Arpentage() {
         )}
       </header>
 
+      {etapes.length > 0 && <EtapesActivite etapes={etapes} />}
+
       {/* Le document : carte source (id) + mode de decoupage */}
-      <section className="arp-section">
+      <section className="arp-section" id="arp-document">
         <h2>Le document</h2>
         <div className="arp-row">
           <div>
@@ -157,7 +193,7 @@ export default function Arpentage() {
       </section>
 
       {/* Decouper : ajout de fragments */}
-      <section className="arp-section">
+      <section className="arp-section" id="arp-decouper">
         <h2>Decouper en fragments</h2>
         <form className="arp-create-form" onSubmit={ajouterFragment}>
           <div className="arp-row">
@@ -201,7 +237,7 @@ export default function Arpentage() {
       </section>
 
       {/* Attribuer + restitutions par fragment */}
-      <section className="arp-section">
+      <section className="arp-section" id="arp-fragments">
         <h2>Fragments, attributions et restitutions</h2>
         {data.fragments.length === 0 ? (
           <p className="arp-empty">Aucun fragment. Decoupez le document ci-dessus.</p>
@@ -224,7 +260,7 @@ export default function Arpentage() {
       </section>
 
       {/* Synthese collective */}
-      <section className="arp-section">
+      <section className="arp-section" id="arp-synthese">
         <h2>Synthese collective</h2>
         <textarea
           className="arp-textarea arp-textarea-lg"

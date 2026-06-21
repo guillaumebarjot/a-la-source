@@ -4,7 +4,18 @@ import { api } from '../api/client'
 import type { DebunkageDetail, ReseauPost } from '../types/debunkage'
 import type { Source } from '../types'
 import CorpusDnD from '../components/corpus/CorpusDnD'
+import EtapesActivite, { type Etape } from '../components/activite/EtapesActivite'
 import '../styles/debunkage.css'
+
+// Jalons de completude FACTUELS renvoyes par GET /debunkages/:id (chantier #1).
+interface DebunkageJalons {
+  a_affirmation: boolean
+  a_demonstration: boolean
+  a_corpus: boolean
+  a_roles_opposes: boolean
+  a_post: boolean
+  est_publie: boolean
+}
 
 /**
  * Débunkage (détail) — l'établi de l'adhérent.
@@ -138,6 +149,29 @@ export default function Debunkage() {
   const roleById = new Map(data.sources.map((s) => [s.id, s.role]))
   const candidates = veille.filter((s) => !data.sources.some((d) => d.id === s.id))
 
+  // Stepper : jalons factuels exposes par le serveur (cast local). Souple, non bloquant.
+  const jalons = (data as DebunkageDetail & { jalons?: DebunkageJalons }).jalons
+  const allerVers = (sel: string) => {
+    document.getElementById(sel)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const etapes: Etape[] = jalons ? [
+    { cle: 'affirmation', label: 'Affirmation visee', fait: jalons.a_affirmation,
+      invitation: 'citer l\'affirmation a debunker',
+      action: { libelle: 'Aller a l\'affirmation', onClick: () => allerVers('debunk-affirmation') } },
+    { cle: 'demonstration', label: 'Demonstration', fait: jalons.a_demonstration,
+      invitation: 'construire la demonstration',
+      action: { libelle: 'Aller a la demonstration', onClick: () => allerVers('debunk-demonstration') } },
+    { cle: 'corpus', label: 'Sources pour / contre', fait: jalons.a_roles_opposes || jalons.a_corpus,
+      invitation: 'ajouter des sources avec un role pour / contre',
+      action: { libelle: 'Aller aux sources', onClick: () => allerVers('debunk-corpus') } },
+    { cle: 'post', label: 'Post consigne', fait: jalons.a_post,
+      invitation: 'consigner un lien de post (peut venir apres publication)',
+      action: { libelle: 'Aller aux posts', onClick: () => allerVers('debunk-posts') } },
+    { cle: 'publie', label: 'Publie', fait: jalons.est_publie,
+      invitation: 'publier quand la demonstration est prete',
+      action: { libelle: 'Aller a la publication', onClick: () => allerVers('debunk-publier') } },
+  ] : []
+
   return (
     <div className="debunkage-page">
       <header className="debunkage-header">
@@ -154,7 +188,9 @@ export default function Debunkage() {
         )}
       </header>
 
-      <section className="debunkage-section">
+      {etapes.length > 0 && <EtapesActivite etapes={etapes} />}
+
+      <section className="debunkage-section" id="debunk-affirmation">
         <h2>Affirmation visee</h2>
         <textarea
           className="debunkage-textarea"
@@ -164,7 +200,7 @@ export default function Debunkage() {
         />
       </section>
 
-      <section className="debunkage-section">
+      <section className="debunkage-section" id="debunk-demonstration">
         <h2>Demonstration</h2>
         <textarea
           className="debunkage-textarea"
@@ -180,7 +216,7 @@ export default function Debunkage() {
         </div>
       </section>
 
-      <section className="debunkage-section">
+      <section className="debunkage-section" id="debunk-corpus">
         <h2>Sources mobilisees</h2>
         <p className="debunkage-card-meta">Promène une carte de la veille vers le corpus, choisis son rôle pour / contre, réordonne par la poignée.</p>
         <CorpusDnD
@@ -209,7 +245,7 @@ export default function Debunkage() {
         />
       </section>
 
-      <section className="debunkage-section">
+      <section className="debunkage-section" id="debunk-posts">
         <h2>Posts publies</h2>
         {data.posts.length === 0 ? (
           <p className="debunkage-empty">Aucun lien de post consigne.</p>
@@ -300,7 +336,7 @@ export default function Debunkage() {
         </div>
       </section>
 
-      <section className="debunkage-section">
+      <section className="debunkage-section" id="debunk-publier">
         <div className="debunkage-actions">
           <button className="btn btn-primary" onClick={publier} disabled={estPublie}>
             {estPublie ? 'Deja publie' : 'Marquer comme publie'}

@@ -1,0 +1,124 @@
+/* EtapesActivite — stepper + encart « Prochaine action » (chantier #1, livrable B).
+   Dark-safe : uniquement des tokens --color-*. Sobre, non bloquant : un fil
+   conducteur, jamais un verdict. */
+
+.etapes-activite {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* Barre d'etapes */
+.etapes-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-md);
+  margin: 0 0 var(--space-md);
+  padding: 0;
+  list-style: none;
+}
+
+.etapes-pas {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.etapes-pas-puce {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg, var(--color-surface));
+  color: var(--color-text-secondary);
+  flex: none;
+}
+
+.etapes-pas-label {
+  white-space: nowrap;
+}
+
+/* Petit trait de liaison entre deux pas (decoratif). */
+.etapes-pas-trait {
+  display: inline-block;
+  width: var(--space-md);
+  height: 1px;
+  margin-left: var(--space-xs);
+  background: var(--color-border);
+}
+
+/* Jalon franchi : pastille verte sobre (factuel, pas un score). */
+.etapes-pas--fait .etapes-pas-puce {
+  border-color: #2e9e5b;
+  background: rgba(46, 158, 91, 0.14);
+  color: #2e9e5b;
+}
+.etapes-pas--fait .etapes-pas-label {
+  color: var(--color-text);
+}
+
+/* Etape courante (prochaine action) : surlignee. */
+.etapes-pas--courant .etapes-pas-puce {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.etapes-pas--courant .etapes-pas-label {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* Encart « Prochaine action » */
+.etapes-prochaine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--color-border);
+}
+
+.etapes-prochaine-libelle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+.etapes-prochaine-libelle strong {
+  color: var(--color-text);
+}
+.etapes-prochaine-libelle--fin {
+  color: #2e9e5b;
+}
+
+.etapes-prochaine-btn {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.etapes-prochaine-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.etapes-prochaine-compte {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}

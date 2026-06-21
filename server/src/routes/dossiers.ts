@@ -65,9 +65,25 @@ router.get('/:id', (req, res) => {
     LEFT JOIN medias m ON m.id = s.media_id
     WHERE asr.activite_id = ?
     ORDER BY asr.ordre, s.titre
-  `).all(activite.id)
+  `).all(activite.id) as Array<{ id: number }>
 
-  res.json({ ...activite, contenu, sources })
+  // Jalons de completude FACTUELS (chantier #1, tunnelisation §3.2). Booleens
+  // deduits de la presence de donnees, jamais d'un score. Aucun n'est bloquant :
+  // ils alimentent le stepper et l'encart « prochaine action » cote client.
+  const c = contenu as {
+    mise_en_perspective_md?: string | null
+    contenu_md?: string | null
+  } | undefined
+  const a = activite as { sujet_id?: number | null; statut_activite?: string }
+  const jalons = {
+    a_sujet: a.sujet_id != null,
+    a_mise_en_perspective: !!(c?.mise_en_perspective_md && c.mise_en_perspective_md.trim()),
+    a_corpus: sources.length > 0,
+    a_contenu: !!(c?.contenu_md && c.contenu_md.trim()),
+    est_publie: a.statut_activite === 'publie',
+  }
+
+  res.json({ ...activite, contenu, sources, jalons })
 })
 
 // GET /api/dossiers/:id/yeswiki — export du dossier en syntaxe YesWiki (text/plain)

@@ -4,7 +4,17 @@ import { api } from '../api/client'
 import type { DossierDetail, EvenementOption } from '../types/dossier'
 import type { Source } from '../types'
 import CorpusDnD from '../components/corpus/CorpusDnD'
+import EtapesActivite, { type Etape } from '../components/activite/EtapesActivite'
 import '../styles/dossier.css'
+
+// Jalons de completude FACTUELS renvoyes par GET /dossiers/:id (chantier #1).
+interface DossierJalons {
+  a_sujet: boolean
+  a_mise_en_perspective: boolean
+  a_corpus: boolean
+  a_contenu: boolean
+  est_publie: boolean
+}
 
 /**
  * Dossier (détail) — l'établi de fond.
@@ -129,6 +139,29 @@ export default function Dossier() {
   const roleById = new Map(data.sources.map((s) => [s.id, s.role]))
   const candidates = veille.filter((s) => !data.sources.some((d) => d.id === s.id))
 
+  // Stepper : on lit les jalons factuels exposes par le serveur (cast local, le
+  // type partage n'est pas modifie). Aucun jalon n'est bloquant.
+  const jalons = (data as DossierDetail & { jalons?: DossierJalons }).jalons
+  const allerVers = (sel: string) => {
+    document.getElementById(sel)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const etapes: Etape[] = jalons ? [
+    { cle: 'sujet', label: 'Theme', fait: jalons.a_sujet,
+      invitation: 'rattacher un theme au dossier' },
+    { cle: 'perspective', label: 'Mise en perspective', fait: jalons.a_mise_en_perspective,
+      invitation: 'rediger la mise en perspective',
+      action: { libelle: 'Aller a la mise en perspective', onClick: () => allerVers('dossier-perspective') } },
+    { cle: 'corpus', label: 'Corpus', fait: jalons.a_corpus,
+      invitation: 'mobiliser au moins une source',
+      action: { libelle: 'Aller au corpus', onClick: () => allerVers('dossier-corpus') } },
+    { cle: 'contenu', label: 'Contenu', fait: jalons.a_contenu,
+      invitation: 'rediger le corps du dossier',
+      action: { libelle: 'Aller au contenu', onClick: () => allerVers('dossier-contenu') } },
+    { cle: 'publie', label: 'Publie', fait: jalons.est_publie,
+      invitation: 'publier quand vous le souhaitez (rien ne presse)',
+      action: { libelle: 'Aller a la publication', onClick: () => allerVers('dossier-publier') } },
+  ] : []
+
   return (
     <div className="dossier-page">
       <header className="dossier-header">
@@ -145,6 +178,8 @@ export default function Dossier() {
           </p>
         )}
       </header>
+
+      {etapes.length > 0 && <EtapesActivite etapes={etapes} />}
 
       <section className="dossier-section">
         <h2>Format</h2>
@@ -173,7 +208,7 @@ export default function Dossier() {
         )}
       </section>
 
-      <section className="dossier-section">
+      <section className="dossier-section" id="dossier-perspective">
         <h2>Mise en perspective</h2>
         <textarea
           className="dossier-textarea"
@@ -183,7 +218,7 @@ export default function Dossier() {
         />
       </section>
 
-      <section className="dossier-section">
+      <section className="dossier-section" id="dossier-contenu">
         <h2>Contenu</h2>
         <textarea
           className="dossier-textarea dossier-textarea-lg"
@@ -199,7 +234,7 @@ export default function Dossier() {
         </div>
       </section>
 
-      <section className="dossier-section">
+      <section className="dossier-section" id="dossier-corpus">
         <h2>Sources mobilisees</h2>
         <p className="dossier-card-meta">Promène une carte de la veille vers le corpus, choisis son rôle, réordonne par la poignée.</p>
         <CorpusDnD
@@ -282,7 +317,7 @@ export default function Dossier() {
         </div>
       </section>
 
-      <section className="dossier-section">
+      <section className="dossier-section" id="dossier-publier">
         <div className="dossier-actions">
           <button className="btn btn-primary" onClick={publier} disabled={estPublie}>
             {estPublie ? 'Deja publie' : 'Marquer comme publie'}
