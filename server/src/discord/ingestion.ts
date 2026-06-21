@@ -162,19 +162,27 @@ async function importerRis(sourceId: number, fileUrl: string): Promise<boolean> 
   }
 }
 
-function ajouterCommentaire(sourceId: number, contenu: string, auteurId: number | null): void {
+function ajouterCommentaire(sourceId: number, contenu: string, auteurId: number | null): boolean {
+  // commentaires.auteur_id est NOT NULL : un membre non rapproche ne peut pas
+  // etre credite. On n'insere pas (l'INSERT echouerait et le commentaire serait
+  // perdu silencieusement) et on le signale a l'appelant.
+  if (auteurId == null) return false
   try {
     // Idempotent : une edition Discord repetee ne doit pas dupliquer le commentaire.
     const ex = db.prepare("SELECT 1 FROM commentaires WHERE source_id = ? AND type = 'commentaire' AND contenu = ?")
       .get(sourceId, contenu)
-    if (ex) return
+    if (ex) return true
     db.prepare("INSERT INTO commentaires (source_id, auteur_id, type, contenu) VALUES (?, ?, 'commentaire', ?)")
       .run(sourceId, auteurId, contenu)
-  } catch (err) { console.error('Discord: echec commentaire', err) }
+    return true
+  } catch (err) { console.error('Discord: echec commentaire', err); return false }
 }
 
 /** Ajoute un lien alternatif (souvent la version sans paywall ajoutee par edition). Idempotent. */
 function ajouterLienAlternatif(sourceId: number, url: string, auteurId: number | null): boolean {
+  // commentaires.auteur_id est NOT NULL (cf. ajouterCommentaire) : sans membre
+  // rapproche, on n'insere pas plutot que de laisser l'INSERT echouer.
+  if (auteurId == null) return false
   try {
     const ex = db.prepare("SELECT 1 FROM commentaires WHERE source_id = ? AND type = 'lien' AND url = ?")
       .get(sourceId, url)
@@ -266,7 +274,10 @@ export async function traiterMessage(opts: {
 
   // 4. Texte de commentaire (au-dela des URLs)
   if (commentaire && courante != null) {
-    ajouterCommentaire(courante, commentaire, soumisPar)
+    const ok = ajouterCommentaire(courante, commentaire, soumisPar)
+    if (!ok && soumisPar == null) {
+      lignes.push('📝 Pour que ton commentaire soit enregistré et te soit attribué, renseigne ton pseudo Discord dans l\'app (Mon espace → Mon compte).')
+    }
   }
 
   return { sourceIds, lignes }

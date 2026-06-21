@@ -13,6 +13,7 @@
  */
 
 import db from '../lib/db.js'
+import { calculerScoreSource } from '../lib/score.js'
 
 // Types pour le bot (sans importer discord.js tant que pas installe)
 interface DiscordConfig {
@@ -190,8 +191,6 @@ function cmdScore(args: string): { response: string; expectsReply: boolean } {
   const source = db.prepare('SELECT titre, date_publication, type_source FROM sources WHERE id = ?').get(id) as { titre: string; date_publication: string | null; type_source: string | null } | undefined
   if (!source) return { response: `Source #${id} introuvable.`, expectsReply: false }
 
-  // Import dynamique evite les imports circulaires
-  const { calculerScoreSource } = require('../lib/score.js')
   const score = calculerScoreSource(id, source.date_publication, source.type_source)
 
   return {
@@ -392,9 +391,16 @@ function stepCommenter(conv: ConversationState, message: string): { response: st
       return { response: 'Votre commentaire :', expectsReply: true, done: false }
     }
     case 2: {
+      // commentaires.auteur_id est NOT NULL : sans membre rapproche, l'INSERT
+      // echouerait. On le refuse proprement et on explique comment etre reconnu.
+      const auteurId = (conv.data.appUserId as number | null) ?? null
+      if (auteurId == null) {
+        conversations.delete(conv.userId)
+        return { response: 'Pour commenter via le bot, renseigne d\'abord ton pseudo Discord dans l\'app (Mon espace → Mon compte).', expectsReply: false, done: true }
+      }
       db.prepare(`
         INSERT INTO commentaires (source_id, auteur_id, type, contenu) VALUES (?, ?, ?, ?)
-      `).run(conv.sourceId, (conv.data.appUserId as number | null) ?? null, conv.data.type, message)
+      `).run(conv.sourceId, auteurId, conv.data.type, message)
 
       conversations.delete(conv.userId)
       return { response: 'Commentaire enregistre !', expectsReply: false, done: true }
