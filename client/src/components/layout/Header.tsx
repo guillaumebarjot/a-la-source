@@ -28,6 +28,7 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
   ],
   '/archiver': [
     { label: 'A archiver', to: '/archiver/priorite' },
+    { label: 'Sans copie locale', to: '/a-archiver' },
     { label: 'Archives partielles', to: '/archiver/partielles' },
     { label: 'Completer', to: '/archiver/contribuer' },
   ],
@@ -56,6 +57,8 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
 }
 
 function getSubNavItems(pathname: string): SubNavItem[] | null {
+  // « Sans copie locale » vit hors de /archiver mais appartient au meme groupe.
+  if (pathname === '/a-archiver') return SUBNAV_CONFIG['/archiver']
   // Match the longest prefix
   const keys = Object.keys(SUBNAV_CONFIG).sort((a, b) => b.length - a.length)
   for (const key of keys) {
@@ -87,6 +90,9 @@ export default function Header() {
         </div>
       </div>
       <nav className="header-nav">
+        <NavLink to="/accueil" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Accueil
+        </NavLink>
         <NavLink to="/sujets" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Sujets
         </NavLink>
@@ -104,7 +110,12 @@ export default function Header() {
         <NavLink to="/observatoire" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Observatoire
         </NavLink>
-        <NavLink to="/archiver" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+        <NavLink
+          to="/archiver"
+          className={({ isActive }) =>
+            (isActive || location.pathname === '/a-archiver') ? 'nav-link active' : 'nav-link'
+          }
+        >
           Archiver
         </NavLink>
         <NavLink

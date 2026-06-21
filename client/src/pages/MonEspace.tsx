@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, Navigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../store/useAuth'
 import type { Lecture, Contenu, Contributions } from '../types'
@@ -309,64 +309,9 @@ function SectionContributions() {
   )
 }
 
-/* ---------- Section Accueil (page d'atterrissage) ---------- */
-
-function SectionAccueil() {
-  const user = useAuth((s) => s.user)
-  const [inboxN, setInboxN] = useState<number | null>(null)
-  const [aLireN, setALireN] = useState(0)
-  const [aRevoirN, setARevoirN] = useState(0)
-  const [contrib, setContrib] = useState<Contributions | null>(null)
-
-  useEffect(() => {
-    api.get<unknown[]>('/sources/inbox').then((d) => setInboxN(Array.isArray(d) ? d.length : 0)).catch(() => setInboxN(null))
-    api.get<Lecture[]>('/auth/lectures').then((l) => setALireN(l.filter((x) => x.statut === 'a_lire').length)).catch(() => {})
-    api.get<unknown[]>('/parcours/revisions/a-revoir').then((d) => setARevoirN(Array.isArray(d) ? d.length : 0)).catch(() => {})
-    api.get<Contributions>('/auth/contributions').then(setContrib).catch(() => {})
-  }, [])
-
-  return (
-    <>
-      <section className="accueil-hello">
-        <h2>Bonjour{user?.nom ? `, ${user.nom}` : ''}</h2>
-        <p className="accueil-sous">Ton espace d'abord, la veille partagee juste apres.</p>
-      </section>
-
-      <Link to="/inbox" className="accueil-inbox">
-        <span className="accueil-inbox-n">{inboxN ?? '...'}</span>
-        <span className="accueil-inbox-texte">
-          <strong>Inbox partagee a qualifier</strong>
-          <small>les sources entrantes a trier ensemble</small>
-        </span>
-      </Link>
-
-      <section className="accueil-tuiles">
-        <Link to="/perso/lectures" className="accueil-tuile">
-          <strong>{aLireN}</strong><span>a lire</span>
-        </Link>
-        {aRevoirN > 0 && (
-          <Link to="/parcours" className="accueil-tuile">
-            <strong>{aRevoirN}</strong><span>a reancrer</span>
-          </Link>
-        )}
-        <Link to="/perso/contributions" className="accueil-tuile">
-          <strong>{contrib ? contrib.sources.length : 0}</strong><span>sources proposees</span>
-        </Link>
-        <Link to="/veille" className="accueil-tuile accueil-tuile--lien">
-          <span>Aller a la veille</span>
-        </Link>
-        <Link to="/sujets" className="accueil-tuile accueil-tuile--lien">
-          <span>Explorer les themes</span>
-        </Link>
-      </section>
-    </>
-  )
-}
-
 /* ---------- Composant principal ---------- */
 
 const INTROS: Record<string, string> = {
-  accueil: '',
   compte: 'Ton identite, ton pseudo Discord et tes droits.',
   contributions: 'Tout ce que tu as propose, analyse et anime.',
   lectures: 'Tes lectures sauvegardees et les recommandations recues.',
@@ -375,17 +320,17 @@ const INTROS: Record<string, string> = {
 
 export default function MonEspace() {
   const { section } = useParams<{ section?: string }>()
-  const sec = section || 'accueil'
+
+  if (!section) return <Navigate to="/perso/compte" replace />
 
   return (
     <div className="page-perso">
-      {INTROS[sec] && <p className="page-intro">{INTROS[sec]}</p>}
+      <p className="page-intro">{INTROS[section] || ''}</p>
 
-      {sec === 'accueil' && <SectionAccueil />}
-      {sec === 'compte' && <SectionCompte />}
-      {sec === 'contributions' && <SectionContributions />}
-      {sec === 'lectures' && <SectionLectures />}
-      {sec === 'chaines' && <SectionChaines />}
+      {section === 'compte' && <SectionCompte />}
+      {section === 'contributions' && <SectionContributions />}
+      {section === 'lectures' && <SectionLectures />}
+      {section === 'chaines' && <SectionChaines />}
     </div>
   )
 }

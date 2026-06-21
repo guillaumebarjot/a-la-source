@@ -11,6 +11,8 @@ const Lire = lazy(() => import('./pages/Lire'))
 const Observatoire = lazy(() => import('./pages/Observatoire'))
 const Ateliers = lazy(() => import('./pages/Ateliers'))
 const Archiver = lazy(() => import('./pages/Archiver'))
+const SansCopie = lazy(() => import('./pages/SansCopie'))
+const Accueil = lazy(() => import('./pages/Accueil'))
 // BecsRouges: route redirects to /perso/chaines, component kept but not lazy-loaded
 const MonEspace = lazy(() => import('./pages/MonEspace'))
 const AdminParametrage = lazy(() => import('./pages/AdminParametrage'))
@@ -38,7 +40,8 @@ export default function App() {
       <main className="main-content">
         <Suspense fallback={<div className="loading">Chargement...</div>}>
           <Routes>
-            <Route path="/" element={<Navigate to="/perso" replace />} />
+            <Route path="/" element={<Navigate to="/accueil" replace />} />
+            <Route path="/accueil" element={<Accueil />} />
             <Route path="/sujets" element={<Sujets />} />
             <Route path="/sujets/:slug" element={<Sujet />} />
             <Route path="/veille" element={<Flux />} />
@@ -61,6 +64,8 @@ export default function App() {
             <Route path="/ateliers/:section" element={<Ateliers />} />
             <Route path="/archiver" element={<Archiver />} />
             <Route path="/archiver/:section" element={<Archiver />} />
+            {/* Sources sans copie locale (hors video/audio) : ce qu'il reste a archiver */}
+            <Route path="/a-archiver" element={<SansCopie />} />
             <Route path="/becs-rouges" element={<Navigate to="/perso/chaines" replace />} />
             <Route path="/perso" element={<MonEspace />} />
             <Route path="/perso/:section" element={<MonEspace />} />

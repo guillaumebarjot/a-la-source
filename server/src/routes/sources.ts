@@ -124,6 +124,46 @@ router.get('/ftr-config', (_req, res) => {
   })
 })
 
+// GET /api/sources/sans-copie-locale — sources sans copie locale du texte integral,
+// hors video/audio (on n'archive pas le texte d'une video ou d'une emission radio).
+// Lecture seule. Placee AVANT la route parametree /:id.
+//
+// « Copie locale » = la source dispose du texte integral, soit via une archive
+// readability/markdown/pdf/html marquee 'complete', soit via le marqueur
+// completude = 'integral_offline'. Une source SANS copie locale n'a ni l'une ni l'autre.
+//
+// Exclusion video/audio : la colonne canonique est sources.type_source ('video','radio').
+// On complete par le type du media (tv/radio) et une heuristique d'URL (plateformes
+// audiovisuelles) pour rattraper les sources dont le type_source n'aurait pas ete renseigne.
+router.get('/sans-copie-locale', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      s.id, s.titre, s.url, s.image_url, s.date_publication, s.accroche,
+      s.completude, s.type_source, s.paywall,
+      m.nom as media_nom,
+      (SELECT COUNT(*) FROM archives ar WHERE ar.source_id = s.id) > 0 as has_archive,
+      (SELECT ar2.statut FROM archives ar2 WHERE ar2.source_id = s.id ORDER BY ar2.cree_le DESC LIMIT 1) as archive_statut
+    FROM sources s
+    LEFT JOIN medias m ON s.media_id = m.id
+    WHERE NOT (
+      s.completude = 'integral_offline'
+      OR EXISTS (
+        SELECT 1 FROM archives ar WHERE ar.source_id = s.id AND ar.statut = 'complete'
+      )
+    )
+    AND (s.type_source IS NULL OR s.type_source NOT IN ('video', 'radio'))
+    AND (m.type IS NULL OR LOWER(m.type) NOT IN ('tv', 'radio'))
+    AND NOT (
+      COALESCE(s.url, '') LIKE '%youtube.com%' OR COALESCE(s.url, '') LIKE '%youtu.be%'
+      OR COALESCE(s.url, '') LIKE '%vimeo.%' OR COALESCE(s.url, '') LIKE '%dailymotion.%'
+      OR COALESCE(s.url, '') LIKE '%soundcloud.%' OR COALESCE(s.url, '') LIKE '%spotify.%'
+      OR COALESCE(s.url, '') LIKE '%podcast%'
+    )
+    ORDER BY s.date_publication DESC, s.soumis_le DESC
+  `).all()
+  res.json(rows)
+})
+
 // GET /api/sources/inbox — sources entrantes a qualifier (inbox)
 // Placee AVANT la route parametree /:id pour ne pas etre avalee par celle-ci.
 router.get('/inbox', (_req, res) => {
