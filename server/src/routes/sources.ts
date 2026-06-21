@@ -199,7 +199,16 @@ router.get('/qualification', (req, res) => {
       s.id, s.titre, s.url, s.image_url, s.accroche, s.date_publication,
       s.paywall, s.completude, s.type_source, s.statut, s.a_qualifier, s.origine,
       m.nom as media_nom,
-      EXISTS (SELECT 1 FROM archives ar WHERE ar.source_id = s.id AND ar.statut = 'complete') as a_archive_complete,
+      -- Une archive 'complete' ne compte comme copie locale que si elle n'est pas
+      -- un mur anti-bot (JavaScript requis, support ID) et a un minimum de contenu.
+      EXISTS (
+        SELECT 1 FROM archives ar
+        WHERE ar.source_id = s.id AND ar.statut = 'complete'
+          AND COALESCE(ar.nb_mots, 0) >= 50
+          AND ar.contenu NOT LIKE '%enable JavaScript%'
+          AND ar.contenu NOT LIKE '%support ID%'
+          AND ar.contenu NOT LIKE '%disable any ad blocker%'
+      ) as a_archive_complete,
       (SELECT COUNT(*) FROM sujet_sources ss WHERE ss.source_id = s.id) as nb_sujets,
       (SELECT COUNT(*) FROM source_mecanismes sm WHERE sm.source_id = s.id) as nb_mecanismes,
       (SELECT COUNT(*) FROM activite_sources asrc WHERE asrc.source_id = s.id) as nb_activites,

@@ -195,6 +195,7 @@ function CarteQualification({
   const [imageUrl, setImageUrl] = useState(s.image_url ?? '')
   const [tag, setTag] = useState('')
   const [colle, setColle] = useState('')
+  const [lien, setLien] = useState(s.url ?? '')
 
   const lancer = async (fn: () => Promise<void>, ok: string) => {
     setEnCours(true)
@@ -223,6 +224,11 @@ function CarteQualification({
     lancer(() => api.patch(`/sources/${s.id}`, { completude: 'integral_offline' }), 'Marquee « consultee hors-ligne ».')
 
   // Copie locale contextuelle : l'id est celui de la carte, jamais a re-saisir.
+  const enregistrerLien = () => {
+    if (!lien.trim()) return
+    lancer(() => api.patch(`/sources/${s.id}`, { url: lien.trim() }), 'Lien d\'acces mis a jour.')
+  }
+
   const collerCopie = () => {
     if (!colle.trim()) return
     lancer(async () => {
@@ -334,40 +340,58 @@ function CarteQualification({
             </div>
           )}
 
-          {!s.jalons.copie_locale && (
-            <div className="hub-action">
-              <span className="hub-action-titre">Copie locale</span>
-              <button type="button" className="hub-btn" disabled={enCours} onClick={archiver}>
-                Archiver (extraction auto)
-              </button>
-              <button type="button" className="hub-btn" disabled={enCours} onClick={integralOffline}>
-                Consultee hors-ligne
-              </button>
-              {/* Copie locale contextuelle, sans jamais re-saisir l'id de la source. */}
-              <textarea
+          {/* Lien d'acces et copie locale : toujours disponibles, pour AJOUTER
+              ou CORRIGER une erreur (mur anti-bot, lien mort, mauvaise archive). */}
+          <div className="hub-action">
+            <span className="hub-action-titre">
+              {s.jalons.copie_locale ? 'Lien et copie locale (corriger)' : 'Lien et copie locale'}
+            </span>
+            {/* Redonner un lien d'acces : source originale, version sans paywall, Europresse. */}
+            <div className="hub-action-ligne">
+              <input
+                type="url"
                 className="hub-champ"
-                value={colle}
-                onChange={(e) => setColle(e.target.value)}
-                placeholder="Coller ici le texte integral (Europresse, archive...)"
-                rows={3}
+                value={lien}
+                onChange={(e) => setLien(e.target.value)}
+                placeholder="Lien d'acces (source originale, sans paywall...)"
               />
-              <div className="hub-action-ligne">
-                <button type="button" className="hub-btn" disabled={enCours || !colle.trim()} onClick={collerCopie}>
-                  Enregistrer le texte colle
-                </button>
-                <label className="hub-btn hub-btn--lien">
-                  Joindre un PDF
-                  <input
-                    type="file"
-                    accept=".pdf,.md,.png,.jpg,.jpeg,.webp"
-                    style={{ display: 'none' }}
-                    disabled={enCours}
-                    onChange={(e) => joindreFichier(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-              </div>
+              <button type="button" className="hub-btn" disabled={enCours || !lien.trim()} onClick={enregistrerLien}>
+                Mettre a jour le lien
+              </button>
+              {s.url && (
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="hub-btn hub-btn--lien">Ouvrir</a>
+              )}
             </div>
-          )}
+            <button type="button" className="hub-btn" disabled={enCours} onClick={archiver}>
+              {s.jalons.copie_locale ? 'Refaire l\'extraction auto' : 'Archiver (extraction auto)'}
+            </button>
+            <button type="button" className="hub-btn" disabled={enCours} onClick={integralOffline}>
+              Consultee hors-ligne
+            </button>
+            {/* Copie locale contextuelle, sans jamais re-saisir l'id de la source. */}
+            <textarea
+              className="hub-champ"
+              value={colle}
+              onChange={(e) => setColle(e.target.value)}
+              placeholder="Coller ici le texte integral (Europresse, archive...)"
+              rows={3}
+            />
+            <div className="hub-action-ligne">
+              <button type="button" className="hub-btn" disabled={enCours || !colle.trim()} onClick={collerCopie}>
+                {s.jalons.copie_locale ? 'Remplacer par ce texte' : 'Enregistrer le texte colle'}
+              </button>
+              <label className="hub-btn hub-btn--lien">
+                Joindre un PDF
+                <input
+                  type="file"
+                  accept=".pdf,.md,.png,.jpg,.jpeg,.webp"
+                  style={{ display: 'none' }}
+                  disabled={enCours}
+                  onChange={(e) => joindreFichier(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+          </div>
 
           {!s.jalons.accroche && (
             <div className="hub-action">
