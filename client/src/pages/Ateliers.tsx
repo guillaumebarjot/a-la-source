@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Link, useParams, Navigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, Navigate } from 'react-router-dom'
 import { Star, FileCheck, Pencil, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
 import {
   DndContext,
@@ -164,6 +164,7 @@ function AteliersInterne({
   section: string | undefined
   isFacilitateur: boolean
 }) {
+  const navigate = useNavigate()
   const [vivier, setVivier] = useState<VivierSource[]>([])
   const [ateliers, setAteliers] = useState<Atelier[]>([])
   const [loading, setLoading] = useState(true)
@@ -215,10 +216,11 @@ function AteliersInterne({
     setNewDate('')
     setNewHeure('')
     setNewLieu('')
-    await fetchData()
-    // Redirige vers la page objet du nouvel atelier si l'id est disponible.
+    // On entre directement dans l'objet du nouvel atelier (navigation SPA, sans rechargement).
     if (res?.id) {
-      window.location.href = `/ateliers/${res.id}`
+      navigate(`/ateliers/${res.id}`)
+    } else {
+      await fetchData()
     }
   }
 
