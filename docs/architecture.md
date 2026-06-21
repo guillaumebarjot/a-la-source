@@ -1,7 +1,7 @@
 # Architecture — À la source v3
 
 > Documentation canonique de l'architecture, à jour de ce qui est réellement codé.
-> Dernière mise à jour : 2026-06-07.
+> Dernière mise à jour : 2026-06-21.
 
 ## Vue d'ensemble
 
@@ -110,6 +110,12 @@ Principe transverse du produit : on décrit les sources et les médias par des *
 ## Client (`client/src/`)
 
 SPA React 19, react-router-dom 7, pages en `lazy()`. State global zustand (`store/useAuth.ts`, `store/useUI.ts`). API via `api/client.ts`. Types dans `types/index.ts`.
+
+#### Socle glisser-déposer : `CorpusDnD`
+
+`components/corpus/CorpusDnD.tsx` est le composant réutilisable de composition de corpus (dnd-kit). On promène une carte (image + titre) depuis la veille vers le corpus, on la réordonne par la poignée, l'ordre est persisté côté serveur (`activite_sources.ordre` ou `sujet_sources.ordre` selon l'objet). Il est monté sur trois pages : **Sujet** (rattachement des sources à un thème), **Dossier** (corpus du dossier/décryptage) et **Débunkage** (corpus avec rôle pour/contre par carte). La page **Ateliers → Préparation** garde son propre tableau dnd-kit (logique de curation animateur·ice spécifique).
+
+Parcours inverse : depuis la page **Lire**, une source ouverte peut être **rangée directement dans un dossier existant** (`POST /api/dossiers/:id/sources`), sans repasser par la composition de corpus.
 
 ### Navigation principale (refonte v3)
 

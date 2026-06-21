@@ -54,6 +54,8 @@ Coeur de l'application. Affiche le contenu archive d'une source avec une sidebar
 - Marquer comme lu·e
 - Recommander a un·e autre membre
 - Proposer au vivier (pour les ateliers)
+- **Ranger dans un dossier existant** (parcours inverse veille → dossier : on
+  rattache directement la source ouverte au corpus d'un dossier)
 - Archiver (si pas encore fait)
 - Partager (copier le lien, Discord)
 
@@ -69,6 +71,37 @@ Visualisations et statistiques sur l'ensemble des sources analysees. 4 onglets :
 ### Activites (`/activites`)
 
 Le **hub** des activites d'education populaire, posees sur un socle commun. Section « Creer une activite » en tete avec les 6 formats : **atelier, dossier, decryptage (a chaud), debunkage, parcours, arpentage**. Compteurs et acces a chaque famille.
+
+#### Composer un corpus en glisser-deposer (sujet, dossier, debunkage)
+
+Les pages **Sujet**, **Dossier** et **Debunkage** partagent un meme composant de
+composition de corpus (`CorpusDnD`) : on **promene une carte** (image + titre)
+depuis la veille vers le corpus, on la reordonne par la poignee, l'ordre est
+persiste. Sur le **debunkage**, chaque carte recoit un **role** (pour / contre)
+en plus de l'ordre. La carte garde toujours son image ; jamais de scroll
+infini.
+
+#### Debunkage (`/debunkages`)
+
+Activite de demonstration : on consigne une affirmation visee, une
+demonstration, un corpus de sources **pour / contre** (glisser-deposer), et des
+**liens de posts reseaux**. Une fois publie, le debunkage dispose d'une page
+publique partageable (OpenGraph) et d'un export YesWiki via la section
+« Partager ».
+
+#### Dossier et decryptage (`/dossiers`)
+
+Le **dossier** est une mise en perspective redigee autour d'un corpus de
+sources. Le **decryptage** est un dossier « a chaud », rattache a un
+**evenement** d'actualite (meme page, flag « a chaud »). Sources composees en
+glisser-deposer, contenu redige, section « Partager » (page publique + export
+YesWiki).
+
+#### Arpentage (`/arpentages`)
+
+Lecture collective **fragmentee** d'un document : on decoupe le document en
+fragments, on les **attribue** aux participant·es, chacun·e restitue, puis on
+fait la **synthese** collective.
 
 ### Ateliers (`/ateliers`)
 

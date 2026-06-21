@@ -1,8 +1,29 @@
 # Glossaire des mecanismes informationnels
 
-Ce glossaire detaille les 10 mecanismes de reference utilises dans « A la source ». Chaque mecanisme est un procede identifiable dans le traitement mediatique de l'information. Ils ne sont pas des « manipulations » volontaires dans tous les cas — certains relevent de biais inconscients, de contraintes editoriales, ou de conventions journalistiques.
+« A la source » embarque un catalogue de **25 mecanismes informationnels** de
+reference, classes en familles (cadrage et mise en scene, sophismes,
+manipulation des chiffres, ressorts emotionnels et discursifs, selection et
+consensus). La **source de verite vivante** est le catalogue de l'application
+(page **Apprendre** → onglet **Catalogue**), peuple par les migrations
+`migrate-mecanismes.ts` puis `migrate-mecanismes-v2.ts` (definitions longues) et
+enrichi au fil des ateliers.
 
-L'objectif n'est pas de « denoncer les medias » mais de **developper le sens critique** : savoir reperer ces procedes permet de mieux comprendre comment une information est construite.
+Ce memo detaille **10 mecanismes representatifs** a titre d'illustration. Pour
+la liste complete et a jour, ainsi que les exemples reperes en atelier, se
+reporter au catalogue dans l'app.
+
+Chaque mecanisme est un procede identifiable dans le traitement mediatique de
+l'information. Ils ne sont pas des « manipulations » volontaires dans tous les
+cas : certains relevent de biais inconscients, de contraintes editoriales, ou
+de conventions journalistiques.
+
+L'objectif n'est pas de « denoncer les medias » mais de **developper le sens
+critique** : savoir reperer ces procedes permet de mieux comprendre comment une
+information est construite.
+
+> Cette liste de 10 est un extrait pedagogique, pas la liste exhaustive. La
+> liste vivante des 25 mecanismes (avec leurs exemples reperes au fil des
+> ateliers) est celle de l'app : **Apprendre → Catalogue** fait foi.
 
 ---
 
@@ -183,3 +204,22 @@ L'objectif n'est pas de « denoncer les medias » mais de **developper le sens c
 - Les deux positions presentees ont-elles le meme poids factuel ?
 - L'equilibre editorial reflete-t-il la realite du debat ?
 - Qui beneficie de cette mise en equivalence ?
+
+---
+
+## Au-dela de ces 10 : les 25 mecanismes du catalogue
+
+Le catalogue complet (page **Apprendre → Catalogue**) couvre une vingtaine de
+mecanismes supplementaires, repartis par famille. Quelques exemples reperes en
+atelier, en complement des 10 fiches ci-dessus :
+
+| Famille | Mecanismes representatifs |
+|---|---|
+| Cadrage et mise en scene | titre-appat, euphemisme, glissement semantique, decontextualisation, omission |
+| Raisonnement et sophismes | whataboutisme, inversion de la charge de la preuve, appel a la tradition, naturalisation, fenetre d'Overton |
+| Manipulation des chiffres | fausse causalite (correlation / causalite), biais de survie, performativite de l'indicateur |
+| Ressorts emotionnels et discursifs | appel a la peur, amalgame, personnalisation, effet de repetition |
+| Selection et consensus | faux consensus |
+
+Pour la definition, l'exemple et les questions guidees de chaque mecanisme,
+ouvrir sa fiche dans l'app. Cette table n'est qu'un aide-memoire.

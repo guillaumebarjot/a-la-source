@@ -71,11 +71,6 @@ Un **socle commun** (table `activites`) avec un pipeline par type. 6 types : **a
 - Detection automatique des paywalls et archives partielles
 - Upload manuel possible (markdown, PDF, HTML)
 
-### Espace personnel
-
-- Lectures sauvegardees, recommandations recues
-- Chaines partenaires (YouTube, podcasts)
-
 ### Apprendre (pedagogie integree)
 
 - **Catalogue de 25+ mecanismes informationnels** classes en 6 familles, avec fiches detaillees, exemples concrets, questions guidees pour les ateliers
@@ -243,8 +238,12 @@ Voir `docs/deploiement.md` pour le detail (Dockerfile, compose, NPM, forward-aut
 
 Le projet est porte par Rouge Coquelicot. Les contributions sont les bienvenues :
 - Signaler un bug : ouvrir une issue
-- Proposer un mecanisme : PR sur `server/src/db/seed.ts`
+- Proposer un mecanisme : PR sur les migrations `server/src/db/migrate-mecanismes*.ts`
 - Ajouter un site FTR : PR sur `server/src/lib/ftr-site-config.ts`
+
+La discipline de travail (branches, commits anonymes, ouverture d'une merge
+request, checklist de revue, regle de la base canonique) est decrite dans
+[`docs/workflow-git.md`](docs/workflow-git.md).
 
 ---
 

@@ -67,6 +67,30 @@ gh pr create --base main --head feat/mon-chantier \
 Corps de PR : decrire le quoi/pourquoi, lister les fichiers sensibles touches
 (schema, auth, deploiement), signaler tout impact base de donnees ou prod.
 
+### Checklist de revue (avant de demander la fusion)
+
+A passer en revue, soi-meme ou en relecteur·ice, avant tout merge :
+
+- [ ] **Typecheck serveur** : `npm run build --workspace=server` (`tsc`) passe
+  sans erreur. TypeScript strict, pas de `any` ajoute.
+- [ ] **Typecheck + build client** : `npm run build --workspace=client`
+  (`tsc -b && vite build`) passe sans erreur.
+- [ ] **Validation locale sur copie de base** : la fonctionnalite a ete
+  essayee en local (`npm run dev`) sur une **copie** de la base, jamais sur la
+  base canonique (cf. section 7).
+- [ ] **Migrations additives et idempotentes** : toute evolution de schema est
+  un `migrate-*.ts` additif, applique par `auto-migrate.ts`, rejouable sans
+  casse ni perte de donnees.
+- [ ] **Documentation a jour** : si le comportement, le schema, les routes ou
+  le deploiement changent, les docs concernees (`docs/architecture.md`,
+  `docs/schema-bdd.md`, `docs/utilisation.md`, `docs/deploiement.md`,
+  `README.md`) sont mises a jour dans la meme PR. Le `docs/CHANGELOG.md` recoit
+  une entree datee.
+- [ ] **Pas de secret commite** : tokens et webhooks Discord vivent dans le
+  `.env` du serveur, jamais dans le depot.
+- [ ] **Commit propre** : messages en francais accentue, anonymes, sans tiret
+  cadratin (cf. section 2).
+
 ---
 
 ## 4. Versions (semver + tags)
@@ -119,3 +143,25 @@ Ensuite, avancer en `v2.x` au fil des chantiers.
 - Ne jamais deployer une branche de travail non fusionnee.
 - Les migrations de schema sont additives et idempotentes (`auto-migrate.ts`) :
   une prod en retard se met a niveau au redemarrage, sans perte de donnees.
+
+---
+
+## 7. La base canonique ne se modifie que par copie + swap
+
+La base de donnees de production est **canonique** : elle ne se modifie
+**jamais en place** depuis un poste de dev ou un script. La regle, deja
+appliquee par les scripts de completion (cf. `docs/completion-bdd-plan.md`) :
+
+1. **Travailler sur une copie**, jamais sur la canonique. Pointer
+   `A_LA_SOURCE_DB` vers une copie (ex. `/tmp/als-travail.db`) ; tout script de
+   transformation refuse une cible dont le chemin contient `OneDrive` ou
+   `00_PERSO`.
+2. **Dry-run d'abord** : ouvrir la base en `readonly`, produire le diff propose
+   et le faire **relire** avant tout `--apply`.
+3. **Appliquer sur la copie**, verifier le resultat, puis **basculer** (swap) la
+   copie validee vers la canonique. On ne fait pas d'ecriture concurrente sur la
+   base servie.
+
+En production, la base est LOCALE au serveur (volume `/data`, jamais OneDrive) ;
+la sauvegarde est une copie a chaud (mode WAL). Voir `docs/deploiement.md` et
+`docs/acces-identite.md`.

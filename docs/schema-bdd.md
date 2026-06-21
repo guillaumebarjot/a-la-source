@@ -2,8 +2,10 @@
 
 Carte lisible du schema SQLite (mode WAL). La reference technique reste
 `server/src/db/schema.sql` ; les evolutions additives sont appliquees au boot
-par `server/src/db/auto-migrate.ts` (idempotent). Etat verifie le 11/06/2026
-(modele v3, refonte par sujets).
+par `server/src/db/auto-migrate.ts` (idempotent). Etat verifie le 21/06/2026
+(modele v3, refonte par sujets ; socle `activites` en place ; completion BDD
+appliquee a la canonique : dedoublonnage, accroches, images, rattachement aux
+sujets, cf. `docs/audit-bdd-2026-06-21.md` et `docs/completion-bdd-plan.md`).
 
 > Le `schema.sql` est un dump : ses dernieres lignes recreent a tort les tables
 > shadow FTS5 (`sources_fts_*`) avec un double `IF NOT EXISTS`. Ces tables sont
@@ -95,10 +97,13 @@ Tables legacy conservees (avant la bascule sur le socle) :
 
 ---
 
-## Volumetrie observee (base de dev, 11/06/2026)
+## Volumetrie
 
-157 sources, 136 medias, 27 sujets, 25 mecanismes, 3 utilisateurs, 3 activites.
-Petite echelle : SQLite est largement suffisant (< 100 utilisateurs vises).
+Petite echelle : SQLite est largement suffisant (cible < 100 utilisateurs). Le
+catalogue de reference compte **25 mecanismes**. Les volumes de sources, medias,
+sujets et activites evoluent au fil de la veille et de la completion BDD ;
+l'instantane chiffre de reference est tenu dans `docs/audit-bdd-2026-06-21.md`
+plutot que recopie ici (pour eviter qu'il ne perime).
 
 ---
 
