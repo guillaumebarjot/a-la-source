@@ -2,6 +2,15 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Inbox-hub : tunnel de qualification des sources + refonte de la navigation
+
+Phase 1 d'une refonte (conception : `docs/conception-inbox-qualification.md`). L'Inbox partagée devient le hub de la qualité des sources.
+
+- **Tunnel de qualification d'une source** (à la carte, non bloquant) : accepter, fiabiliser (image, accroche, copie locale), situer (sujet, mots-clés), analyser (mécanisme), mobiliser (dossier/activité), commenter. Endpoint `GET /api/sources/qualification` : jalons factuels par source (`accepte, copie_locale, accroche, image, sujet, analysee, mobilisee, commentee`), **score d'avancement** pondéré 0-100, `bien_qualifiee` (= copie locale + accroche + image), filtres `?tout` / `?manque=...`, compteurs.
+- **Inbox refondue en hub** : filtres par ce qui manque (avec compteurs vivants), par source une jauge de score sobre, un stepper de jalons, et les actions inline de chaque étape réutilisant les endpoints existants, non bloquantes, ouvertes à tous les membres.
+- **Copie locale contextuelle** : sur la carte de la source, « Archiver » (readability), « Coller le texte » (Europresse, `archive-manuelle`) et « Joindre un PDF » (`archive-fichier`) sans jamais re-saisir le numéro de la source. Corrige l'ergonomie de l'archivage manuel.
+- **Refonte de la navigation H1** : Accueil · Mon espace · Inbox · Veille · Sujets · Activités · Apprendre · Observatoire. Archiver fondu dans l'Inbox (ses anciennes routes redirigent vers le filtre « sans copie locale ») ; Parcours seulement sous Apprendre ; Mécanismes seulement sous Observatoire. Ancienne page « Sans copie locale » retirée (devenue un filtre).
+
 ## 2026-06-21 — Dossiers publiés, accueil neutre, page à archiver, analyses, complétion v2
 
 - **Dossiers publiés** : les 3 dossiers thématiques (Pesticides, Concentration des médias, PFAS) passent en `publie` (pages publiques `/partage/dossier/:id` accessibles), sur la base de dev et en prod.
