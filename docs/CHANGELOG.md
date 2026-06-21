@@ -2,6 +2,13 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-21 — Observatoire (phase 3b), correction d'accès en lecture, atterrissage Ateliers
+
+- **Observatoire, tableau de bord de notre veille** (phase 3b, le second temps) : à `/observatoire/tableau-de-bord` (première entrée de la sous-nav, l'Observatoire y atterrit par défaut). Quatre blocs factuels : notre corpus en chiffres (sources, médias, sujets, activités, mécanismes), sources ajoutées par mois, médias les plus présents, mécanismes les plus repérés (timeline et matrice réutilisées), sujets instruits. Endpoint `GET /api/sources/tableau-de-bord` (lecture seule). Aucun score, que des volumes de notre travail.
+- **Corriger l'accès depuis la lecture** : sur `/lire/:id`, un panneau « Corriger l'accès » (ouvert d'office sur les sources paywall ou à archive partielle) permet de remettre un lien d'accès, coller le texte intégral (Europresse) ou joindre un PDF, directement sur la source affichée, sans re-saisir son numéro. Les anciens liens vers la page d'archivage (désormais fondue dans l'Inbox) sont remplacés.
+- **Vérification de la base** : repérage des archives anti-bot (mur JavaScript, support ID) et des sources sous paywall sans vraie copie locale ; elles ressortent toutes dans le filtre Inbox « sans copie locale » pour être refaites.
+- **Atterrissage Ateliers** : cliquer « Ateliers » mène désormais à la liste des ateliers (à venir et en cours), plus au vivier. Sous-nav réordonnée (À venir et en cours, Passés, Préparation, Vivier) : le vivier est la réserve de sources, utilisée à la préparation d'un atelier.
+
 ## 2026-06-21 — Observatoire (phase 3a), durcissement de l'Inbox, attribution des contributions
 
 - **Observatoire, référence critique des médias** : nouvelle section **Propriété** (qui possède quoi, médias regroupés par actionnaire ultime ou propriétaire, type de propriété, financement, ligne revendiquée), endpoint `GET /api/medias/propriete-groupee`. Nouveau **catalogue des mécanismes** par catégorie (définition, exemple type, questions de guidage, exemples réels issus de la veille). Fiches médias factuelles (mécanismes repérés, sans note). **Score de confiance des médias retiré** côté client et serveur (doctrine « décrire, ne pas noter »). Le tableau de bord de notre veille reste pour la phase 3b.
