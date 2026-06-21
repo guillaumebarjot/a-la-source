@@ -35,7 +35,7 @@ interface MediaStats {
   nb_mecanismes: number
   nb_commentaires: number
   nb_evaluations: number
-  score_confiance_moyen: number | null
+  mecanismes_reperes: { nom: string; nb: number }[]
   sources_recentes: { id: number; titre: string; date_publication: string | null }[]
 }
 
@@ -158,17 +158,32 @@ export default function FichesMedias() {
             <table className="media-detail-table">
               <tbody>
                 <tr><th>Sources dans la base</th><td>{stats.nb_sources}</td></tr>
-                <tr><th>Mecanismes identifies</th><td>{stats.nb_mecanismes}</td></tr>
+                <tr><th>Mécanismes identifiés</th><td>{stats.nb_mecanismes}</td></tr>
                 <tr><th>Commentaires</th><td>{stats.nb_commentaires}</td></tr>
-                <tr><th>Evaluations</th><td>{stats.nb_evaluations}</td></tr>
-                {/* Indice de confiance retiré (Chantier B) : on décrit la propriété
-                    et la transparence, on ne note pas le média (piège Decodex). */}
+                <tr><th>Évaluations en atelier</th><td>{stats.nb_evaluations}</td></tr>
               </tbody>
             </table>
 
+            {stats.mecanismes_reperes.length > 0 && (
+              <section className="media-detail-mecas">
+                <h3>Mécanismes les plus repérés sur ce média</h3>
+                <p className="media-propriete-note">
+                  Mécanismes identifiés par les membres sur les sources de ce média dans notre veille. Ce sont des faits d'analyse, pas un classement du média.
+                </p>
+                <ul className="media-detail-mecas-liste">
+                  {stats.mecanismes_reperes.map(m => (
+                    <li key={m.nom} className="media-detail-meca-item">
+                      <span className="media-detail-meca-nom">{m.nom}</span>
+                      <span className="media-detail-meca-nb">{m.nb} fois</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {stats.sources_recentes.length > 0 && (
               <section>
-                <h3>Sources les plus recentes</h3>
+                <h3>Sources récentes</h3>
                 <ul>
                   {stats.sources_recentes.map(s => (
                     <li key={s.id}>

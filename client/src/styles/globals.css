@@ -991,60 +991,391 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   transition: width 0.4s ease;
 }
 
-/* Confiance media */
-.obs-confiance {
+/* Intro descriptive des sections (sobre, pas de fond lourd) */
+.obs-intro-bloc {
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-border);
+  margin-bottom: var(--space-lg);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.obs-intro-mini {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+/* Propriété et concentration des médias */
+
+.obs-prop-compteurs {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.obs-prop-groupes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.obs-prop-groupe {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.obs-prop-groupe--inconnu {
+  opacity: 0.7;
+}
+
+.obs-prop-groupe-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.obs-prop-groupe-header:hover {
+  background: var(--color-surface-2);
+}
+
+.obs-prop-groupe-header:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.obs-prop-groupe--ouvert .obs-prop-groupe-header {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.obs-prop-groupe-nom {
+  font-weight: 600;
+  font-size: 0.95rem;
+  flex: 1;
+  color: var(--color-text);
+}
+/* Garde-fou sombre : le nom du groupe est un titre structurel, pas un lien de prose */
+.dark .obs-prop-groupe-nom { color: var(--color-text); }
+
+.obs-prop-groupe-nom--inconnu {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.obs-prop-groupe-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.obs-prop-chevron {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.obs-prop-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.obs-prop-badge--sources {
+  background: var(--color-border);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.obs-prop-medias {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.obs-prop-media-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-xs) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.obs-prop-media-item:last-child {
+  border-bottom: none;
+}
+
+.obs-prop-media-nom {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+.dark .obs-prop-media-nom { color: var(--color-text); }
+
+.obs-prop-media-meta {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.obs-prop-ligne {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.obs-prop-annee {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Catalogue des mécanismes */
+
+.obs-meca-compteurs {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+
+.obs-meca-categorie-bloc {
+  margin-top: var(--space-lg);
+}
+
+.obs-meca-categorie-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.obs-meca-categorie-header h2 {
+  margin-bottom: 0;
+}
+
+.obs-meca-categorie-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+.obs-meca-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.obs-meca-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--color-text);
+  transition: background 0.15s, border-color 0.15s;
+  min-width: 10rem;
+}
+
+.obs-meca-card:hover {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+.obs-meca-card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.obs-meca-card-nom {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+.dark .obs-meca-card-nom { color: var(--color-text); }
+
+.obs-meca-card-nb {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* Fiche mécanisme (détail) */
+.obs-meca-fiche {
+  max-width: 48rem;
+}
+
+.obs-meca-fiche-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.obs-meca-fiche-header h2 {
+  margin: 0;
+}
+
+.obs-meca-fiche-desc {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin-bottom: var(--space-md);
+  color: var(--color-text);
+}
+
+.obs-meca-fiche-desc--court {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.obs-meca-exemple-generique {
+  background: var(--color-surface-2);
+  border-left: 3px solid var(--color-border);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.9rem;
+  margin-bottom: var(--space-md);
+  color: var(--color-text-secondary);
+}
+
+.obs-meca-questions {
+  background: var(--color-surface-2);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  margin-bottom: var(--space-lg);
+  color: var(--color-text-secondary);
+}
+
+.obs-meca-exemples {
+  margin-top: var(--space-xl);
+}
+
+.obs-meca-exemples h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin-bottom: var(--space-md);
+  color: var(--color-text);
+}
+
+.obs-meca-exemples-liste {
+  list-style: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.obs-confiance-row {
-  display: grid;
-  grid-template-columns: 8.75rem 1fr 3.75rem;
-  align-items: center;
-  gap: var(--space-sm);
+.obs-meca-exemple-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
 }
 
-.obs-confiance-nom {
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.obs-meca-exemple-source {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  color: var(--color-text);
 }
+.dark .obs-meca-exemple-source { color: var(--color-text); }
 
-.obs-confiance-bar-track {
-  height: 0.75rem;
-  background: var(--color-border);
-  border-radius: 0.375rem;
-  overflow: hidden;
-}
-
-.obs-confiance-bar-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: width 0.4s ease;
-}
-
-.obs-confiance-score {
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-align: right;
-}
-
-.obs-confiance-meta {
-  grid-column: 2 / -1;
-  font-size: 0.7rem;
+.obs-meca-exemple-media {
+  font-size: 0.8rem;
   color: var(--color-text-secondary);
-  margin-top: -4px;
+  margin-bottom: var(--space-xs);
 }
 
-.obs-confiance-note {
+.obs-meca-exemple-extrait {
+  border-left: 3px solid var(--color-border);
+  padding-left: var(--space-sm);
+  margin: var(--space-xs) 0;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.obs-meca-exemple-justif {
+  font-size: 0.85rem;
+  margin: var(--space-xs) 0;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.obs-meca-exemple-par {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
-  font-style: italic;
+  margin-top: var(--space-xs);
+}
+
+/* Fiches médias — mécanismes repérés (liste factuelle, pas un score) */
+.media-detail-mecas {
+  margin-top: var(--space-lg);
+}
+
+.media-detail-mecas h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin-bottom: var(--space-xs);
+}
+
+.media-detail-mecas-liste {
+  list-style: none;
+  padding: 0;
   margin-top: var(--space-sm);
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.media-detail-meca-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.media-detail-meca-nom {
+  color: var(--color-text);
+}
+.dark .media-detail-meca-nom { color: var(--color-text); }
+
+.media-detail-meca-nb {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 /* Légendes Recharts : par défaut le libellé reprend la couleur de la série,

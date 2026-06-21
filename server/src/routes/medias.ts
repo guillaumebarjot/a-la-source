@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import db from '../lib/db.js'
-import { calculerConfianceMedia } from '../lib/score.js'
 
 const router = Router()
 
@@ -43,18 +42,60 @@ router.get('/matrice', (_req, res) => {
   res.json(rows)
 })
 
-// GET /api/medias/confiance — score de confiance par media
-router.get('/confiance', (_req, res) => {
-  const medias = db.prepare('SELECT id, nom FROM medias').all() as { id: number; nom: string }[]
-  const results = medias.map(m => {
-    const conf = calculerConfianceMedia(m.id)
-    return { media_id: m.id, media_nom: m.nom, ...conf }
-  }).filter(r => r.nbSources > 0)
-    .sort((a, b) => a.score - b.score)
-  res.json(results)
+// GET /api/medias/propriete-groupee — médias regroupés par actionnaire ultime / propriétaire
+// Lecture seule. Retourne pour chaque groupe propriétaire les médias qui en dépendent,
+// avec leur type_propriete et nb_sources. Aucun score, que des faits sourcés.
+router.get('/propriete-groupee', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      m.id,
+      m.nom,
+      m.type,
+      m.url_site,
+      m.proprietaire,
+      m.actionnaire_ultime,
+      m.type_propriete,
+      m.financement,
+      m.annee_creation,
+      m.ligne_revendiquee,
+      COUNT(s.id) as nb_sources
+    FROM medias m
+    LEFT JOIN sources s ON s.media_id = m.id
+    GROUP BY m.id
+    HAVING nb_sources > 0 OR m.proprietaire IS NOT NULL OR m.actionnaire_ultime IS NOT NULL
+    ORDER BY nb_sources DESC, m.nom
+  `).all() as {
+    id: number; nom: string; type: string | null; url_site: string | null;
+    proprietaire: string | null; actionnaire_ultime: string | null;
+    type_propriete: string | null; financement: string | null;
+    annee_creation: number | null; ligne_revendiquee: string | null;
+    nb_sources: number;
+  }[]
+
+  // Regrouper par actionnaire_ultime (ou propriétaire si pas d'ultime, sinon « Non renseigné »)
+  const groupes: Record<string, { medias: typeof rows; type_propriete: string | null }> = {}
+  for (const m of rows) {
+    const cle = m.actionnaire_ultime || m.proprietaire || '(propriété non renseignée)'
+    if (!groupes[cle]) groupes[cle] = { medias: [], type_propriete: m.type_propriete }
+    groupes[cle].medias.push(m)
+  }
+
+  // Trier les groupes par nombre total de sources décroissant
+  const result = Object.entries(groupes)
+    .map(([groupe, data]) => ({
+      groupe,
+      type_propriete: data.type_propriete,
+      nb_sources_total: data.medias.reduce((s, m) => s + m.nb_sources, 0),
+      nb_medias: data.medias.length,
+      medias: data.medias,
+    }))
+    .sort((a, b) => b.nb_sources_total - a.nb_sources_total)
+
+  res.json(result)
 })
 
-// GET /api/medias/:id/stats — stats d'un media (confiance agregee)
+// GET /api/medias/:id/stats — compteurs factuels d'un média + sources récentes.
+// Aucun score de confiance : on décrit (compteurs), on ne note pas (doctrine epoché).
 router.get('/:id/stats', (req, res) => {
   const base = db.prepare(`
     SELECT
@@ -69,9 +110,17 @@ router.get('/:id/stats', (req, res) => {
     WHERE s.media_id = ?
   `).get(req.params.id) as { nb_sources: number; nb_evaluations: number; nb_commentaires: number; nb_mecanismes: number }
 
-  // Score confiance moyen
-  const confiance = calculerConfianceMedia(Number(req.params.id))
-  const score_confiance_moyen = confiance.nbSources > 0 ? confiance.score : null
+  // Mécanismes les plus repérés sur ce média (faits, pas un score)
+  const mecanismes_reperes = db.prepare(`
+    SELECT mr.nom, COUNT(sm.id) as nb
+    FROM source_mecanismes sm
+    JOIN sources s ON s.id = sm.source_id
+    JOIN mecanismes_reference mr ON mr.id = sm.mecanisme_id
+    WHERE s.media_id = ?
+    GROUP BY mr.id
+    ORDER BY nb DESC
+    LIMIT 5
+  `).all(req.params.id) as { nom: string; nb: number }[]
 
   // Sources recentes (5 dernieres)
   const sources_recentes = db.prepare(`
@@ -87,7 +136,7 @@ router.get('/:id/stats', (req, res) => {
     nb_mecanismes: base.nb_mecanismes,
     nb_commentaires: base.nb_commentaires,
     nb_evaluations: base.nb_evaluations,
-    score_confiance_moyen,
+    mecanismes_reperes,
     sources_recentes,
   })
 })

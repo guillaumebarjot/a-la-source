@@ -48,6 +48,9 @@ export default function App() {
             <Route path="/lire/:id" element={<Lire />} />
             <Route path="/observatoire" element={<Observatoire />} />
             <Route path="/observatoire/:section" element={<Observatoire />} />
+            {/* Anciennes routes supprimées (phase 3a) : score de confiance et classement retraits */}
+            <Route path="/observatoire/medias" element={<Navigate to="/observatoire/fiches" replace />} />
+            <Route path="/observatoire/sources" element={<Navigate to="/observatoire/catalogue" replace />} />
             <Route path="/decrypter" element={<Navigate to="/observatoire" replace />} />
             <Route path="/debunkages" element={<Debunkages />} />
             <Route path="/debunkages/:id" element={<Debunkage />} />

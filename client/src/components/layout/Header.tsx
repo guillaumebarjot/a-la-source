@@ -13,13 +13,18 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
     { label: 'Dossiers', to: '/dossiers' },
     { label: 'Debunkages', to: '/debunkages' },
   ],
-  // Observatoire : porte les Mecanismes (retires d'Apprendre).
+  // Observatoire — Référence critique des médias (phase 3a).
+  // Quatre sections factuelles, zéro score-verdict :
+  //   Propriété : cartographie de la concentration des médias
+  //   Couverture : comparaison multisource d'un même fait
+  //   Fiches médias : propriété + transparence + mécanismes repérés
+  //   Catalogue : référence des mécanismes + exemples réels
+  // La section Mécanismes (timeline + matrice) est gardée pour le tableau de bord (phase 3b).
   '/observatoire': [
-    { label: 'Mecanismes', to: '/observatoire/mecanismes' },
-    { label: 'Medias', to: '/observatoire/medias' },
-    { label: 'Fiches medias', to: '/observatoire/fiches' },
-    { label: 'Couverture', to: '/observatoire/couverture' },
-    { label: 'Sources', to: '/observatoire/sources' },
+    { label: 'Propriété', to: '/observatoire/propriete' },
+    { label: 'Couverture comparée', to: '/observatoire/couverture' },
+    { label: 'Fiches médias', to: '/observatoire/fiches' },
+    { label: 'Catalogue mécanismes', to: '/observatoire/catalogue' },
   ],
   '/ateliers': [
     { label: 'Vivier', to: '/ateliers/vivier' },
