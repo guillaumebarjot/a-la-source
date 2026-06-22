@@ -71,6 +71,11 @@
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
+/* Mode sombre : accent dark-safe (le primary crimson echoue le contraste AA). */
+.dark .etapes-pas--courant .etapes-pas-puce {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
 .etapes-pas--courant .etapes-pas-label {
   color: var(--color-text);
   font-weight: 600;

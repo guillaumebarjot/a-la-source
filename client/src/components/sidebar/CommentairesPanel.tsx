@@ -102,7 +102,7 @@ export default function CommentairesPanel({ sourceId }: Props) {
                 {peutEditer(c) && (
                   <div className="commentaire-actions">
                     <button type="button" className="btn btn-sm btn-secondary" onClick={() => demarrerEdition(c)}>Modifier</button>
-                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => supprimer(c)}>Supprimer</button>
+                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => { if (window.confirm('Supprimer ce commentaire ?')) supprimer(c) }}>Supprimer</button>
                   </div>
                 )}
               </>

@@ -75,6 +75,8 @@
   color: var(--rc-crimson, #c8102e);
   font-size: 0.75rem; cursor: pointer; text-decoration: underline;
 }
+/* Mode sombre : le crimson echoue le contraste AA, on passe a l'accent dark-safe. */
+.dark .corpusdnd-retirer { color: var(--color-accent); }
 .corpusdnd-invite {
   margin: var(--space-sm) 0 0;
   font-size: 0.8rem; color: var(--color-text-secondary); text-align: center;

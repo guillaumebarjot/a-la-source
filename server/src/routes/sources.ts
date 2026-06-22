@@ -661,10 +661,21 @@ router.post('/:id/archive-manuelle', (req, res) => {
   if (!contenu || typeof contenu !== 'string') { res.status(400).json({ error: 'Contenu requis' }); return }
 
   const nbMots = compterMots(contenu)
+  // Si l'utilisateur colle du TEXTE BRUT (Europresse, copier-coller), il n'y a pas
+  // de balises : on le met en paragraphes, sinon le rendu HTML ecrase les sauts de
+  // ligne en un pave illisible. Si du HTML est present, on le garde tel quel.
+  const aDuHtml = /<[a-z!][\s\S]*?>/i.test(contenu)
+  const contenuFinal = aDuHtml
+    ? contenu
+    : contenu
+        .trim()
+        .split(/\n{2,}/)
+        .map((p) => `<p>${p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>')}</p>`)
+        .join('\n')
   db.prepare(`
     INSERT INTO archives (source_id, type, contenu, cree_par, nb_mots, statut)
     VALUES (?, ?, ?, ?, ?, 'complete')
-  `).run(req.params.id, type, contenu, req.user?.id || null, nbMots)
+  `).run(req.params.id, type, contenuFinal, req.user?.id || null, nbMots)
 
   res.json({ ok: true, nbMots })
 })

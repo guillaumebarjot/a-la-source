@@ -34,6 +34,9 @@ export default function Lire() {
   const [corrMsg, setCorrMsg] = useState<string | null>(null)
   const [corrSaving, setCorrSaving] = useState(false)
 
+  // Retour visuel des actions rapides (lire plus tard, vers atelier...).
+  const [actionMsg, setActionMsg] = useState('')
+
   const loadSource = useCallback(async () => {
     if (!id) return
     setLoading(true)
@@ -53,12 +56,17 @@ export default function Lire() {
   const archivePartielle = source.archive?.statut === 'partielle'
   const isPaywall = source.paywall === 1
 
+  function flashAction(msg: string) {
+    setActionMsg(msg)
+    setTimeout(() => setActionMsg(''), 2200)
+  }
   async function aLirePlusTard() {
-    await api.post('/auth/lectures', { source_id: source!.id, statut: 'a_lire' })
+    try { await api.post('/auth/lectures', { source_id: source!.id, statut: 'a_lire' }); flashAction('Ajoutee a vos lectures.') }
+    catch { flashAction('Echec, reessayez.') }
   }
   async function proposerAtelier() {
-    await api.patch(`/sources/${source!.id}`, { statut: 'vivier' })
-    loadSource()
+    try { await api.patch(`/sources/${source!.id}`, { statut: 'vivier' }); flashAction('Versee au vivier des ateliers.'); loadSource() }
+    catch { flashAction('Echec, reessayez.') }
   }
 
   async function handleShareOpenChange(open: boolean) {
@@ -205,6 +213,7 @@ export default function Lire() {
           )}
           <a href="#corriger-acces" className="btn-action-sm" title="Remettre un lien ou une copie locale"><FileUp size={14} /> Corriger l'acces</a>
         </div>
+        {actionMsg && <span className="lire-action-msg" role="status" style={{ fontSize: '0.8rem', color: 'var(--color-success, #2e7d32)' }}>{actionMsg}</span>}
       </div>
 
       {/* Corriger l'acces : remettre un lien ou une copie locale, contextuel a la source. */}

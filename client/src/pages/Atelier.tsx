@@ -116,6 +116,7 @@ function AtelierObjt({ id }: { id: number }) {
   }
 
   const terminerAtelier = async (atelierId: number) => {
+    if (!window.confirm('Cloturer cet atelier ? Il passera en archive (Preparation et Pilotage seront masques).')) return
     await api.patch(`/ateliers/${atelierId}`, { statut: 'termine' })
     await fetchAtelier()
   }

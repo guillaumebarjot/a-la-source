@@ -81,10 +81,12 @@ export default function ParcoursSession() {
     setChoixId(mecanismeId)
     if (!sessionId) {
       // Pas de session : correction locale impossible cote serveur. On signale doucement.
+      // Mode decouverte (pas connecte) : on n'affiche PAS un faux verdict d'echec ;
+      // le rendu detecte l'absence de session et montre un encart neutre.
       setResultat({
         correct: false,
         mecanisme_attendu: null,
-        explication: 'Connectez-vous pour enregistrer vos reponses et voir la correction.',
+        explication: '',
         score: 0,
         total: questions.length,
         termine: false,
@@ -219,9 +221,15 @@ export default function ParcoursSession() {
 
       {resultat && (
         <div className="parcours-feedback">
-          <p className={`parcours-feedback-verdict ${resultat.correct ? 'parcours-feedback-verdict--ok' : 'parcours-feedback-verdict--ko'}`}>
-            {resultat.correct ? 'Bonne reponse.' : 'Reponse incorrecte.'}
-          </p>
+          {sessionId ? (
+            <p className={`parcours-feedback-verdict ${resultat.correct ? 'parcours-feedback-verdict--ok' : 'parcours-feedback-verdict--ko'}`}>
+              {resultat.correct ? 'Bonne reponse.' : 'Reponse incorrecte.'}
+            </p>
+          ) : (
+            <p className="parcours-feedback-explication">
+              Mode decouverte. Connectez-vous pour enregistrer vos reponses et voir la correction.
+            </p>
+          )}
           {resultat.mecanisme_attendu && (
             <p className="parcours-feedback-attendu">
               Mecanisme attendu : <strong>{resultat.mecanisme_attendu.nom}</strong>
@@ -231,7 +239,7 @@ export default function ParcoursSession() {
             <p className="parcours-feedback-explication">{resultat.explication}</p>
           )}
           <button className="parcours-btn" onClick={suivant}>
-            {index + 1 >= questions.length ? 'Voir mon score' : 'Question suivante'}
+            {index + 1 >= questions.length ? 'Voir le recap' : 'Question suivante'}
           </button>
         </div>
       )}

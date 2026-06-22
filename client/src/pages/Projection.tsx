@@ -70,7 +70,7 @@ export default function Projection() {
 
   const quitter = () => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
-    navigate('/ateliers/en-cours')
+    navigate(`/ateliers/${atelierId}`)
   }
 
   // Choose source for reading
