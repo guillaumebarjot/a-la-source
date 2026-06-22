@@ -20,6 +20,8 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   useDraggable,
@@ -33,6 +35,7 @@ import {
   useSortable,
   arrayMove,
   verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { api } from '../api/client'
@@ -766,7 +769,13 @@ function PreparationBoard({
   const [overlay, setOverlay] = useState<CarteMin | null>(null)
   const [vivierDragId, setVivierDragId] = useState<number | null>(null)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Mobile : court delai avant capture pour distinguer le glisser du scroll tactile.
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    // Clavier : reordonner au clavier (accessibilite).
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
   const dejaRetenues = useMemo(() => new Set(atelier.sources.map(s => s.id)), [atelier.sources])
   const vivierParId = useMemo(() => new Map(vivier.map(s => [s.id, s])), [vivier])
 

@@ -4,6 +4,8 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -17,6 +19,7 @@ import {
   verticalListSortingStrategy,
   useSortable,
   arrayMove,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
 import '../../styles/corpus-dnd.css'
 
@@ -136,7 +139,13 @@ export default function CorpusDnD({
   videVivier = 'Aucune source disponible.', videCorpus = 'Glissez des cartes ici, ou « + Ajouter ».',
   renderExtra, lienSource, readOnly = false,
 }: CorpusDnDProps) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    // Mobile : court delai avant capture pour distinguer le glisser du scroll tactile.
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    // Clavier : reordonner au clavier (accessibilite).
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
   const reorderable = !!onReorder && !readOnly
 
   // Ordre local du corpus (rendu), resynchronise quand la liste change.
