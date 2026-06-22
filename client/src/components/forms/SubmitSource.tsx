@@ -145,7 +145,7 @@ export default function SubmitSource({ open, onOpenChange, onCreated }: Props) {
           <>
             <div className="submit-preview">
               {preview.image_url && (
-                <img src={preview.image_url} alt="" className="submit-preview-img" />
+                <img src={preview.image_url} alt="" className="submit-preview-img" referrerPolicy="no-referrer" />
               )}
               <div className="submit-preview-fields">
                 <label>

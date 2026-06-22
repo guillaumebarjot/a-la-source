@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import SourceImage from '../components/cards/SourceImage'
 import { api } from '../api/client'
 import type { Contenu } from '../types'
 
@@ -259,9 +260,10 @@ export default function Mecanismes() {
                 {fiche.exemples.map((ex) => (
                   <Link key={ex.id} to={`/lire/${ex.source_id}`} className="mecanisme-exemple-card">
                     <div className="mecanisme-exemple-visuel">
-                      {ex.image_url
-                        ? <img src={ex.image_url} alt="" loading="lazy" />
-                        : <span className="mecanisme-exemple-initiale">{(ex.media_nom || ex.titre).charAt(0)}</span>}
+                      <SourceImage
+                        src={ex.image_url}
+                        fallback={<span className="mecanisme-exemple-initiale">{(ex.media_nom || ex.titre).charAt(0)}</span>}
+                      />
                     </div>
                     <div className="mecanisme-exemple-body">
                       <h3 className="mecanisme-exemple-titre">{ex.titre}</h3>

@@ -29,6 +29,7 @@ function SourceVisuel({ question }: { question: ParcoursQuestion }) {
       src={question.source_image_url}
       alt=""
       loading="lazy"
+      referrerPolicy="no-referrer"
       onError={() => setEnErreur(true)}
     />
   )

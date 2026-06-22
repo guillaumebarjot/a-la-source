@@ -15,6 +15,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useParams, useNavigate, Navigate } from 'react-router-dom'
 import { Star, FileCheck, Pencil, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
+import SourceImage from '../components/cards/SourceImage'
 import {
   DndContext,
   DragOverlay,
@@ -441,9 +442,12 @@ const ZONE_CORPUS = 'zone-corpus'
 type CarteMin = { titre: string; image_url: string | null; media_nom?: string | null }
 
 function PrepVisuel({ source }: { source: CarteMin }) {
-  return source.image_url
-    ? <img src={source.image_url} alt="" loading="lazy" />
-    : <span className="prep-carte-initiale">{(source.media_nom || source.titre).charAt(0)}</span>
+  return (
+    <SourceImage
+      src={source.image_url}
+      fallback={<span className="prep-carte-initiale">{(source.media_nom || source.titre).charAt(0)}</span>}
+    />
+  )
 }
 
 function PrepCarteVivier({ source, dejaRetenue, enDrag, onAjouter }: {

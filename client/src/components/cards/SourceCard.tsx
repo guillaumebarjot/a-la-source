@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Unlock, Lock, FileWarning, FileCheck, File, Star, Target, MessageCircle, Layers, Clock } from 'lucide-react'
 import type { Source, Facettes } from '../../types'
+import SourceImage from './SourceImage'
 import '../../styles/attribution.css'
 import '../../styles/completude.css'
 
@@ -53,9 +54,10 @@ export default function SourceCard({ source, score, facettes, showFraicheur, act
           présente. À défaut d'illustration, un placeholder sobre (initiale du
           média), dark-safe. */}
       <Link to={`/lire/${source.id}`} className="source-card-image" aria-hidden="true" tabIndex={-1}>
-        {imgSrc
-          ? <img src={imgSrc} alt="" loading="lazy" />
-          : <span className="source-card-image-fallback">{(source.media_nom || source.titre || '?').charAt(0)}</span>}
+        <SourceImage
+          src={imgSrc}
+          fallback={<span className="source-card-image-fallback">{(source.media_nom || source.titre || '?').charAt(0)}</span>}
+        />
       </Link>
 
       {score && (

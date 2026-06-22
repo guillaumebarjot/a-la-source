@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
+import SourceImage from '../components/cards/SourceImage'
 import type { Sujet, Atelier } from '../types'
 import '../styles/sujets-accueil.css'
 
@@ -178,9 +179,10 @@ export default function Sujets() {
                   className="sujet-card-visuel"
                   style={s.couleur ? { background: s.couleur } : undefined}
                 >
-                  {s.image_url
-                    ? <img src={s.image_url} alt="" loading="lazy" />
-                    : <span className="sujet-card-initiale">{s.titre.charAt(0)}</span>}
+                  <SourceImage
+                    src={s.image_url}
+                    fallback={<span className="sujet-card-initiale">{s.titre.charAt(0)}</span>}
+                  />
                 </div>
                 <div className="sujet-card-body">
                   <h3 className="sujet-card-titre">{s.titre}</h3>

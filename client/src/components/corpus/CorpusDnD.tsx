@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react'
+import SourceImage from '../cards/SourceImage'
 import {
   DndContext,
   DragOverlay,
@@ -58,9 +59,12 @@ export interface CorpusDnDProps {
 const ZONE = 'corpus-zone'
 
 function Visuel({ carte }: { carte: CorpusCarte }) {
-  return carte.image_url
-    ? <img src={carte.image_url} alt="" loading="lazy" />
-    : <span className="corpusdnd-initiale">{(carte.media_nom || carte.titre).charAt(0)}</span>
+  return (
+    <SourceImage
+      src={carte.image_url}
+      fallback={<span className="corpusdnd-initiale">{(carte.media_nom || carte.titre).charAt(0)}</span>}
+    />
+  )
 }
 
 function CarteVivier({ carte, onAdd, dejaPresente, enDrag, readOnly }: {

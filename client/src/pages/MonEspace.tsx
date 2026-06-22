@@ -169,7 +169,7 @@ function SectionChaines() {
             {videos.map((v) => (
               <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="br-video-card">
                 <div className="br-video-thumb">
-                  <img src={v.vignette} alt={v.titre} loading="lazy" />
+                  <img src={v.vignette} alt={v.titre} loading="lazy" referrerPolicy="no-referrer" />
                   <span className="br-video-duration">{formatDuree(v.duree)}</span>
                 </div>
                 <div className="br-video-info">

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
+import SourceImage from '../components/cards/SourceImage'
 import type { AtelierDetail, MecanismeReference } from '../types'
 
 interface SourceProjection {
@@ -200,7 +201,7 @@ export default function Projection() {
               >
                 {s.image_url && (
                   <div className="projection-card-img">
-                    <img src={s.image_url} alt="" loading="lazy" />
+                    <SourceImage src={s.image_url} />
                   </div>
                 )}
                 <div className="projection-card-body">

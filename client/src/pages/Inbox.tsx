@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
+import SourceImage from '../components/cards/SourceImage'
 import type {
   SourceQualification,
   CompteursQualification,
@@ -286,11 +287,10 @@ function CarteQualification({
     <div className={`hub-carte${s.bien_qualifiee ? ' hub-carte--ok' : ''}`}>
       <div className="hub-carte-tete">
         <Link to={`/lire/${s.id}`} className="hub-carte-vignette" aria-hidden={!s.image_url}>
-          {s.image_url ? (
-            <img src={s.image_url} alt="" loading="lazy" />
-          ) : (
-            <span className="hub-carte-initiale">{(s.titre || '?').charAt(0).toUpperCase()}</span>
-          )}
+          <SourceImage
+            src={s.image_url}
+            fallback={<span className="hub-carte-initiale">{(s.titre || '?').charAt(0).toUpperCase()}</span>}
+          />
         </Link>
         <div className="hub-carte-corps">
           <Link to={`/lire/${s.id}`} className="hub-carte-titre">{s.titre}</Link>
