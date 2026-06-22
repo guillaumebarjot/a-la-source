@@ -12,11 +12,17 @@ if (!existsSync(DB_PATH)) {
 }
 
 const db: DatabaseType = new Database(DB_PATH)
-// On force le mode DELETE (journal rollback classique), jamais WAL : la prod
-// monte la base en bind-mount Docker et l'ancienne base de travail vivait sur
-// OneDrive (sidecars -wal/-shm desynchronises par la synchro cloud => "database
-// disk image is malformed"). DELETE reste le mode sain partout. Ne pas repasser en WAL.
-db.pragma('journal_mode = DELETE')
+// Mode WAL : la base vit desormais sur disque LOCAL (prod = bind-mount Docker
+// d'un repertoire, dev = repo local), plus sur OneDrive. WAL autorise des
+// lecteurs concurrents pendant une ecriture (bien meilleure tenue a la charge,
+// ex. plusieurs dizaines d'utilisateurs) et resiste mieux aux coupures.
+// L'ancien mode DELETE etait impose par OneDrive, dont la synchro cloud
+// corrompait les sidecars -wal/-shm ("database disk image is malformed") :
+// cette contrainte n'existe plus. Ne PAS repasser en DELETE ni pointer la base
+// sur un dossier synchronise (OneDrive, Dropbox...).
+db.pragma('journal_mode = WAL')
+db.pragma('synchronous = NORMAL')
+db.pragma('busy_timeout = 5000')
 db.pragma('foreign_keys = ON')
 
 export default db
