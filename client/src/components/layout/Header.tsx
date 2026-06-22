@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../store/useAuth'
 import GlobalSearch from './GlobalSearch'
+import AjouterSource from '../forms/AjouterSource'
 
 interface SubNavItem {
   label: string
@@ -84,6 +85,7 @@ export default function Header() {
           </div>
         </div>
         <div className="header-right">
+          {user && <AjouterSource />}
           <GlobalSearch />
           {user && <span className="header-user">{user.nom}</span>}
         </div>

@@ -33,3 +33,13 @@
   .global-search-input { width: 9rem; }
   .global-search-results { position: fixed; left: 0.5rem; right: 0.5rem; min-width: 0; }
 }
+
+/* Bouton global « Ajouter une source » (Header, Inbox). */
+.btn-ajouter-source {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 0.35rem 0.7rem;
+  background: var(--color-primary); color: #fff;
+  border: none; border-radius: var(--radius, 6px);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.btn-ajouter-source:hover { filter: brightness(1.08); }

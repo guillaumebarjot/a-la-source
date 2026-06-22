@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import SourceImage from '../components/cards/SourceImage'
+import AjouterSource from '../components/forms/AjouterSource'
 import type {
   SourceQualification,
   CompteursQualification,
@@ -108,6 +109,7 @@ export default function Inbox() {
           <strong> bien qualifiee</strong> quand elle a sa copie locale, son accroche et son
           image. Le travail est collectif.
         </p>
+        <AjouterSource onCreated={charger} label="Ajouter une source" />
       </div>
 
       <div className="hub-filtres" role="tablist" aria-label="Filtrer par ce qui manque">
