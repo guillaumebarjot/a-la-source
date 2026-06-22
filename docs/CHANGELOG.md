@@ -2,6 +2,16 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-22 (soir) — Audit UX multi-perspectives + premiers lots déployés
+
+Audit complet (4 perspectives + 10 simulations d'utilisateurs) consigné dans `docs/audit-ux-2026-06-22.md`. Premiers lots de corrections, déployés en prod :
+- **Lot 1 (quick wins parcours)** : feedback visible sur les actions de lecture qui étaient muettes (« Lire plus tard », « Vers atelier ») ; quiz non connecté en « mode découverte » (fini le faux « Réponse incorrecte ») ; « Quitter » la projection revient à l'atelier (et non à la liste) ; confirmation avant de clôturer un atelier et avant de supprimer un commentaire ; deux fuites de texte rouge en mode sombre corrigées (accent dark-safe) ; un texte collé brut dans « Corriger l'accès » est mis en paragraphes (sinon pavé illisible).
+- **Lot 2 (recherche)** : le moteur FTS5 (`/api/recherche`) existait côté serveur mais n'était jamais appelé. Nouvelle **recherche globale dans le Header** (input débouncé, résultats rankés avec extraits surlignés, navigation vers la source), disponible partout. Aucune dépendance front ajoutée (le FTS serveur suffit à cette échelle).
+- **Lot 3 (ajout)** : le seul point d'entrée pour ajouter une source était enfoui en haut de la Veille. Bouton **« + Ajouter une source » global** (Header, mène à l'Inbox) et en tête de l'Inbox (là où on qualifie). La connexion reste gérée par le SSO Authentik (pas de login in-app).
+- **Lot 4a (glisser-déposer)** : ajout de `TouchSensor` (mobile) et `KeyboardSensor` (clavier) au corpus en glisser-déposer (CorpusDnD + préparation d'atelier) ; la « carte qu'on promène » se promène enfin au doigt et au clavier.
+
+Reste à faire (cf. audit) : carte canonique (factoriser ~10 implémentations + token `--color-accent-text`), recadrage du score (dispensable / facettes factuelles), dédoublonnage du catalogue mécanismes, lien source vers fiche média, menu mobile, champ thème d'atelier, etc.
+
 ## 2026-06-22 — Images fiabilisées (affichage) + bascule base canonique en prod
 
 - **Images « invisibles » corrigées (déployé en prod)** : beaucoup de médias bloquent le hotlinking en vérifiant le `Referer` (403), d'où des og:image qui ne s'affichaient plus (cartes sources, quiz, Inbox, Sujets, Mécanismes, Ateliers, Projection, corpus glisser-déposer). Nouveau composant réutilisable `SourceImage` (client) : `referrerPolicy="no-referrer"` pour débloquer l'affichage, et repli sur l'initiale sobre si le chargement échoue malgré tout (lien mort), fidèle à « la source est une carte qu'on promène ». Le quiz avait déjà un `onError` mais pas de `referrerPolicy`, d'où le ressenti d'images invisibles. Appliqué aux 11 points d'usage.
