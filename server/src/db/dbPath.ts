@@ -1,21 +1,20 @@
-import { join } from 'path'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
 // Resolution UNIQUE du chemin de la base « A la source ».
-// La base est canonique et vit HORS du repo, dans OneDrive 00_PERSO/A la source/
-// (donnees synchronisees par OneDrive ; code par git). Une seule base : celle-ci.
-// Racine OneDrive detectee par plateforme (PRO win32 / PERSO darwin),
-// surchargeable par ONEDRIVE_ROOT ; chemin complet surchargeable par A_LA_SOURCE_DB.
 //
-// Tout acces a la base (app, seeds, migrations) DOIT passer par ce chemin, pour
-// qu'il n'existe jamais une seconde base divergente dans le repo.
-const ONEDRIVE_ROOTS: Record<string, string> = {
-  win32: 'C:/Users/guillaume.barjot/OneDrive - ARTELIA',
-  darwin: '/Users/invite/Library/CloudStorage/OneDrive-ARTELIA',
-}
+// Architecture (06/2026) : la base CANONIQUE vit en PROD sur Bomp4rd
+// (/srv/a-la-source/data/db/a-la-source.db), sauvegardee par restic (offsite,
+// /srv vers Boris) + un backup dedie horodate. La prod fixe son chemin via la
+// variable A_LA_SOURCE_DB (=/data/a-la-source.db dans le conteneur).
+//
+// En DEV local, on ne porte plus toute la base : on travaille sur un ECHANTILLON
+// leger fabrique par server/src/scripts/make-dev-db.ts (db/a-la-source-dev.db,
+// ignore par git). C'est le defaut ci-dessous. On peut toujours surcharger par
+// A_LA_SOURCE_DB (ex. pointer une copie complete recuperee de la prod).
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const ONEDRIVE_ROOT =
-  process.env.ONEDRIVE_ROOT || ONEDRIVE_ROOTS[process.platform] || ''
+// db/ du depot : server/src/db -> server/src -> server -> racine depot, + db/.
+const DEV_DB_DEFAULT = join(__dirname, '..', '..', '..', 'db', 'a-la-source-dev.db')
 
-export const DB_PATH =
-  process.env.A_LA_SOURCE_DB ||
-  join(ONEDRIVE_ROOT, '00_PERSO', 'A la source', 'a-la-source.db')
+export const DB_PATH = process.env.A_LA_SOURCE_DB || DEV_DB_DEFAULT
