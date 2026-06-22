@@ -2,6 +2,11 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-22 — Images fiabilisées (affichage) + bascule base canonique en prod
+
+- **Images « invisibles » corrigées (déployé en prod)** : beaucoup de médias bloquent le hotlinking en vérifiant le `Referer` (403), d'où des og:image qui ne s'affichaient plus (cartes sources, quiz, Inbox, Sujets, Mécanismes, Ateliers, Projection, corpus glisser-déposer). Nouveau composant réutilisable `SourceImage` (client) : `referrerPolicy="no-referrer"` pour débloquer l'affichage, et repli sur l'initiale sobre si le chargement échoue malgré tout (lien mort), fidèle à « la source est une carte qu'on promène ». Le quiz avait déjà un `onError` mais pas de `referrerPolicy`, d'où le ressenti d'images invisibles. Appliqué aux 11 points d'usage.
+- **Base canonique désormais en prod** : la base de référence vit sur Bomp4rd (`/srv/a-la-source/data/db/a-la-source.db`), sauvegardée offsite par restic (`/srv` vers Boris) **et** par un backup dédié horodaté (dump SQLite `VACUUM INTO`, cron 2x/jour, rotation 14 jours). Le dev local ne porte plus toute la base : `server/src/scripts/make-dev-db.ts` fabrique un échantillon léger et représentatif (5 sujets mûrs + les sources du quiz, avec archives, images, tags, mécanismes ; index FTS contentless reconstruit) — 2,2 Mo au lieu de 16. `dbPath.ts` pointe par défaut sur `db/a-la-source-dev.db` (ignoré par git), toujours surchargeable par `A_LA_SOURCE_DB` ; la prod fixe son propre chemin (inchangée).
+
 ## 2026-06-21 — Ateliers : liste + objet atelier, copies anti-bot refaites
 
 - **Ateliers, modèle liste + objet** : `/ateliers` est la liste de tous les ateliers (à venir et en cours, puis passés), chaque carte mène à sa page. `/ateliers/:id` est la page objet d'un atelier : fiche, stepper de jalons, et trois onglets (Préparation avec corpus en glisser-déposer et profil de diversité, Pilotage avec transitions de statut et projection, Synthèse). On peut donc avoir plusieurs ateliers en simultané et entrer dans chacun pour le préparer, le mener, le projeter, le modifier. Les anciennes sections (`en-cours`, `preparation`, `archives`) redirigent vers la liste ; le vivier reste la réserve de sources (`/ateliers/vivier`, et accès depuis la liste). Sous-nav simplifiée (Liste, Vivier).
