@@ -2,6 +2,15 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-23 — Bascule du domaine public vers rouge-coquelicot.fr
+
+L'app est désormais servie sur **`alasource.rouge-coquelicot.fr`** (marque Rouge Coquelicot) ; `alasource.barjot.net` est retiré. Migration côté infra PIAF :
+- **HAProxy** : règle SNI exacte `alasource.rouge-coquelicot.fr` → NPM (les autres sous-domaines RC restent sur JonLuk).
+- **NPM** : hôte dédié + certificat Let's Encrypt propre (HTTP-01), forward-auth Authentik cloné de l'ancien hôte.
+- **Authentik** : provider `alasource-proxy` repointé (`external_host` + `cookie_domain` + `meta_launch_url` → rouge-coquelicot.fr).
+- **App + bot Discord** : `PUBLIC_BASE_URL=https://alasource.rouge-coquelicot.fr` (liens `/partage`, OpenGraph et notifications Discord repointés en un seul point) ; défaut codé en dur mis à jour en repli.
+- `alasource.barjot.net` retiré (hôte NPM supprimé) : les liens Discord déjà postés sous l'ancien domaine ne sont plus servis (retrait sec assumé).
+
 ## 2026-06-22 (soir) — Audit UX multi-perspectives + premiers lots déployés
 
 Audit complet (4 perspectives + 10 simulations d'utilisateurs) consigné dans `docs/audit-ux-2026-06-22.md`. Premiers lots de corrections, déployés en prod :

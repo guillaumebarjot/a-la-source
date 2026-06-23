@@ -6,7 +6,7 @@
  * simple webhook suffit pour ecrire (l'ingestion entrante, elle, demande le bot).
  *
  * Configuration : DISCORD_WEBHOOK_URL (secret, dans /srv/a-la-source/.env).
- * Base des liens : PUBLIC_BASE_URL (defaut https://alasource.barjot.net).
+ * Base des liens : PUBLIC_BASE_URL (defaut https://alasource.rouge-coquelicot.fr).
  *
  * ROBUSTESSE : ne throw jamais, ne bloque jamais la requete appelante.
  * Sans webhook configure, c'est un no-op silencieux.
@@ -30,7 +30,7 @@ export async function notifierPublication(notif: NotifPublication): Promise<void
   if (!webhook) return
 
   try {
-    const base = process.env.PUBLIC_BASE_URL || 'https://alasource.barjot.net'
+    const base = process.env.PUBLIC_BASE_URL || 'https://alasource.rouge-coquelicot.fr'
     const lien = notif.chemin ? `${base}${notif.chemin}` : undefined
     const embed: Record<string, unknown> = {
       title: notif.titre,
@@ -43,7 +43,7 @@ export async function notifierPublication(notif: NotifPublication): Promise<void
     const res = await fetch(webhook, {
       method: 'POST',
       // User-Agent obligatoire : Discord (Cloudflare) renvoie 403/1010 sans lui.
-      headers: { 'Content-Type': 'application/json', 'User-Agent': 'alasource-bot/1.0 (+https://alasource.barjot.net)' },
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'alasource-bot/1.0 (+https://alasource.rouge-coquelicot.fr)' },
       body: JSON.stringify({ username: 'À la source', embeds: [embed] }),
     })
     if (!res.ok) {

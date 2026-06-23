@@ -202,4 +202,4 @@ Route `partage.ts`, montée avant le fallback SPA :
 
 ## Déploiement
 
-Conteneur Docker sur l'infra PIAF (serveur Bomp4rd), `alasource.barjot.net`, derrière Authentik forward-auth (via NPM), port interne 3033. En production, le serveur Express sert le build React (`client/dist`). Voir `docs/deploiement.md`.
+Conteneur Docker sur l'infra PIAF (serveur Bomp4rd), `alasource.rouge-coquelicot.fr`, derrière Authentik forward-auth (via NPM), port interne 3033. En production, le serveur Express sert le build React (`client/dist`). Voir `docs/deploiement.md`.

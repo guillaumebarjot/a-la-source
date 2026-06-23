@@ -24,7 +24,7 @@ const URL_REGEX = /https?:\/\/[^\s<>"')]+/gi
 
 // User-Agent explicite pour les telechargements (CDN Discord, etc.) : certains
 // hotes (Cloudflare) refusent les requetes sans User-Agent.
-const UA = 'alasource-bot/1.0 (+https://alasource.barjot.net)'
+const UA = 'alasource-bot/1.0 (+https://alasource.rouge-coquelicot.fr)'
 
 export function nettoyerUrl(brut: string): string {
   return brut.replace(/[.,;:!?]+$/, '').trim()
@@ -45,7 +45,7 @@ export function estLienPdf(url: string): boolean {
 }
 
 export function lienApp(sourceId: number): string {
-  const base = process.env.PUBLIC_BASE_URL || 'https://alasource.barjot.net'
+  const base = process.env.PUBLIC_BASE_URL || 'https://alasource.rouge-coquelicot.fr'
   return `${base}/lire/${sourceId}`
 }
 

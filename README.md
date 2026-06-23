@@ -153,7 +153,7 @@ L'application tourne sur `http://localhost:3031` en développement. En développ
 | `PORT` | 3031 (dev) / 3033 (conteneur) | Port du serveur |
 | `NODE_ENV` | development | `production` active le serve statique |
 | `A_LA_SOURCE_DB` | (auto) | Chemin de la base SQLite (en prod : `/data/a-la-source.db`) |
-| `PUBLIC_BASE_URL` | -- | URL publique de l'app (`https://alasource.barjot.net`), pour les liens et l'unfurl |
+| `PUBLIC_BASE_URL` | -- | URL publique de l'app (`https://alasource.rouge-coquelicot.fr`), pour les liens et l'unfurl |
 | `DISCORD_TOKEN` | -- | Token du bot Discord ; sans lui l'ingestion et les commandes sont inactives |
 | `DISCORD_WEBHOOK_URL` | -- | Webhook du salon de diffusion (notifications App vers Discord, sans bot) |
 | `DISCORD_CHANNEL_VEILLE` | -- | Identifiant du canal Discord surveillé pour l'ingestion |
@@ -203,7 +203,7 @@ a-la-source/
 ## Déploiement (infra PIAF, Docker + Authentik)
 
 En production, l'application tourne dans un **conteneur Docker** sur l'infra PIAF (serveur **Bomp4rd**) :
-- Servie sur `alasource.barjot.net`, derrière **Authentik forward-auth** (via NPM) ; aucun mot de passe à gérer.
+- Servie sur `alasource.rouge-coquelicot.fr`, derrière **Authentik forward-auth** (via NPM) ; aucun mot de passe à gérer.
 - Conteneur `a-la-source` sur le réseau Docker `web`, **port interne 3033** (un seul process Node.js qui sert l'API et le build client).
 - Base SQLite montée en lecture-écriture (`A_LA_SOURCE_DB=/data/a-la-source.db`), volumes `uploads/` et `image-cache/`.
 - Secrets (token et webhook Discord) dans `/srv/a-la-source/.env`.

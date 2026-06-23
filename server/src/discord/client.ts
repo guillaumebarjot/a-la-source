@@ -20,7 +20,7 @@ import { traiterMessage, sourcePourMessage, type PieceJointe } from './ingestion
 
 // Le bot invite toujours a faire la meme chose, en mieux, dans l'app.
 function avecAstuce(reponse: string): string {
-  const base = process.env.PUBLIC_BASE_URL || 'https://alasource.barjot.net'
+  const base = process.env.PUBLIC_BASE_URL || 'https://alasource.rouge-coquelicot.fr'
   return `${reponse}\n\n_💡 Encore plus confortable dans l'app : ${base}_`
 }
 

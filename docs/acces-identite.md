@@ -7,7 +7,7 @@ reel au 11/06/2026 (verifie dans le code et la base), puis modele recommande.
 
 ## 1. Authentification : Authentik forward-auth (PIAF)
 
-En production (Bomp4rd, `alasource.barjot.net`), l'application est servie derriere
+En production (Bomp4rd, `alasource.rouge-coquelicot.fr`), l'application est servie derriere
 **Authentik** (SSO de l'infra PIAF, en forward-auth via NPM). L'app ne gere
 **aucun mot de passe** : NPM interroge Authentik et transmet l'identite et les
 groupes dans des en-tetes poses par la sous-requete d'auth (anti-usurpation : NPM

@@ -36,7 +36,7 @@ interface ConversationState {
 const conversations = new Map<string, ConversationState>()
 
 function baseApp(): string {
-  return process.env.PUBLIC_BASE_URL || 'https://alasource.barjot.net'
+  return process.env.PUBLIC_BASE_URL || 'https://alasource.rouge-coquelicot.fr'
 }
 
 /**

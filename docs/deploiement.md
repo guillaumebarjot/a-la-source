@@ -2,7 +2,7 @@
 
 > Etat de reference : **conteneur Docker sur l'infra PIAF** (serveur Bomp4rd),
 > derriere Authentik forward-auth, sur le modele de Prisme. La cible publique est
-> `alasource.barjot.net`. La section YunoHost en fin de document est conservee a
+> `alasource.rouge-coquelicot.fr`. La section YunoHost en fin de document est conservee a
 > titre **historique** (ancien mode de deploiement, plus utilise).
 
 ## Prerequis
@@ -10,7 +10,7 @@
 - Acces au serveur PIAF Bomp4rd (Docker + Docker Compose, reseau Docker `web`)
 - Nginx Proxy Manager (NPM) et Authentik en place sur l'infra
 - Node.js >= 22 (uniquement pour le build dans l'image)
-- Sous-domaine pointe : `alasource.barjot.net`
+- Sous-domaine pointe : `alasource.rouge-coquelicot.fr`
 
 ## Architecture de production
 
@@ -22,7 +22,7 @@
                   base SQLite locale /data/a-la-source.db
 ```
 
-NPM termine le TLS (`*.barjot.net`), interroge Authentik en forward-auth, puis
+NPM termine le TLS (cert dédié `alasource.rouge-coquelicot.fr`), interroge Authentik en forward-auth, puis
 transmet la requete au conteneur sur le port interne **3033**. Un seul process
 Node.js sert a la fois l'API et le build statique du client.
 
@@ -54,7 +54,7 @@ vivent et **ne sont jamais commites**.
 | `NODE_ENV` | `production` | Active le serve statique |
 | `PORT` | `3033` | Port d'ecoute interne du conteneur |
 | `A_LA_SOURCE_DB` | `/data/a-la-source.db` | Chemin de la base (volume) |
-| `PUBLIC_BASE_URL` | `https://alasource.barjot.net` | URL publique (liens, unfurl) |
+| `PUBLIC_BASE_URL` | `https://alasource.rouge-coquelicot.fr` | URL publique (liens, unfurl) |
 | `DISCORD_TOKEN` | (secret) | Bot Discord : ingestion + commandes |
 | `DISCORD_WEBHOOK_URL` | (secret) | Webhook du salon de diffusion (notifications) |
 | `DISCORD_CHANNEL_VEILLE` | (id) | Canal Discord surveille pour l'ingestion |
