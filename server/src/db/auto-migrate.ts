@@ -38,6 +38,13 @@ export function autoMigrate(): void {
   ajouterColonne('medias', 'annee_creation', 'INTEGER')
   ajouterColonne('medias', 'ligne_revendiquee', 'TEXT')
 
+  // Chantier G — clusters de propriété et famille éditoriale
+  // groupe_proprietaire : groupe nommé (ex. "Bollore / Vivendi", "Service public audiovisuel")
+  // famille : famille éditoriale (ex. "Presse quotidienne nationale", "Television")
+  // Colonnes déjà peuplées en production ; l'ADD COLUMN est idempotent (protégé par ajouterColonne).
+  ajouterColonne('medias', 'groupe_proprietaire', 'TEXT')
+  ajouterColonne('medias', 'famille', 'TEXT')
+
   // Chantier C — événements (veille multisource)
   db.exec(`
     CREATE TABLE IF NOT EXISTS evenements (

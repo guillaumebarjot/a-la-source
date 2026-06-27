@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS medias (
   nom TEXT NOT NULL UNIQUE COLLATE NOCASE,
   type TEXT,
   url_site TEXT
-, description TEXT, proprietaire TEXT, actionnaire_ultime TEXT, type_propriete TEXT, financement TEXT, annee_creation INTEGER, ligne_revendiquee TEXT);
+, description TEXT, proprietaire TEXT, actionnaire_ultime TEXT, type_propriete TEXT, financement TEXT, annee_creation INTEGER, ligne_revendiquee TEXT, groupe_proprietaire TEXT, famille TEXT);
 CREATE TABLE IF NOT EXISTS auteurs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nom TEXT NOT NULL,
