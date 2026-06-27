@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './store/useAuth'
+import { useUI } from './store/useUI'
 import Header from './components/layout/Header'
 
 const Sujets = lazy(() => import('./pages/Sujets'))
@@ -29,12 +30,26 @@ const Arpentage = lazy(() => import('./pages/Arpentage'))
 
 export default function App() {
   const fetchUser = useAuth((s) => s.fetchUser)
+  const darkMode = useUI((s) => s.darkMode)
 
   useEffect(() => { fetchUser() }, [fetchUser])
 
-  // Mode clair forcé : la classe `.dark` n'est jamais appliquée (cf. store/useUI).
+  // Intercepteur global 401/403 : notifie l'utilisateur d'une session expirée.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const status = (e as CustomEvent<{ status: number }>).detail?.status
+      if (status === 401) {
+        // On re-fetch silencieusement ; si l'utilisateur n'est plus connecté,
+        // l'app le détectera et affichera l'état déconnecté.
+        fetchUser()
+      }
+    }
+    window.addEventListener('als:auth-error', handler)
+    return () => window.removeEventListener('als:auth-error', handler)
+  }, [fetchUser])
+
   return (
-    <div className="app">
+    <div className={`app${darkMode ? ' dark' : ''}`}>
       <Header />
       <main className="main-content">
         <Suspense fallback={<div className="loading">Chargement...</div>}>

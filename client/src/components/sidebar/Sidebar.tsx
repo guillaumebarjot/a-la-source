@@ -13,12 +13,17 @@ interface Props {
 
 function CollapsiblePanel({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
+  const toggle = () => setOpen((o) => !o)
   return (
     <div className="sidebar-panel">
+      {/* role="button" + tabIndex + onKeyDown : rend le repli accessible au clavier (C1). */}
       <h3
         className="sidebar-panel-collapsible"
+        role="button"
+        tabIndex={0}
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
+        onClick={toggle}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle() } }}
       >
         {title}
       </h3>
@@ -57,10 +62,12 @@ export default function Sidebar({ source, onRefresh }: Props) {
       <CollapsiblePanel title="Evaluation" defaultOpen={false}>
         <EvaluationPanel sourceId={source.id} score={source.score} />
       </CollapsiblePanel>
-      <CollapsiblePanel title="Mecanismes" defaultOpen={false}>
+      {/* Décision produit 27/06 : Mécanismes et Commentaires ouverts par défaut (D5)
+          car ce sont les actions cœur de la lecture analytique. */}
+      <CollapsiblePanel title="Mecanismes" defaultOpen={true}>
         <MecanismesPanel sourceId={source.id} mecanismes={source.mecanismes} onRefresh={onRefresh} />
       </CollapsiblePanel>
-      <CollapsiblePanel title="Commentaires" defaultOpen={false}>
+      <CollapsiblePanel title="Commentaires" defaultOpen={true}>
         <CommentairesPanel sourceId={source.id} />
       </CollapsiblePanel>
     </aside>

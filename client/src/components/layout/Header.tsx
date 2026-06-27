@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../store/useAuth'
+import { useUI } from '../../store/useUI'
 import GlobalSearch from './GlobalSearch'
 import AjouterSource from '../forms/AjouterSource'
 
@@ -73,6 +74,8 @@ export default function Header() {
   const isAdmin = user?.role === 'admin'
   const location = useLocation()
   const subNavItems = getSubNavItems(location.pathname)
+  const darkMode = useUI((s) => s.darkMode)
+  const toggleDarkMode = useUI((s) => s.toggleDarkMode)
 
   return (
     <header className="header">
@@ -87,6 +90,15 @@ export default function Header() {
         <div className="header-right">
           {user && <AjouterSource />}
           <GlobalSearch />
+          <button
+            type="button"
+            className="btn-icon header-dark-toggle"
+            onClick={toggleDarkMode}
+            title={darkMode ? 'Passer en mode clair' : 'Passer en mode sombre'}
+            aria-label={darkMode ? 'Mode clair' : 'Mode sombre'}
+          >
+            {darkMode ? '☀' : '☾'}
+          </button>
           {user && <span className="header-user">{user.nom}</span>}
         </div>
       </div>
@@ -99,16 +111,20 @@ export default function Header() {
         <NavLink to="/perso" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Mon espace
         </NavLink>
+        {/* Décision produit 27/06 (D8) : renommage en langage d'usage.
+            Inbox → "À trier" (hub de qualification), Veille → "À lire" (flux des sources qualifiées).
+            Les URLs restent inchangées. */}
         <NavLink
           to="/inbox"
           className={({ isActive }) =>
             (isActive || location.pathname === '/a-archiver' || location.pathname.startsWith('/archiver')) ? 'nav-link active' : 'nav-link'
           }
+          title="Inbox — qualifier les sources entrantes"
         >
-          Inbox
+          A trier
         </NavLink>
-        <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Veille
+        <NavLink to="/veille" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} title="Veille — les sources qualifiees a lire">
+          A lire
         </NavLink>
         <NavLink to="/sujets" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Sujets

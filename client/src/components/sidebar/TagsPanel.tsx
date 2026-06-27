@@ -20,6 +20,7 @@ export default function TagsPanel({ sourceId, tags, onRefresh }: Props) {
   }
 
   async function removeTag(tagId: number) {
+    if (!window.confirm('Supprimer ce tag ?')) return
     await api.delete(`/tags/source/${sourceId}/${tagId}`)
     onRefresh()
   }

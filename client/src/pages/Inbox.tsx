@@ -106,7 +106,7 @@ export default function Inbox() {
         <p className="hub-intro">
           Le hub de la qualite des sources. Qualifier une source, c'est l'enrichir a la
           carte : on traite ce qu'on veut, dans l'ordre qu'on veut. Une source est
-          <strong> bien qualifiee</strong> quand elle a sa copie locale, son accroche et son
+          <strong> prete a lire</strong> quand elle a sa copie locale, son accroche et son
           image. Le travail est collectif.
         </p>
         <AjouterSource onCreated={charger} label="Ajouter une source" />
@@ -302,12 +302,12 @@ function CarteQualification({
             {s.paywall ? <span className="hub-badge hub-badge--alerte">paywall</span> : null}
           </div>
 
-          {/* Jauge de score sobre (factuelle, pas un verdict). */}
-          <div className="hub-jauge" title={`${nbFaits}/${JALONS_ORDRE.length} jalons`}>
+          {/* Avancement factuel : nombre de jalons franchis, sans note chiffrée (D2 : score /100 retiré). */}
+          <div className="hub-jauge" title={`${nbFaits} jalons sur ${JALONS_ORDRE.length}`}>
             <div className="hub-jauge-piste">
-              <div className="hub-jauge-remplie" style={{ width: `${s.score}%` }} />
+              <div className="hub-jauge-remplie" style={{ width: `${Math.round((nbFaits / JALONS_ORDRE.length) * 100)}%` }} />
             </div>
-            <span className="hub-jauge-valeur">{s.score} / 100</span>
+            <span className="hub-jauge-valeur">{nbFaits} / {JALONS_ORDRE.length} jalons</span>
           </div>
 
           {/* Stepper de jalons compact. */}

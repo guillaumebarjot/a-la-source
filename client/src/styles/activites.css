@@ -240,3 +240,34 @@
   font-size: 1.25rem;
   margin: 0 0 var(--space-lg);
 }
+
+/* Badges "Bientot" et cartes grisées (D6/D7 — décision produit 27/06) */
+.creer-carte-titre-ligne,
+.activite-carte-titre-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.creer-carte-bientot,
+.activite-carte-bientot {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* Cartes "bientot" grisées : opacité réduite, pas de hover marqué */
+.creer-carte--bientot,
+.activite-carte--bientot {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+

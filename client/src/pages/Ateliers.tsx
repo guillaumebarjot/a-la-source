@@ -82,9 +82,9 @@ export interface VivierSource extends Source {
   quality_gate: QualityGate
 }
 
-// Tris factuels du vivier (le score n'est plus le tri par défaut, doctrine
-// « décrire, ne pas noter »). Il reste proposé comme tri optionnel.
-export type TriVivier = 'recence' | 'fraicheur' | 'score'
+// Tris factuels du vivier. Décision produit 27/06 (D2) : le tri par score retiré
+// (supprime l'auto-contradiction « on ne les note pas » / tri par score).
+export type TriVivier = 'recence' | 'fraicheur'
 
 // Jalons factuels renvoyés par GET /ateliers/:id.
 interface AtelierJalons {
@@ -202,9 +202,8 @@ function AteliersInterne({
     const trie = [...filtre]
     if (tri === 'fraicheur') {
       trie.sort((a, b) => (b.facettes?.fraicheur ?? 0) - (a.facettes?.fraicheur ?? 0))
-    } else if (tri === 'score') {
-      trie.sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
     } else {
+      // tri === 'recence' (par défaut) — D2 : tri 'score' retiré.
       trie.sort((a, b) => String(b.soumis_le ?? '').localeCompare(String(a.soumis_le ?? '')))
     }
     return trie
@@ -258,7 +257,6 @@ function AteliersInterne({
               <select value={tri} onChange={(e) => setTri(e.target.value as TriVivier)} aria-label="Trier le vivier">
                 <option value="recence">Récence (soumission)</option>
                 <option value="fraicheur">Fraîcheur (ancienneté)</option>
-                <option value="score">Score animateur (optionnel)</option>
               </select>
             </label>
             <label className="vivier-quality-filter">
@@ -893,7 +891,6 @@ function PreparationBoard({
               <select value={tri} onChange={(e) => onChangeTri(e.target.value as TriVivier)} aria-label="Trier le vivier">
                 <option value="recence">Récence</option>
                 <option value="fraicheur">Fraîcheur</option>
-                <option value="score">Score (optionnel)</option>
               </select>
             </label>
             <label>

@@ -87,19 +87,13 @@ export default function Sujets() {
 
   return (
     <div className="sujets-page">
-      {/* 1. Bandeau d'intro */}
-      <header className="accueil-intro">
-        <h1>À la source</h1>
+      {/* Décision produit 27/06 (D9) : la page Sujets se recentre sur la grille de thèmes.
+          L'intro générale de l'app vit sur /accueil. Ici on entre direct dans les thèmes. */}
+      <header className="accueil-intro accueil-intro--compact">
+        <h1>Sujets</h1>
         <p className="accueil-intro-baseline">
-          L'éducation populaire aux médias, en commun. On apprend à remonter à la
-          source de l'information, à démonter ensemble une affirmation trompeuse,
-          et à garder l'œil sur ce qui se publie.
+          Les grands thèmes de notre veille. Chaque sujet rassemble ses sources, ses dossiers et sa couverture médiatique.
         </p>
-        <ul className="accueil-intro-piliers">
-          <li><strong>Ateliers</strong> pour décrypter à plusieurs</li>
-          <li><strong>Débunkage collectif</strong> des affirmations virales</li>
-          <li><strong>Veille partagée</strong> sur les sujets qu'on suit</li>
-        </ul>
       </header>
 
       {/* 2. La une : dernier décryptage à chaud */}
