@@ -2,6 +2,21 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-27 — Clustering des médias par groupe propriétaire et famille éditoriale
+
+Branche `feat/clusters-proprietaire-famille`.
+
+- **Schéma** : deux nouvelles colonnes `groupe_proprietaire TEXT` et `famille TEXT` dans la table `medias` (`schema.sql` et `auto-migrate.ts`). ADD COLUMN idempotent au boot, ne touche pas aux données existantes.
+- **API** : deux nouvelles routes `GET /api/medias/clusters-proprietaire` et `GET /api/medias/clusters-famille`. `PUT /api/medias/:id/propriete` accepte maintenant `groupe_proprietaire` et `famille`. Toutes les routes existantes retournant un média exposent les deux colonnes (via `SELECT m.*`).
+- **Front** : nouvelle section `/observatoire/clusters` (entrée « Qui possède quoi ? » dans la sous-nav). Composant `ClustersMedias` avec bascule entre deux vues :
+  - « Qui possède quoi ? » : section service public / État distincte des groupes privés, accordéons, indéterminé en fin.
+  - « Par famille éditoriale » : accordéons par type de presse, indéterminé en fin.
+  - Carte cliquable vers fiche détail (groupe, famille, propriétaire, mécanismes, sources récentes).
+  - Phrase d'intro pédagogique sans jargon sur chaque vue. Valeurs nulles en section dédiée.
+- **Fiches médias** : `groupe_proprietaire` et `famille` affichés sur la carte et dans la fiche détail (nouvelles lignes du tableau de propriété).
+- **CSS** : classes `clusters-*` dark-safe absolues (jamais de rouge sur fond sombre, tokens CSS seuls).
+- **Doc** : `architecture.md` (nouvelles colonnes + route clusters) et `utilisation.md` (section Observatoire mise à jour, 6 sections).
+
 ## 2026-06-27 — Documentation : passage éditorial + structure
 
 Branche `docs/anti-ia-et-structure-27-06`.
