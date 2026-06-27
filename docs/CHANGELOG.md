@@ -2,6 +2,23 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-27 — Décisions produit + améliorations UX (suite de l'audit 22/06)
+
+Audit à jour dans `docs/audit-ux-2026-06-27.md`. Corrections appliquées sur la branche `feat/ameliorations-ux-audit-27-06`.
+
+- **Mode sombre réactivé** : le toggle (☾/☀) est de retour dans le Header ; la préférence est mémorisée en `localStorage`. La classe `.dark` est posée sur `.app`. Tout le code dark-safe (tokens, garde-fous) existant entre en service.
+- **Score /100 dispensable** : la jauge `/100` de l'Inbox est remplacée par un compteur de jalons `N/M jalons` (factuel, pas de verdict). L'option « Score animateur » disparaît du sélecteur de tri du vivier. Aligné avec « décrire, ne pas noter ».
+- **Panneau Évaluation simplifié** : le score chiffré (total, Écho/40, Pédagogie/50) est retiré. On conserve le nombre brut d'évaluateurs et le formulaire de contribution.
+- **Sidebar ouverte par défaut sur l'essentiel** : Mécanismes et Commentaires s'ouvrent dès l'arrivée sur `/lire/:id` (les deux panneaux-cœur de la lecture analytique). L'en-tête repliable est désormais accessible au clavier (rôle bouton, tabIndex, `onKeyDown`).
+- **Renommage de la navigation** : « Inbox » → « À trier », « Veille » → « À lire » dans la barre principale. Les URLs restent inchangées. Sous-titre contextuel (attribut `title`) rappelle le jargon technique.
+- **Page Sujets recentrée** : le H1 « À la source » et le bandeau intro-piliers disparaissent de `/sujets` (ils doublonnaient l'Accueil). La page affiche désormais directement la grille de thèmes, avec une phrase d'intro courte.
+- **Hub Activités épuré** : Arpentage marqué « Bientôt » et grisé (diffusion non finalisée). La carte de création « Décryptage à chaud » est fusionnée dans Dossier (déjà identiques côté formulaire).
+- **Quiz mode découverte neutre** : on ne dit plus « Réponse incorrecte ». En cas de mauvaise réponse, on affiche « Voir la correction. » + le mécanisme attendu. La bonne réponse reste saluée. Cohérent avec « on n'est pas noté ».
+- **Inbox : feedback auto-effacé** : le message de retour d'action (« Accroche enregistrée », etc.) s'efface automatiquement après 3 secondes.
+- **Confirmation suppression de tag** : `window.confirm()` avant toute suppression de mot-clé.
+- **Avertissement iframe blanche** : notice textuelle affichée avant l'iframe « Source originale » (la plupart des sites bloquent l'embed ; lien d'ouverture dans un nouvel onglet mis en avant).
+- **Intercepteur 401/403 global** : `api/client.ts` émet `als:auth-error` sur toute réponse 401/403 ; `App.tsx` re-fetch l'utilisateur silencieusement (session expirée détectée sans rechargement forcé).
+
 ## 2026-06-23 — Bascule du domaine public vers rouge-coquelicot.fr
 
 L'app est désormais servie sur **`alasource.rouge-coquelicot.fr`** (marque Rouge Coquelicot) ; `alasource.barjot.net` est retiré. Migration côté infra PIAF :

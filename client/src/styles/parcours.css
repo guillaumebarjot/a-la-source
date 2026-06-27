@@ -322,7 +322,9 @@
   font-weight: 700;
 }
 .parcours-feedback-verdict--ok { color: #2e9e5b; }
+/* Mode decouverte neutre : pas de rouge ni de verdict "ko" (décision produit 27/06). */
 .parcours-feedback-verdict--ko { color: var(--color-text); }
+.parcours-feedback-verdict--neutre { color: var(--color-text-secondary); font-weight: 600; }
 .parcours-feedback-attendu {
   margin: 0 0 var(--space-sm);
   color: var(--color-text);
@@ -331,6 +333,10 @@
   margin: 0 0 var(--space-lg);
   color: var(--color-text-secondary);
   line-height: 1.5;
+}
+.parcours-feedback-explication--discret {
+  font-size: 0.8rem;
+  margin-top: var(--space-xs);
 }
 
 /* Ecran de fin */

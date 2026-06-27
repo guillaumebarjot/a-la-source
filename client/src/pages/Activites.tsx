@@ -23,6 +23,7 @@ interface CarteActivite {
   accroche: string
   to: string
   ill: string // initiale ou pictogramme texte (image-titre sobre, sans dépendance)
+  bientot?: boolean
 }
 
 /** Formats de création : point d'entrée unifié vers chaque page de création. */
@@ -34,7 +35,16 @@ interface CarteCreation {
   ill: string
 }
 
-const CREATIONS: CarteCreation[] = [
+/** Décision produit 27/06 :
+ *  - Décryptage à chaud fusionné dans Dossier (D7) : retiré comme carte de création séparée.
+ *    La page Dossier propose déjà la bascule "à chaud". Inutile de dupliquer.
+ *  - Arpentage marqué "bientôt" (D6) : la diffusion n'est pas finalisée.
+ */
+interface CarteCreationEtendue extends CarteCreation {
+  bientot?: boolean
+}
+
+const CREATIONS: CarteCreationEtendue[] = [
   {
     cle: 'creer-atelier',
     titre: 'Atelier',
@@ -45,16 +55,9 @@ const CREATIONS: CarteCreation[] = [
   {
     cle: 'creer-dossier',
     titre: 'Dossier',
-    usage: "Le fond d'un theme media, monte piece par piece avec ses sources.",
+    usage: "Le fond d'un theme media, monte piece par piece avec ses sources. Inclut le decryptage a chaud (meme page, bascule a chaud).",
     to: '/dossiers',
     ill: 'D',
-  },
-  {
-    cle: 'creer-decryptage',
-    titre: 'Decryptage a chaud',
-    usage: "Un dossier date, monte a chaud sur un evenement recent (meme page que le dossier, simple bascule a chaud).",
-    to: '/dossiers',
-    ill: 'C',
   },
   {
     cle: 'creer-debunkage',
@@ -76,6 +79,7 @@ const CREATIONS: CarteCreation[] = [
     usage: "Une lecture collective fragmentee : on decoupe un document, chacun lit un morceau, on synthetise.",
     to: '/arpentages',
     ill: 'R',
+    bientot: true,
   },
 ]
 
@@ -114,6 +118,7 @@ const CARTES: CarteActivite[] = [
     accroche: "Une lecture collective fragmentee : on decoupe un document, chacun lit un morceau, on synthetise ensemble.",
     to: '/arpentages',
     ill: 'R',
+    bientot: true,
   },
 ]
 
@@ -160,14 +165,17 @@ export default function Activites() {
         </p>
         <div className="creer-activite-grid">
           {CREATIONS.map((c) => (
-            <Link key={c.cle} to={c.to} className="creer-carte">
+            <Link key={c.cle} to={c.to} className={`creer-carte${c.bientot ? ' creer-carte--bientot' : ''}`}>
               <div className="creer-carte-visuel" aria-hidden="true">
                 <span className="creer-carte-initiale">{c.ill}</span>
               </div>
               <div className="creer-carte-body">
-                <h3 className="creer-carte-titre">{c.titre}</h3>
+                <div className="creer-carte-titre-ligne">
+                  <h3 className="creer-carte-titre">{c.titre}</h3>
+                  {c.bientot && <span className="creer-carte-bientot">Bientot</span>}
+                </div>
                 <p className="creer-carte-usage">{c.usage}</p>
-                <span className="creer-carte-cta">Creer</span>
+                {!c.bientot && <span className="creer-carte-cta">Creer</span>}
               </div>
             </Link>
           ))}
@@ -180,28 +188,33 @@ export default function Activites() {
         {CARTES.map((c) => {
           const stat = etat[c.cle]
           return (
-            <Link key={c.cle} to={c.to} className="activite-carte">
+            <Link key={c.cle} to={c.to} className={`activite-carte${c.bientot ? ' activite-carte--bientot' : ''}`}>
               <div className="activite-carte-visuel" aria-hidden="true">
                 <span className="activite-carte-initiale">{c.ill}</span>
               </div>
               <div className="activite-carte-body">
-                <h2 className="activite-carte-titre">{c.titre}</h2>
-                <p className="activite-carte-accroche">{c.accroche}</p>
-                <div className="activite-carte-meta">
-                  {loading ? (
-                    <span className="activite-compteur">...</span>
-                  ) : (
-                    <>
-                      <span className="activite-compteur">
-                        {stat?.nb ?? 0} {stat?.nb === 1 ? 'entree' : 'entrees'}
-                      </span>
-                      {c.cle === 'dossiers' && !!stat?.nbChaud && (
-                        <span className="activite-compteur chaud">{stat.nbChaud} a chaud</span>
-                      )}
-                    </>
-                  )}
-                  <span className="activite-lien">Ouvrir</span>
+                <div className="activite-carte-titre-ligne">
+                  <h2 className="activite-carte-titre">{c.titre}</h2>
+                  {c.bientot && <span className="activite-carte-bientot">Bientot</span>}
                 </div>
+                <p className="activite-carte-accroche">{c.accroche}</p>
+                {!c.bientot && (
+                  <div className="activite-carte-meta">
+                    {loading ? (
+                      <span className="activite-compteur">...</span>
+                    ) : (
+                      <>
+                        <span className="activite-compteur">
+                          {stat?.nb ?? 0} {stat?.nb === 1 ? 'entree' : 'entrees'}
+                        </span>
+                        {c.cle === 'dossiers' && !!stat?.nbChaud && (
+                          <span className="activite-compteur chaud">{stat.nbChaud} a chaud</span>
+                        )}
+                      </>
+                    )}
+                    <span className="activite-lien">Ouvrir</span>
+                  </div>
+                )}
               </div>
             </Link>
           )

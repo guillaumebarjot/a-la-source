@@ -9,9 +9,15 @@ interface UIState {
 
 export const useUI = create<UIState>((set) => ({
   sidebarOpen: true,
-  // Mode clair forcé partout (jamais de thème sombre, même si l'OS est en sombre) :
-  // l'app sert en atelier et en projection, le sombre nuit à la lisibilité.
-  darkMode: false,
+  // Mode sombre réactivé (doctrine non négociable). Initialisé depuis localStorage
+  // pour mémoriser la préférence entre sessions.
+  darkMode: typeof window !== 'undefined'
+    ? localStorage.getItem('darkMode') === '1'
+    : false,
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-  toggleDarkMode: () => set(() => ({ darkMode: false })),
+  toggleDarkMode: () => set((s) => {
+    const next = !s.darkMode
+    try { localStorage.setItem('darkMode', next ? '1' : '0') } catch { /* rien */ }
+    return { darkMode: next }
+  }),
 }))

@@ -6,6 +6,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   })
   if (!res.ok) {
+    // Intercepteur global 401/403 (session expirée ou accès interdit).
+    // On émet un événement personnalisé que l'app peut écouter pour notifier l'utilisateur.
+    if (res.status === 401 || res.status === 403) {
+      window.dispatchEvent(new CustomEvent('als:auth-error', { detail: { status: res.status } }))
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error(err.error || res.statusText)
   }

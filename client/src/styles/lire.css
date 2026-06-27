@@ -37,3 +37,14 @@
 .lire-corriger-corps textarea { resize: vertical; }
 .lire-corriger-corps label.btn { cursor: pointer; }
 .lire-corriger-msg { color: var(--color-text-secondary); font-size: 0.85rem; }
+
+/* Avertissement iframe blanche (C4 — décision produit 27/06) */
+.reader-iframe-notice {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface-2, var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}

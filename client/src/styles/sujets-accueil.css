@@ -49,6 +49,15 @@
 }
 .accueil-intro-piliers li strong { color: var(--color-text); font-weight: 600; }
 
+/* Version compacte de l'intro (D9 — page Sujets recentrée sur la grille) */
+.accueil-intro--compact {
+  padding: var(--space-md) var(--space-lg);
+}
+.accueil-intro--compact .accueil-intro-baseline {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 /* Sections génériques de l'accueil */
 .accueil-section { margin-bottom: var(--space-xl, 2rem); }
 .accueil-section-titre {

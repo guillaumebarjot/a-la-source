@@ -214,6 +214,13 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .header-user { font-size: 0.85rem; color: rgba(255,255,255,0.9); }
 .header .btn-icon { color: white; opacity: 0.8; }
 .header .btn-icon:hover { opacity: 1; }
+/* Bouton toggle mode sombre (D1 — décision produit 27/06) */
+.header-dark-toggle {
+  font-size: 1rem; color: rgba(255,255,255,0.8); background: none; border: none;
+  padding: 2px 4px; cursor: pointer; line-height: 1;
+  transition: opacity 0.15s;
+}
+.header-dark-toggle:hover { opacity: 1; color: white; }
 
 /* Nav — integre dans le header */
 .header-nav {

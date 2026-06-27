@@ -268,17 +268,21 @@ export default function Lire() {
                   <a href="#corriger-acces">Remettre un lien ou une copie locale</a>
                 </div>
               )}
+              {/* La plupart des sites bloquent l'affichage en intégré (X-Frame-Options).
+                  On avertit d'abord pour éviter la page blanche muette. */}
+              <p className="reader-iframe-notice">
+                La plupart des sites bloquent l'affichage en integre.
+                Si la page reste blanche,{' '}
+                <a href={source.url!} target="_blank" rel="noopener noreferrer">
+                  ouvrez-la dans un nouvel onglet
+                </a>.
+              </p>
               <iframe
                 src={source.url!}
                 sandbox="allow-same-origin allow-scripts"
                 className="reader-iframe"
                 title={source.titre}
               />
-              <p className="reader-fallback">
-                <a href={source.url!} target="_blank" rel="noopener noreferrer">
-                  Ouvrir dans un nouvel onglet
-                </a>
-              </p>
             </div>
           ) : (
             <Reader

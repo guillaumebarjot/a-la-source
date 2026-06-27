@@ -85,9 +85,8 @@ function AtelierObjt({ id }: { id: number }) {
     const trie = [...filtre]
     if (tri === 'fraicheur') {
       trie.sort((a, b) => (b.facettes?.fraicheur ?? 0) - (a.facettes?.fraicheur ?? 0))
-    } else if (tri === 'score') {
-      trie.sort((a, b) => b.score.scoreTotal - a.score.scoreTotal)
     } else {
+      // tri === 'recence' (par défaut) — D2 : tri 'score' retiré.
       trie.sort((a, b) => String(b.soumis_le ?? '').localeCompare(String(a.soumis_le ?? '')))
     }
     return trie

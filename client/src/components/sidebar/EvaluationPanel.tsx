@@ -23,17 +23,14 @@ export default function EvaluationPanel({ sourceId, score }: Props) {
 
   return (
     <>
-      <div className="score-summary">
-        <div className="score-total">{score.scoreTotal}</div>
-        <div className="score-details">
-          <span>Echo: {Math.round(score.moyEcho)}/40</span>
-          <span>Pedagogie: {Math.round(score.moyPedagogie)}/50</span>
-          <span>Fraicheur: x{score.fraicheur.toFixed(2)}</span>
-          <span>{score.nbEvaluations} eval{score.nbEvaluations > 1 ? 's' : ''}</span>
-        </div>
-      </div>
+      {/* Décision produit 27/06 : on supprime l'affichage du score chiffré (/100, Écho/40,
+          Pédagogie/50). On garde uniquement le nombre d'évaluations (factuel) et le
+          formulaire de contribution. Doctrine : « décrire, ne pas noter ». */}
+      {score.nbEvaluations > 0 && (
+        <p className="eval-compte">{score.nbEvaluations} membre{score.nbEvaluations > 1 ? 's ont' : ' a'} evalue cette source.</p>
+      )}
       {!showForm ? (
-        <button className="btn btn-sm" onClick={() => setShowForm(true)}>Evaluer</button>
+        <button className="btn btn-sm" onClick={() => setShowForm(true)}>Evaluer cette source</button>
       ) : (
         <form className="eval-form" onSubmit={handleSubmit}>
           <label>
