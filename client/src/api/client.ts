@@ -1,3 +1,13 @@
+/**
+ * Client HTTP type-safe pour l'API du serveur.
+ *
+ * Toutes les requêtes sont relatives à /api (proxy Vite en dev, même origine en prod).
+ * Comportement :
+ *   - Réponses 401/403 : émet l'événement personnalisé als:auth-error (App.tsx l'écoute
+ *     pour re-fetch l'utilisateur silencieusement, sans rechargement forcé).
+ *   - Réponses sans corps (204, 200 vide) : retourne null au lieu de planter sur JSON.parse.
+ *   - api.upload() : vide les headers pour laisser le navigateur poser la boundary multipart.
+ */
 const BASE = '/api'
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {

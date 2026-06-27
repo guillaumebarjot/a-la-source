@@ -1,3 +1,14 @@
+/**
+ * Résolution UNIQUE du chemin de la base SQLite.
+ *
+ * En production (Bomp4rd) : A_LA_SOURCE_DB=/data/a-la-source.db (variable d'env du conteneur).
+ * En développement local : db/a-la-source-dev.db (échantillon léger, ignoré par git).
+ *   Générer cet échantillon : npm run make-dev-db (server/src/scripts/make-dev-db.ts).
+ *   On peut surcharger en dev avec A_LA_SOURCE_DB=/chemin/vers/copie.db.
+ *
+ * Ne jamais pointer sur un dossier synchronisé (OneDrive, Dropbox) : le mode WAL
+ * produit des fichiers sidecar -wal/-shm que la synchro cloud corrompt.
+ */
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
