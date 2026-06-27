@@ -1,23 +1,23 @@
-# Contribuer a « A la source »
+# Contribuer à « À la source »
 
 ## Stack technique
 
 - **Frontend** : React 19, TypeScript strict, Vite, Zustand, React Router v7
 - **Backend** : Express, TypeScript, better-sqlite3
-- **Base** : SQLite en mode WAL
+- **Base** : SQLite en mode WAL (journal rollback classique en dev local ; la prod tourne en WAL depuis que la base vit sur un disque local, hors OneDrive)
 - **Archivage** : @mozilla/readability + jsdom
 
-## Developpement
+## Développement
 
 ```bash
 npm install
-npm run init-db   # premiere fois
-npm run dev       # lance server + client en parallele
+npm run init-db   # première fois
+npm run dev       # lance server + client en parallèle
 ```
 
 - Client : http://localhost:5173 (Vite HMR)
 - API : http://localhost:3031
-- En dev, le user est `HydroLooney` par defaut (pas de SSO)
+- En dev, l'utilisateur par défaut est `HydroLooney` (pas de SSO)
 
 ## Conventions
 
@@ -26,17 +26,21 @@ npm run dev       # lance server + client en parallele
 - Un fichier = un composant ou une route
 - Noms de fichiers en PascalCase (composants) ou camelCase (utils)
 - CSS avec variables, pas de framework CSS
-- API REST, reponses JSON
-- Pas de mention d'outils de generation de code
+- API REST, réponses JSON
+- Pas de mention d'outils de génération de code
 
-## Schema BDD
+## Schéma BDD
 
-Le schema initial est dans `server/src/db/schema.sql`. Les evolutions sont des scripts `migrate-*.ts` (a plat dans `server/src/db/`, ex. `migrate-activites.ts`), appliques au demarrage de maniere idempotente par `auto-migrate.ts`. Les seeds sont des `seed-*.ts`.
+Le schéma initial est dans `server/src/db/schema.sql`. Les évolutions sont des scripts `migrate-*.ts` (à plat dans `server/src/db/`, ex. `migrate-activites.ts`), appliqués au démarrage de manière idempotente par `auto-migrate.ts`. Les seeds sont des `seed-*.ts`.
 
-Socle des activites : la table `activites` (socle commun) + une extension par type (`atelier_pipeline`, `debunkage_pipeline`, `dossier_contenu`, `arpentage_pipeline`). Le parcours vit en tables propres (`parcours*`). Voir `docs/architecture.md`.
+Socle des activités : la table `activites` (socle commun) + une extension par type (`atelier_pipeline`, `debunkage_pipeline`, `dossier_contenu`, `arpentage_pipeline`). Le parcours vit en tables propres (`parcours*`). Voir `docs/architecture.md`.
 
-## Roles
+## Rôles
 
-- **membre** : soumettre, taguer, commenter, evaluer, lire
-- **facilitateur·ice** : tout ce qu'un membre peut faire + gerer les ateliers
-- **admin** : tout + gerer les utilisateurs
+- **membre** : soumettre, taguer, commenter, évaluer, lire
+- **facilitateur·ice** : tout ce qu'un membre peut faire + gérer les ateliers
+- **admin** : tout + gérer les utilisateurs
+
+## Branches et commits
+
+Une branche par chantier, fusionnée par merge request. Messages de commit en français accentué, anonymes, sans mention d'outil. Voir `docs/workflow-git.md` pour la procédure complète (checklist de revue, règle de la base canonique).

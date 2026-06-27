@@ -1,3 +1,18 @@
+/**
+ * Calcul du score atelier et des indicateurs de fraîcheur.
+ *
+ * Fonctions exportées :
+ *   - coeffFraicheur(datePublication, typeSource) : coefficient 0-1 de décroissance
+ *     temporelle (demi-vie par type de source, paramétrable en admin).
+ *   - calculerTiming(dureeMinutes, override) : indice A/B/C/D selon la durée de lecture
+ *     (zone optimale atelier : 5-10 min = A).
+ *   - calculerScoreSource(sourceId, ...) : score /100 = pédagogie + écho, avec détail.
+ *     Utilisé comme tri OPTIONNEL au vivier ; jamais affiché comme verdict à l'Inbox.
+ *   - calculerConfianceMedia(mediaId) : indicateur par média (conservé en base,
+ *     retiré de l'interface depuis la doctrine « décrire, ne pas noter »).
+ *
+ * Les poids pédagogie/écho sont paramétrables via la table `parametres` (clé score_poids).
+ */
 import db from './db.js'
 
 interface EvalRow {

@@ -1,3 +1,16 @@
+/**
+ * Extraction d'articles web (anti-linkrot).
+ *
+ * extractReadability(url) : télécharge la page, applique les règles FTR du site
+ * (ftr-site-config.ts), puis Mozilla Readability pour extraire le texte principal.
+ * Retourne titre, contenu HTML, texte brut, accroche, auteur et mots-clés.
+ *
+ * detecterArchivePartielle(textContent, paywall) : détermine si l'archive est
+ * complète ou partielle (trop courte, pattern paywall dans les 100 derniers mots).
+ *
+ * Entrée : URL publique de l'article.
+ * Sortie : ReadabilityResult | null (null si fetch échoue ou Readability ne parse pas).
+ */
 import { Readability } from '@mozilla/readability'
 import { JSDOM } from 'jsdom'
 import { findSiteConfig, applySiteConfig, extractSiteMetadata } from './ftr-site-config.js'

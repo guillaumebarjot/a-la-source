@@ -29,7 +29,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 
 | Montage | Fichier | Rôle |
 |---|---|---|
-| `/api/sources` | sources.ts | CRUD des sources (vivier), fetch métadonnées, statuts veille/vivier/atelier/archive. `GET /qualification` : hub de qualité des sources (Inbox-hub), jalons booléens, score d'avancement 0-100, filtre `?manque=` par jalon manquant. |
+| `/api/sources` | sources.ts | CRUD des sources (vivier), fetch métadonnées, statuts veille/vivier/atelier/archive. `GET /qualification` : hub de qualité des sources (Inbox-hub), jalons booléens, compteur de jalons N/M, filtre `?manque=` par jalon manquant. |
 | `/api/tags` | tags.ts | Tags manuels (thématique/mécanisme/média/libre) |
 | `/api/evaluations` | evaluations.ts | Scores écho (0-40) et pédagogie (0-50) par évaluateur |
 | `/api/commentaires` | commentaires.ts | Commentaires/analyses/questions sur les sources |
@@ -51,7 +51,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 
 ### Bibliothèques (`server/src/lib/`)
 
-- `db.ts` : connexion better-sqlite3, mode DELETE (pas WAL, incompatible OneDrive), `foreign_keys = ON`.
+- `db.ts` : connexion better-sqlite3, mode WAL (la base est locale, sur disque, hors OneDrive), `foreign_keys = ON`.
 - `auth.ts` : middleware d'authentification (Authentik forward-auth : lit `X-authentik-username` / `X-authentik-groups`, repli `Remote-User` puis `?_user=` en dev ; rôle dérivé des groupes, élevable en base).
 - `readability.ts` + `opengraph.ts` : extraction d'articles (Mozilla Readability, OpenGraph).
 - `ftr-site-config.ts` : règles FullTextRSS par site (65 sites configurés).
@@ -93,7 +93,9 @@ Refonte v3 (par sujets), tables additives (auto-migrate au boot, idempotent) :
 - `mobilisee` : versée dans au moins 1 activité
 - `commentee` : au moins 1 commentaire
 
-Score pondéré : copie_locale 25, accroche 20, image 15, sujet 20, analysee 10, mobilisee 5, commentee 5. **Bien qualifiée** = copie_locale ET accroche ET image. Filtre `?manque=<jalon>` pour cibler les sources incomplètes. Filtre `?tout=1` pour inclure les sources déjà bien qualifiées.
+L'affichage montre un compteur de jalons `N/M` (factuel, pas un verdict de score). **Bien qualifiée** = copie_locale ET accroche ET image. Filtre `?manque=<jalon>` pour cibler les sources incomplètes. Filtre `?tout=1` pour inclure les sources déjà bien qualifiées.
+
+Note : la table `evaluations` conserve des colonnes de score (écho/pédagogie) pour le tri optionnel au vivier ; le score-verdict global n'est plus affiché dans l'Inbox (décision 27/06, aligné avec la doctrine « décrire, ne pas noter »).
 
 #### Autres tables additives
 
@@ -133,14 +135,18 @@ SPA React 19, react-router-dom 7, pages en `lazy()`. State global zustand (`stor
 Le menu H1 comporte 8 entrées :
 
 ```
-Accueil | Mon espace | Inbox | Veille | Sujets | Activités | Apprendre | Observatoire
+Accueil | Mon espace | À trier | À lire | Sujets | Activités | Apprendre | Observatoire
 (+ Admin si admin)
 ```
+
+Les libellés de la navigation (depuis le 27/06) :
+- « **Inbox** » s'affiche « **À trier** » dans la barre de navigation (URL `/inbox` inchangée ; sous-titre `title` rappelle le terme technique).
+- « **Veille** » s'affiche « **À lire** » dans la barre de navigation (URL `/veille` inchangée).
 
 Changements par rapport à la v3 initiale :
 - **Accueil** remplace Sujets en tête (pédagogique, point d'entrée).
 - **Mon espace** juste après Accueil.
-- **Inbox** en H1 (le hub qualité) ; Archiver est retiré (fondu dans l'Inbox via filtres).
+- **À trier (Inbox)** en H1 (le hub qualité) ; Archiver est retiré (fondu dans l'Inbox via filtres).
 - **Parcours** retiré du hub Activités, vit désormais uniquement sous Apprendre (sous-nav H2).
 - **Mécanismes** retiré d'Apprendre, vit désormais uniquement sous Observatoire (sous-nav H2).
 

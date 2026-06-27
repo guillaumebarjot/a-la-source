@@ -1,3 +1,16 @@
+/**
+ * Point d'entrée du serveur « À la source ».
+ *
+ * Lance Express sur le port PORT (défaut 3031 en dev, 3033 en prod via conteneur).
+ * Ordre de démarrage :
+ *   1. autoMigrate() — met le schéma SQLite à jour (idempotent, sûr au redémarrage).
+ *   2. Middlewares globaux : JSON, authMiddleware (identité Authentik forward-auth).
+ *   3. Fichiers statiques : /uploads (copies locales) et /images (cache og:image).
+ *   4. Routes API (montées sous /api/...).
+ *   5. Route /partage (pages HTML publiques OpenGraph, montée AVANT le fallback SPA).
+ *   6. Fallback SPA : sert client/dist en production.
+ *   7. startDiscordBot() — lancé après le listen, non bloquant, gated sur DISCORD_TOKEN.
+ */
 import express from 'express'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
