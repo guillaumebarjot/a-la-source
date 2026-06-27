@@ -3,6 +3,24 @@ import db from '../lib/db.js'
 
 const router = Router()
 
+// Type interne partagé pour les routes de clustering
+interface MediaRow {
+  id: number
+  nom: string
+  type: string | null
+  url_site: string | null
+  description: string | null
+  proprietaire: string | null
+  actionnaire_ultime: string | null
+  type_propriete: string | null
+  financement: string | null
+  annee_creation: number | null
+  ligne_revendiquee: string | null
+  groupe_proprietaire: string | null
+  famille: string | null
+  nb_sources: number
+}
+
 // Migration inline : ajouter colonne description si absente
 try {
   db.prepare("SELECT description FROM medias LIMIT 1").get()
@@ -162,10 +180,92 @@ router.post('/', (req, res) => {
   res.status(201).json({ id: Number(r.lastInsertRowid) })
 })
 
-// Champs de propriété éditables (Chantier A)
+// GET /api/medias/clusters-proprietaire — médias regroupés par groupe_proprietaire
+// Trois sections : service public / État (groupe_proprietaire correspondant), privé, indéterminé.
+// Chaque groupe est trié par nb_medias desc. Les médias sans groupe_proprietaire sont en dernier.
+router.get('/clusters-proprietaire', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      m.id, m.nom, m.type, m.url_site, m.description,
+      m.proprietaire, m.actionnaire_ultime, m.type_propriete,
+      m.financement, m.annee_creation, m.ligne_revendiquee,
+      m.groupe_proprietaire, m.famille,
+      COUNT(s.id) as nb_sources
+    FROM medias m
+    LEFT JOIN sources s ON s.media_id = m.id
+    GROUP BY m.id
+    ORDER BY m.groupe_proprietaire NULLS LAST, nb_sources DESC, m.nom
+  `).all() as MediaRow[]
+
+  const groupes: Record<string, { medias: MediaRow[] }> = {}
+  for (const m of rows) {
+    const cle = m.groupe_proprietaire ?? '__indetermine'
+    if (!groupes[cle]) groupes[cle] = { medias: [] }
+    groupes[cle].medias.push(m)
+  }
+
+  // Trier : indéterminé en dernier, sinon par nb_medias desc
+  const INDETERMINE = '__indetermine'
+  const result = Object.entries(groupes)
+    .map(([groupe, data]) => ({
+      groupe: groupe === INDETERMINE ? null : groupe,
+      nb_medias: data.medias.length,
+      nb_sources_total: data.medias.reduce((s, m) => s + m.nb_sources, 0),
+      medias: data.medias,
+    }))
+    .sort((a, b) => {
+      if (a.groupe === null) return 1
+      if (b.groupe === null) return -1
+      return b.nb_medias - a.nb_medias
+    })
+
+  res.json(result)
+})
+
+// GET /api/medias/clusters-famille — médias regroupés par famille éditoriale
+router.get('/clusters-famille', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      m.id, m.nom, m.type, m.url_site, m.description,
+      m.proprietaire, m.actionnaire_ultime, m.type_propriete,
+      m.financement, m.annee_creation, m.ligne_revendiquee,
+      m.groupe_proprietaire, m.famille,
+      COUNT(s.id) as nb_sources
+    FROM medias m
+    LEFT JOIN sources s ON s.media_id = m.id
+    GROUP BY m.id
+    ORDER BY m.famille NULLS LAST, nb_sources DESC, m.nom
+  `).all() as MediaRow[]
+
+  const familles: Record<string, { medias: MediaRow[] }> = {}
+  for (const m of rows) {
+    const cle = m.famille ?? '__indetermine'
+    if (!familles[cle]) familles[cle] = { medias: [] }
+    familles[cle].medias.push(m)
+  }
+
+  const INDETERMINE = '__indetermine'
+  const result = Object.entries(familles)
+    .map(([famille, data]) => ({
+      famille: famille === INDETERMINE ? null : famille,
+      nb_medias: data.medias.length,
+      nb_sources_total: data.medias.reduce((s, m) => s + m.nb_sources, 0),
+      medias: data.medias,
+    }))
+    .sort((a, b) => {
+      if (a.famille === null) return 1
+      if (b.famille === null) return -1
+      return b.nb_medias - a.nb_medias
+    })
+
+  res.json(result)
+})
+
+// Champs de propriété éditables (Chantier A + G)
 const PROPRIETE_FIELDS = [
   'proprietaire', 'actionnaire_ultime', 'type_propriete',
   'financement', 'annee_creation', 'ligne_revendiquee',
+  'groupe_proprietaire', 'famille',
 ] as const
 
 // PUT /api/medias/:id/propriete — édite la propriété structurée d'un média
