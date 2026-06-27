@@ -25,6 +25,7 @@ const SUBNAV_CONFIG: Record<string, SubNavItem[]> = {
   '/observatoire': [
     { label: 'Tableau de bord', to: '/observatoire/tableau-de-bord' },
     { label: 'Propriété', to: '/observatoire/propriete' },
+    { label: 'Qui possède quoi ?', to: '/observatoire/clusters' },
     { label: 'Couverture comparée', to: '/observatoire/couverture' },
     { label: 'Fiches médias', to: '/observatoire/fiches' },
     { label: 'Catalogue mécanismes', to: '/observatoire/catalogue' },

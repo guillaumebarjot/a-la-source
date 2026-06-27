@@ -7,6 +7,7 @@ import {
 import { api } from '../api/client'
 import FichesMedias from '../components/observatoire/FichesMedias'
 import Couverture from '../components/observatoire/Couverture'
+import ClustersMedias from '../components/observatoire/ClustersMedias'
 import type { MecanismeStat, TableauDeBordData } from '../types'
 
 /* ---------- Types locaux ---------- */
@@ -743,6 +744,10 @@ export default function Observatoire() {
 
       {section === 'couverture' && (
         <Couverture />
+      )}
+
+      {section === 'clusters' && (
+        <ClustersMedias />
       )}
 
       {section === 'fiches' && (
