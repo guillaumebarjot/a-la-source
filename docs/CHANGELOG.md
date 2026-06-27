@@ -2,6 +2,19 @@
 
 Doc vivante des évolutions notables. À jour de ce qui est réellement fait.
 
+## 2026-06-27 — Documentation : passage éditorial + structure
+
+Branche `docs/anti-ia-et-structure-27-06`.
+
+- **Index `docs/README.md` créé** : table des documents du dossier `docs/` (référence technique, guides, workflow, conceptions, audits), point d'entrée pour les nouveaux contributeurs.
+- **Passage éditorial transversal** : retrait des tirets cadratin en ponctuation (R7), accentuation des mots français dans `deploiement.md`, `acces-identite.md`, `CONTRIBUTING.md`, `workflow-git.md` ; formules creuses supprimées dans `README.md`.
+- **Cohérence factuelle** :
+  - `docs/schema-bdd.md` et `docs/architecture.md` : mode journal corrigé (WAL, pas DELETE ; la contrainte DELETE venait d'OneDrive, résolue depuis que la base est locale).
+  - `docs/architecture.md` et `docs/utilisation.md` : jauge score /100 de l'Inbox remplacée par compteur de jalons N/M (décision 27/06).
+  - `docs/architecture.md`, `docs/utilisation.md`, `README.md` : navigation mise à jour (« Inbox » → « À trier », « Veille » → « À lire », décision 27/06).
+- **En-têtes de modules** ajoutés : `server/src/index.ts`, `server/src/db/dbPath.ts`, `server/src/lib/readability.ts`, `server/src/lib/score.ts`, `client/src/api/client.ts`.
+- **CONTRIBUTING.md** refondu : accentuation, correction du mode journal, ajout d'une section « Branches et commits » pointant vers `workflow-git.md`.
+
 ## 2026-06-27 — Décisions produit + améliorations UX (suite de l'audit 22/06)
 
 Audit à jour dans `docs/audit-ux-2026-06-27.md`. Corrections appliquées sur la branche `feat/ameliorations-ux-audit-27-06`.

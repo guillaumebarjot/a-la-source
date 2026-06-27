@@ -4,29 +4,25 @@
 
 > Développer le sens critique, ensemble. Pas dénoncer les médias, mais comprendre comment l'information est construite.
 
----
-
 ## Pourquoi cet outil ?
 
-Les ateliers « À la source » existent depuis 2024 au sein de Rouge Coquelicot. Un groupe se retrouve, découvre une source choisie collectivement, et analyse ensemble comment l'information est construite — quels mécanismes informationnels sont à l'oeuvre, quel cadrage, quels implicites.
+Les ateliers « À la source » existent depuis 2024 au sein de Rouge Coquelicot. Un groupe se retrouve, découvre une source choisie collectivement, et analyse ensemble comment l'information est construite : quels mécanismes informationnels sont à l'œuvre, quel cadrage, quels implicites.
 
 **Le problème** : préparer ces ateliers et maintenir une veille collaborative nécessitait un outil dédié. Rien sur le marché ne correspondait à notre usage (voir la section [Pourquoi pas Linkwarden ?](#pourquoi-pas-linkwarden-ou-wallabag-ou-shaarli)).
 
 **La solution** : une application web légère, autohébergée, construite sur mesure pour le workflow associatif d'éducation populaire aux médias.
 
----
-
 ## Ce que permet l'application
 
-> **Refonte v3, par sujets.** L'entrée du produit est le **Sujet** (thème durable, ex. le lithium en Alsace), pas le flux de liens. La veille collaborative (« Veille ») devient un **substrat secondaire** qui alimente sujets et activités. Autour des données communes (sources, événements, médias, mécanismes, sujets) se branche une famille d'**activités** d'éducation populaire.
+> **Refonte v3, par sujets.** L'entrée du produit est le **Sujet** (thème durable, ex. le lithium en Alsace), pas le flux de liens. La veille collaborative (« À lire ») devient un **substrat secondaire** qui alimente sujets et activités. Autour des données communes (sources, événements, médias, mécanismes, sujets) se branche une famille d'**activités** d'éducation populaire.
 
 ### Accueil pédagogique (`/accueil`)
 
-La page d'accueil explique le parcours d'une source de bout en bout (de l'Inbox aux activités), avec **aide au survol** sur chaque étape et **blocs repliables** pour le menu de l'application. Le raccourci vers l'Inbox en attente et vers les parcours et lectures en cours y est affiché. Personne ne doit être perdu.
+La page d'accueil explique le parcours d'une source de bout en bout (de l'Inbox aux activités), avec **aide au survol** sur chaque étape et **blocs repliables** pour le menu de l'application. Le raccourci vers l'Inbox en attente et vers les parcours et lectures en cours y est affiché.
 
-### Inbox (hub de la qualité des sources)
+### À trier — hub de la qualité des sources (`/inbox`)
 
-L'Inbox est le **hub collectif de qualification des sources** (entrée H1). Qualifier une source n'est plus un simple « envoyer en veille » : c'est un **tunnel d'enrichissement à la carte**, non bloquant, en six étapes (accepter, fiabiliser, situer, analyser, mobiliser, commenter). Chaque source affiche ses **jalons factuels** (copie locale, accroche, image, sujet, mécanisme, activité, commentaire) et un **score d'avancement 0-100** (copie locale 25 pts, accroche 20, image 15, sujet 20, mécanisme 10, activité 5, commentaire 5). Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
+L'Inbox est le **hub collectif de qualification des sources** (entrée H1, libellé « À trier »). Qualifier une source n'est plus un simple « envoyer en veille » : c'est un **tunnel d'enrichissement à la carte**, non bloquant, en six étapes (accepter, fiabiliser, situer, analyser, mobiliser, commenter). Chaque source affiche ses **jalons factuels** (copie locale, accroche, image, sujet, mécanisme, activité, commentaire) et un **compteur de jalons** N/M. Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
 
 Les **filtres par ce qui manque** (à accepter, sans copie locale, sans accroche, sans image, sans sujet, non analysée) remplacent l'ancienne page Archiver. La copie locale s'ajoute inline sur la carte de la source (archivage automatique, collage de texte Europresse ou PDF joint) sans ressaisir l'identifiant de la source. Endpoint serveur : `GET /api/sources/qualification`.
 
@@ -43,16 +39,16 @@ Un **socle commun** (table `activites`) avec un pipeline par type. 6 types : **a
 - **Atelier** : liste unique (à venir, en cours, puis passés) + page objet par atelier (stepper de jalons, onglets Préparation / Pilotage / Synthèse, projection plein écran, export PDF). Vivier accessible depuis la liste ou directement.
 - **Dossier / décryptage** : mise en perspective et contenu rédigé ; le décryptage est un dossier « à chaud » rattaché à un événement.
 - **Débunkage** : démonstration, sources pour/contre, liens de posts réseaux.
-- **Parcours** : cursus Apprendre, quiz de repérage des mécanismes sur cartes-sources nues (score).
+- **Parcours** : cursus Apprendre, quiz de repérage des mécanismes sur cartes-sources nues.
 - **Arpentage** : lecture collective fragmentée d'un document, attribution, restitutions, synthèse.
 
-### Veille collaborative (`/veille`)
+### À lire — veille collaborative (`/veille`)
 
-Le substrat de la veille (distinct de l'Inbox). Affiche les sources soumises et qualifiées, triées par récence. Soumission URL-first : coller une URL, tout le reste est auto-fetché (titre, auteur, média, mots-clés, image, accroche, archive). Filtres par média/tag/type/commentées.
+Le substrat de la veille (libellé « À lire », distinct de l'Inbox). Affiche les sources soumises et qualifiées, triées par récence. Soumission URL-first : coller une URL, tout le reste est auto-fetché (titre, auteur, média, mots-clés, image, accroche, archive). Filtres par média/tag/type/commentées.
 
 ### Observatoire (`/observatoire`)
 
-La **référence critique des médias** : qui possède quoi (propriété et concentration), couverture comparée d'un même fait, fiches médias factuelles, catalogue des mécanismes. Outils d'analyse, jamais de notation de média. Le **catalogue des 25 mécanismes** vit désormais sous Observatoire (retiré d'Apprendre). Cinq sections (sous-nav H2) : **Tableau de bord** (miroir factuel de notre veille : volumes, médias, mécanismes, sujets), **Propriété** (cartographie des actionnaires), **Couverture comparée**, **Fiches médias** (propriété + transparence), **Catalogue mécanismes** (fiches pédagogiques avec exemples réels). Doctrine : décrire, ne pas noter.
+La **référence critique des médias** : qui possède quoi (propriété et concentration), couverture comparée d'un même fait, fiches médias factuelles, catalogue des mécanismes. Cinq sections (sous-nav H2) : **Tableau de bord** (miroir factuel de notre veille : volumes, médias, mécanismes, sujets), **Propriété** (cartographie des actionnaires), **Couverture comparée**, **Fiches médias** (propriété + transparence), **Catalogue mécanismes** (fiches pédagogiques avec exemples réels). Doctrine : décrire, ne pas noter.
 
 ### Apprendre (`/apprendre`)
 
@@ -91,8 +87,6 @@ Ingestion Discord vers Inbox : un message posté dans un canal surveillé crée 
 
 Pages publiques OpenGraph (`/partage/debunkage|dossier/:id`, `/partage/sujet/:slug`) partageables sur Discord (carte « unfurlée »). Exports YesWiki des débunkages, dossiers et sujets.
 
----
-
 ## Pourquoi pas Linkwarden, ou Wallabag, ou Shaarli ?
 
 Cette question revient régulièrement. Voici la réponse :
@@ -109,9 +103,7 @@ Cette question revient régulièrement. Voici la réponse :
 | **Analyse collaborative** | Non | Commentaires types, questions guidées |
 | **Anti-linkrot spécialisé** | Oui (générique) | Oui, règles par site (65 sites FR) |
 
-**En résumé** : les outils de bookmarking archivent des liens. **À la source** structure une démarche pédagogique collective autour de ces liens. Ce n'est pas la même chose.
-
----
+Les outils de bookmarking archivent des liens. **À la source** structure une démarche pédagogique collective autour de ces liens.
 
 ## Navigation
 
@@ -120,12 +112,10 @@ L'interface s'organise en 3 niveaux de header :
 | Niveau | Contenu |
 |---|---|
 | H0 | Bandeau Rouge Coquelicot (logo + titre) |
-| H1 | Navigation principale : **Accueil · Mon espace · Inbox · Veille · Sujets · Activités · Apprendre · Observatoire** (+ Admin) |
+| H1 | Navigation principale : **Accueil · Mon espace · À trier · À lire · Sujets · Activités · Apprendre · Observatoire** (+ Admin) |
 | H2 | Sous-navigation contextuelle selon la page (ex. Activités > Ateliers · Dossiers · Débunkages ; Ateliers > Liste · Vivier ; Observatoire > Tableau de bord · Propriété · Couverture comparée · Fiches médias · Catalogue mécanismes ; Apprendre > Parcours · Manuel · Aide & Ressources) |
 
 Redirections de compatibilité : `/` vers `/accueil`, `/archiver` et `/a-archiver` vers `/inbox?manque=copie_locale`, `/mecanismes` vers `/apprendre`, `/decrypter` vers `/observatoire`, `/aide` vers `/apprendre/aide`, `/becs-rouges` vers `/perso/chaines`.
-
----
 
 ## Installation
 
@@ -153,12 +143,10 @@ L'application tourne sur `http://localhost:3031` en développement. En développ
 | `PORT` | 3031 (dev) / 3033 (conteneur) | Port du serveur |
 | `NODE_ENV` | development | `production` active le serve statique |
 | `A_LA_SOURCE_DB` | (auto) | Chemin de la base SQLite (en prod : `/data/a-la-source.db`) |
-| `PUBLIC_BASE_URL` | -- | URL publique de l'app (`https://alasource.rouge-coquelicot.fr`), pour les liens et l'unfurl |
-| `DISCORD_TOKEN` | -- | Token du bot Discord ; sans lui l'ingestion et les commandes sont inactives |
-| `DISCORD_WEBHOOK_URL` | -- | Webhook du salon de diffusion (notifications App vers Discord, sans bot) |
-| `DISCORD_CHANNEL_VEILLE` | -- | Identifiant du canal Discord surveillé pour l'ingestion |
-
----
+| `PUBLIC_BASE_URL` | (aucun) | URL publique de l'app (`https://alasource.rouge-coquelicot.fr`), pour les liens et l'unfurl |
+| `DISCORD_TOKEN` | (aucun) | Token du bot Discord ; sans lui l'ingestion et les commandes sont inactives |
+| `DISCORD_WEBHOOK_URL` | (aucun) | Webhook du salon de diffusion (notifications App vers Discord, sans bot) |
+| `DISCORD_CHANNEL_VEILLE` | (aucun) | Identifiant du canal Discord surveillé pour l'ingestion |
 
 ## Architecture
 
@@ -188,17 +176,15 @@ a-la-source/
 
 ### Stack technique
 
-| Couche | Choix | Justification |
-|---|---|---|
-| Frontend | React 19 + Vite 6 + TypeScript | Écosystème, composants, HMR |
-| State | Zustand | 3 Ko, pas de boilerplate |
-| Backend | Express + better-sqlite3 | Simple, performant, < 100 users |
-| BDD | SQLite mode DELETE | Zéro config, backup triviale, compatible OneDrive (pas de WAL) |
-| Archivage | Readability + jsdom + FTR | Extraction intelligente par site |
-| Auth | Authentik forward-auth (PIAF) | Zéro mot de passe à gérer |
-| Deploy | Conteneur Docker (infra PIAF, Bomp4rd) | Autohébergé, un seul process |
-
----
+| Couche | Choix |
+|---|---|
+| Frontend | React 19 + Vite 6 + TypeScript |
+| State | Zustand |
+| Backend | Express + better-sqlite3 |
+| BDD | SQLite mode WAL |
+| Archivage | Readability + jsdom + FTR |
+| Auth | Authentik forward-auth (PIAF) |
+| Deploy | Conteneur Docker (infra PIAF, Bomp4rd) |
 
 ## Déploiement (infra PIAF, Docker + Authentik)
 
@@ -220,8 +206,6 @@ docker compose build && docker compose up -d
 
 Voir `docs/deploiement.md` pour le détail (Dockerfile, compose, NPM, forward-auth).
 
----
-
 ## Contribution
 
 Le projet est porté par Rouge Coquelicot. Les contributions sont les bienvenues :
@@ -230,8 +214,6 @@ Le projet est porté par Rouge Coquelicot. Les contributions sont les bienvenues
 - Ajouter un site FTR : PR sur `server/src/lib/ftr-site-config.ts`
 
 La discipline de travail (branches, commits anonymes, ouverture d'une merge request, checklist de revue, règle de la base canonique) est décrite dans [`docs/workflow-git.md`](docs/workflow-git.md).
-
----
 
 ## Licence
 

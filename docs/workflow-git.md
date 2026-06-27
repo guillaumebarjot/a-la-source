@@ -1,8 +1,6 @@
-# Workflow git, merge requests et versions -- À la source
+# Workflow git, merge requests et versions — À la source
 
 Ce document fixe une façon simple et propre de faire évoluer le code, même en travaillant seul. Objectif : un historique lisible, des versions repérables, une prod qu'on sait reproduire. **On ne réécrit jamais l'historique de `main`.**
-
----
 
 ## 1. Branches
 
@@ -31,16 +29,12 @@ git branch -d feature/nom-branche   # refuse si non mergée
 git branch -D feature/nom-branche
 ```
 
----
-
 ## 2. Commits
 
 - Messages **en français accentué**, à l'impératif ou descriptifs, concis.
 - **Commits anonymes** : aucune mention d'outil de génération, aucun `Co-Authored-By`, aucun « Generated » (R2).
-- Pas de tiret cadratin ni de « -- » décoratif dans les messages (R7).
+- Pas de tiret cadratin ni de double tiret décoratif dans les messages (R7).
 - Un commit = une idée. Éviter les commits fourre-tout.
-
----
 
 ## 3. Merge requests (pull requests GitHub)
 
@@ -70,8 +64,6 @@ Corps de PR : décrire le quoi/pourquoi, lister les fichiers sensibles touchés 
 - [ ] **Pas de secret commité** : tokens et webhooks Discord vivent dans le `.env` du serveur, jamais dans le dépôt.
 - [ ] **Commit propre** : messages en français accentué, anonymes, sans tiret cadratin (cf. section 2).
 
----
-
 ## 4. Versions (semver + tags)
 
 Format `vMAJEUR.MINEUR.CORRECTIF`, aligné avec `package.json` :
@@ -88,8 +80,6 @@ git tag -a v2.1.0 -m "v2.1.0 - résumé du palier"
 git push origin v2.1.0
 ```
 
----
-
 ## 5. CHANGELOG
 
 `docs/CHANGELOG.md` est tenu et détaillé. Règle :
@@ -97,15 +87,11 @@ git push origin v2.1.0
 - À chaque tag de version, ajouter en tête une entrée `## vX.Y.Z - AAAA-MM-JJ` résumant le palier (les détails fins peuvent rester sous forme datée).
 - Le CHANGELOG raconte le « pourquoi » côté produit ; les messages de commit le « quoi » côté code.
 
----
-
 ## 6. Lien avec le déploiement
 
 - La prod doit pouvoir indiquer **quelle version (tag) elle fait tourner**. Une fois les tags en place, comparer prod vs `main` se résume à comparer un tag à `origin/main`.
 - Ne jamais déployer une branche de travail non fusionnée. Seul `main` (HEAD) est déployé.
 - Les migrations de schéma sont additives et idempotentes (`auto-migrate.ts`) : une prod en retard se met à niveau au redémarrage, sans perte de données.
-
----
 
 ## 7. La base canonique ne se modifie que par copie + swap
 

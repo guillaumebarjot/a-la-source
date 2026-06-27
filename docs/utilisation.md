@@ -18,8 +18,10 @@
 Le menu de tête comporte 8 entrées :
 
 ```
-Accueil | Mon espace | Inbox | Veille | Sujets | Activités | Apprendre | Observatoire
+Accueil | Mon espace | À trier | À lire | Sujets | Activités | Apprendre | Observatoire
 ```
+
+Les libellés « À trier » et « À lire » correspondent aux routes `/inbox` et `/veille` (URLs inchangées ; les sous-titres `title` rappellent les termes techniques « Inbox » et « Veille »).
 
 Une sous-navigation contextuelle (H2) apparaît selon la page active.
 
@@ -40,7 +42,7 @@ Le **hub collectif de qualification des sources**. Qualifier une source n'est pl
 5. **Mobiliser** : verser dans un dossier ou une activité (optionnel).
 6. **Commenter** (optionnel).
 
-Aucune étape n'est bloquante. Chaque source affiche ses **jalons factuels** (faits/à faire) et un **score d'avancement** de 0 à 100. Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
+Aucune étape n'est bloquante. Chaque source affiche ses **jalons factuels** (faits/à faire) sous forme d'un compteur `N/M jalons`. Une source est « bien qualifiée » quand elle a une copie locale, une accroche et une image.
 
 **Filtres par ce qui manque** : à accepter · sans copie locale · sans accroche · sans image · sans sujet · non analysée. Ces filtres remplacent l'ancienne page Archiver (`/archiver` et `/a-archiver` redirigent ici).
 
@@ -158,12 +160,14 @@ Mode plein écran pour la projection en atelier. Fond clair forcé, typographie 
 
 ## Système de score
 
-### Score atelier /100
+> Le score global /100 n'est plus affiché dans l'Inbox (décision 27/06, aligné avec la doctrine « décrire, ne pas noter »). La jauge est remplacée par un compteur de jalons `N/M`. Le score reste disponible comme **tri optionnel** au vivier (`/ateliers/vivier`), jamais comme verdict.
 
-Chaque source reçoit un score sur 100, composé de :
+### Score atelier (tri optionnel au vivier)
 
-- **Pédagogie (50 pts)** : densité de mécanismes identifiés, diversité, qualité des justifications, complexité du sujet (slider), bonus expert·e (slider)
-- **Écho (50 pts)** : croisements internes (tags communs), lectures, commentaires, viralité, résonance (slider)
+Chaque source dispose d'un score calculé côté serveur, composé de :
+
+- **Pédagogie** : densité de mécanismes identifiés, diversité, qualité des justifications, complexité du sujet (slider), bonus expert·e (slider)
+- **Écho** : croisements internes (tags communs), lectures, commentaires, viralité, résonance (slider)
 
 ### Indice timing (A/B/C/D)
 

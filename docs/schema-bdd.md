@@ -1,6 +1,6 @@
 # Schéma de la base `a-la-source.db`
 
-Carte lisible du schéma SQLite (mode DELETE, pas WAL, incompatible OneDrive). La référence technique reste `server/src/db/schema.sql` ; les évolutions additives sont appliquées au boot par `server/src/db/auto-migrate.ts` (idempotent). État vérifié le 21/06/2026 (modèle v3, refonte par sujets ; socle `activites` en place ; complétion BDD appliquée à la canonique : dédoublonnage, accroches, images, rattachement aux sujets, cf. `docs/audit-bdd-2026-06-21.md` et `docs/completion-bdd-plan.md`).
+Carte lisible du schéma SQLite. La référence technique reste `server/src/db/schema.sql` ; les évolutions additives sont appliquées au boot par `server/src/db/auto-migrate.ts` (idempotent). État vérifié le 21/06/2026 (modèle v3, refonte par sujets ; socle `activites` en place ; complétion BDD appliquée à la canonique : dédoublonnage, accroches, images, rattachement aux sujets, cf. `docs/audit-bdd-2026-06-21.md` et `docs/completion-bdd-plan.md`).
 
 > Le `schema.sql` est un dump : ses dernières lignes recrèent à tort les tables
 > shadow FTS5 (`sources_fts_*`) avec un double `IF NOT EXISTS`. Ces tables sont
@@ -78,9 +78,11 @@ Petite échelle : SQLite est largement suffisant (cible < 100 utilisateurs). Le 
 
 ## Mode journal
 
-**Mode DELETE** (journal rollback classique). Le mode WAL est incompatible avec OneDrive (les fichiers sidecar `-wal`/`-shm` sont désynchronisés par la synchro cloud, ce qui provoque des erreurs « database disk image is malformed » et des régressions de données). Ne jamais repasser en WAL.
+**Mode WAL** en production (la base vit sur un disque local, hors OneDrive). Le mode WAL autorise des lecteurs concurrents pendant une écriture, ce qui convient à plusieurs dizaines d'utilisateurs simultanés.
 
-En production, la base est LOCALE au serveur (volume `/data` du conteneur, via `A_LA_SOURCE_DB`), jamais OneDrive.
+En développement local, le mode WAL est aussi actif (la base de dev `db/a-la-source-dev.db` est sur le disque du dépôt, hors OneDrive).
+
+**Ne jamais pointer la base sur un dossier synchronisé (OneDrive, Dropbox...) :** les fichiers sidecar `-wal`/`-shm` sont désynchronisés par la synchro cloud, ce qui provoque des erreurs « database disk image is malformed ». En prod, la base est LOCALE au serveur (volume `/data` du conteneur, via `A_LA_SOURCE_DB`).
 
 ---
 
