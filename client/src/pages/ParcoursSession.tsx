@@ -221,22 +221,30 @@ export default function ParcoursSession() {
 
       {resultat && (
         <div className="parcours-feedback">
-          {sessionId ? (
-            <p className={`parcours-feedback-verdict ${resultat.correct ? 'parcours-feedback-verdict--ok' : 'parcours-feedback-verdict--ko'}`}>
-              {resultat.correct ? 'Bonne reponse.' : 'Reponse incorrecte.'}
+          {/* Mode decouverte neutre (décision produit 27/06) : on ne dit jamais "Réponse
+              incorrecte". On montre le mécanisme attendu et on invite à continuer.
+              Si la reponse est correcte on le salue ; sinon on révèle sans sanctionner. */}
+          {resultat.correct ? (
+            <p className="parcours-feedback-verdict parcours-feedback-verdict--ok">
+              Bonne reponse.
             </p>
           ) : (
-            <p className="parcours-feedback-explication">
-              Mode decouverte. Connectez-vous pour enregistrer vos reponses et voir la correction.
+            <p className="parcours-feedback-verdict parcours-feedback-verdict--neutre">
+              Voir la correction.
             </p>
           )}
           {resultat.mecanisme_attendu && (
             <p className="parcours-feedback-attendu">
-              Mecanisme attendu : <strong>{resultat.mecanisme_attendu.nom}</strong>
+              Le mecanisme attendu etait : <strong>{resultat.mecanisme_attendu.nom}</strong>
             </p>
           )}
           {resultat.explication && (
             <p className="parcours-feedback-explication">{resultat.explication}</p>
+          )}
+          {!sessionId && (
+            <p className="parcours-feedback-explication parcours-feedback-explication--discret">
+              Connectez-vous pour que vos reponses soient enregistrees.
+            </p>
           )}
           <button className="parcours-btn" onClick={suivant}>
             {index + 1 >= questions.length ? 'Voir le recap' : 'Question suivante'}

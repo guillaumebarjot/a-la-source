@@ -207,6 +207,8 @@ function CarteQualification({
       await fn()
       setMessage(ok)
       await onAction()
+      // Auto-effacement du message de succès après 3 s (feedback non persistant).
+      setTimeout(() => setMessage(null), 3000)
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Echec')
     } finally {
