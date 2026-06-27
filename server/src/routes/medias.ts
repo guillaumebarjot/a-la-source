@@ -159,30 +159,8 @@ router.get('/:id/stats', (req, res) => {
   })
 })
 
-// GET /api/medias/:id — detail d'un media
-router.get('/:id', (req, res) => {
-  const media = db.prepare(`
-    SELECT m.*, COUNT(s.id) as nb_sources
-    FROM medias m
-    LEFT JOIN sources s ON s.media_id = m.id
-    WHERE m.id = ?
-    GROUP BY m.id
-  `).get(req.params.id)
-  if (!media) { res.status(404).json({ error: 'Media non trouve' }); return }
-  res.json(media)
-})
-
-// POST /api/medias
-router.post('/', (req, res) => {
-  const { nom, type, url_site } = req.body
-  if (!nom) { res.status(400).json({ error: 'Nom requis' }); return }
-  const r = db.prepare('INSERT OR IGNORE INTO medias (nom, type, url_site) VALUES (?, ?, ?)').run(nom, type || null, url_site || null)
-  res.status(201).json({ id: Number(r.lastInsertRowid) })
-})
-
 // GET /api/medias/clusters-proprietaire — médias regroupés par groupe_proprietaire
-// Trois sections : service public / État (groupe_proprietaire correspondant), privé, indéterminé.
-// Chaque groupe est trié par nb_medias desc. Les médias sans groupe_proprietaire sont en dernier.
+// Déclarée AVANT /:id sinon "clusters-proprietaire" serait pris pour un id.
 router.get('/clusters-proprietaire', (_req, res) => {
   const rows = db.prepare(`
     SELECT
@@ -204,7 +182,6 @@ router.get('/clusters-proprietaire', (_req, res) => {
     groupes[cle].medias.push(m)
   }
 
-  // Trier : indéterminé en dernier, sinon par nb_medias desc
   const INDETERMINE = '__indetermine'
   const result = Object.entries(groupes)
     .map(([groupe, data]) => ({
@@ -259,6 +236,27 @@ router.get('/clusters-famille', (_req, res) => {
     })
 
   res.json(result)
+})
+
+// GET /api/medias/:id — detail d'un media
+router.get('/:id', (req, res) => {
+  const media = db.prepare(`
+    SELECT m.*, COUNT(s.id) as nb_sources
+    FROM medias m
+    LEFT JOIN sources s ON s.media_id = m.id
+    WHERE m.id = ?
+    GROUP BY m.id
+  `).get(req.params.id)
+  if (!media) { res.status(404).json({ error: 'Media non trouve' }); return }
+  res.json(media)
+})
+
+// POST /api/medias
+router.post('/', (req, res) => {
+  const { nom, type, url_site } = req.body
+  if (!nom) { res.status(400).json({ error: 'Nom requis' }); return }
+  const r = db.prepare('INSERT OR IGNORE INTO medias (nom, type, url_site) VALUES (?, ?, ?)').run(nom, type || null, url_site || null)
+  res.status(201).json({ id: Number(r.lastInsertRowid) })
 })
 
 // Champs de propriété éditables (Chantier A + G)
