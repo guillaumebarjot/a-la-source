@@ -117,12 +117,16 @@ Le **vivier** (`/ateliers/vivier`) liste les sources candidates triées par **r�
 
 ### Observatoire (`/observatoire`)
 
-La **référence critique des médias** : qui possède quoi, couverture comparée d'un même fait, fiches médias factuelles, catalogue des mécanismes. 5 sections (sous-nav H2) :
+La **référence critique des médias** : qui possède quoi, couverture comparée d'un même fait, fiches médias factuelles, catalogue des mécanismes. 6 sections (sous-nav H2) :
 
 - **Tableau de bord** : miroir factuel de notre veille (volumes globaux, sources ajoutées par mois, médias les plus présents, mécanismes identifiés, sujets instruits). Zéro score-verdict, que des compteurs.
-- **Propriété** : cartographie des actionnaires ultimes des médias présents dans la veille, regroupés par groupe propriétaire, avec type de propriété et financement.
+- **Propriété** : cartographie des actionnaires ultimes des médias présents dans la veille, regroupés par groupe propriétaire (actionnaire ultime ou propriétaire), avec type de propriété et financement.
+- **Qui possède quoi ?** (`/observatoire/clusters`) : clustering des médias par `groupe_proprietaire` et `famille` éditoriale. Deux vues via bascule :
+  - « Qui possède quoi ? » : deux sections distinctes (service public / État vs groupes privés), accordéons, médias sans groupe en fin de liste.
+  - « Par famille éditoriale » : regroupement par type de presse (PQN, PQR, économique, TV, radio, pure player, scientifique, associatif, think tank...).
+  - Chaque carte média est cliquable vers la fiche détail (groupe, famille, propriétaire, financement, mécanismes repérés). Médias sans valeur regroupés en « Propriété / Famille indéterminée ».
 - **Couverture comparée** : comment un même fait est couvert différemment selon les médias.
-- **Fiches médias** : propriétaire, actionnaire ultime, type de propriété, financement, ligne revendiquée, mécanismes repérés. Pas de score de confiance : on décrit, on ne note pas.
+- **Fiches médias** : propriétaire direct, actionnaire ultime, groupe propriétaire, famille éditoriale, type de propriété, financement, ligne revendiquée, mécanismes repérés. Pas de score de confiance : on décrit, on ne note pas.
 - **Catalogue mécanismes** : les 25 mécanismes de référence (fiches pédagogiques avec définition, exemple type, questions guidées et analyses réelles de la veille).
 
 ### Apprendre (`/apprendre`)

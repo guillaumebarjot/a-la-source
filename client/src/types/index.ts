@@ -54,7 +54,26 @@ export interface Media {
   financement?: string | null
   annee_creation?: number | null
   ligne_revendiquee?: string | null
+  // Clusters de propriété et famille éditoriale (Chantier G)
+  groupe_proprietaire?: string | null
+  famille?: string | null
   nb_sources?: number
+}
+
+// Cluster regroupant des médias par groupe propriétaire
+export interface ClusterProprietaire {
+  groupe: string | null  // null = propriété indéterminée
+  nb_medias: number
+  nb_sources_total: number
+  medias: Media[]
+}
+
+// Cluster regroupant des médias par famille éditoriale
+export interface ClusterFamille {
+  famille: string | null  // null = famille indéterminée
+  nb_medias: number
+  nb_sources_total: number
+  medias: Media[]
 }
 
 // Événements (Chantier C) — veille multisourcée

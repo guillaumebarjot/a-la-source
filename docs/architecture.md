@@ -33,7 +33,7 @@ Point d'entrée `index.ts` : Express sur le port `3031`, `authMiddleware` global
 | `/api/tags` | tags.ts | Tags manuels (thématique/mécanisme/média/libre) |
 | `/api/evaluations` | evaluations.ts | Scores écho (0-40) et pédagogie (0-50) par évaluateur |
 | `/api/commentaires` | commentaires.ts | Commentaires/analyses/questions sur les sources |
-| `/api/medias` | medias.ts | Liste, détail, stats, matrice média × mécanisme, propriété groupée. Doctrine : décrire (compteurs factuels), pas noter. |
+| `/api/medias` | medias.ts | Liste, détail, stats, matrice média × mécanisme, propriété groupée, clusters par groupe propriétaire et par famille éditoriale. Doctrine : décrire (compteurs factuels), pas noter. |
 | `/api/ateliers` | ateliers.ts | Pipeline atelier (vivier, préparation, en cours, synthèse, impression). A1 terminée : lit/écrit exclusivement depuis `activites` + `atelier_pipeline` + `activite_sources` + `activite_mecanismes`. `GET /vivier` expose un bloc `facettes` factuel (doctrine « décrire, ne pas noter ») et trie par récence de soumission par défaut. |
 | `/api/sujets` | sujets.ts | Sujets (thèmes durables) : CRUD, publication, rattachement sources/événements |
 | `/api/debunkages` | debunkages.ts | Activité débunkage : démonstration, sources pour/contre, liens de posts réseaux, publier |
@@ -100,7 +100,7 @@ Note : la table `evaluations` conserve des colonnes de score (écho/pédagogie) 
 #### Autres tables additives
 
 - `sources.completude` : `libre` / `partiel` / `integral_offline`.
-- `medias` : propriété structurée (`proprietaire`, `actionnaire_ultime`, `type_propriete`, `financement`, `ligne_revendiquee`) requêtable (cartographie « qui possède quoi »). Migration `migrate-medias-propriete.ts`, données `seed-medias-propriete.ts`.
+- `medias` : propriété structurée (`proprietaire`, `actionnaire_ultime`, `type_propriete`, `financement`, `ligne_revendiquee`) et clusters (`groupe_proprietaire` = groupe nommé au bout de la chaîne, `famille` = famille éditoriale) requêtables (cartographie « qui possède quoi »). Migration `migrate-medias-propriete.ts`, données `seed-medias-propriete.ts`. Les colonnes `groupe_proprietaire` et `famille` sont ajoutées par `autoMigrate()` au boot (ADD COLUMN idempotent).
 - `discord_messages` : mapping message Discord vers source (dédup, éditions, réponses Discord rattachées à la bonne source).
 
 #### Scripts de complétion (`server/src/scripts/completion/`)
@@ -173,7 +173,7 @@ Sous-navigation H2 (SUBNAV_CONFIG dans `Header.tsx`) :
 | `/inbox` | Inbox | Hub de qualification des sources : jalons factuels, score, actions inline |
 | `/lire/:id` | Lire | Reader + sidebar d'analyse (coeur) |
 | `/observatoire` | Observatoire | Redirige vers `/observatoire/tableau-de-bord` |
-| `/observatoire/:section` | Observatoire | Section : `tableau-de-bord`, `propriete`, `couverture`, `fiches`, `catalogue` |
+| `/observatoire/:section` | Observatoire | Section : `tableau-de-bord`, `propriete`, `clusters`, `couverture`, `fiches`, `catalogue` |
 | `/activites` | Activites | Hub des activités d'éducation populaire |
 | `/debunkages[/:id]` | Debunkages, Debunkage | Activité débunkage |
 | `/dossiers[/:id]` | Dossiers, Dossier | Activité dossier / décryptage à chaud |

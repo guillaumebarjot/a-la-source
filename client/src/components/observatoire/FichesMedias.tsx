@@ -15,6 +15,8 @@ interface MediaFiche {
   financement: string | null
   annee_creation: number | null
   ligne_revendiquee: string | null
+  groupe_proprietaire: string | null
+  famille: string | null
   nb_sources: number
 }
 
@@ -120,13 +122,19 @@ export default function FichesMedias() {
           <p className="media-detail-description">{media.description}</p>
         )}
 
-        {(media.proprietaire || media.actionnaire_ultime || media.type_propriete || media.financement || media.annee_creation || media.ligne_revendiquee) && (
+        {(media.groupe_proprietaire || media.famille || media.proprietaire || media.actionnaire_ultime || media.type_propriete || media.financement || media.annee_creation || media.ligne_revendiquee) && (
           <section className="media-propriete">
             <h3>Propriété et financement</h3>
             <table className="media-detail-table">
               <tbody>
+                {media.groupe_proprietaire && (
+                  <tr><th>Groupe propriétaire</th><td>{media.groupe_proprietaire}</td></tr>
+                )}
+                {media.famille && (
+                  <tr><th>Famille éditoriale</th><td>{media.famille}</td></tr>
+                )}
                 {media.proprietaire && (
-                  <tr><th>Propriétaire</th><td>{media.proprietaire}</td></tr>
+                  <tr><th>Propriétaire direct</th><td>{media.proprietaire}</td></tr>
                 )}
                 {media.actionnaire_ultime && (
                   <tr><th>Au bout de la chaîne</th><td>{media.actionnaire_ultime}</td></tr>
@@ -240,6 +248,12 @@ export default function FichesMedias() {
                     <div className="media-card-initial">{m.nom.charAt(0).toUpperCase()}</div>
                     <div className="media-card-nom">{m.nom}</div>
                     <div className="media-card-meta">
+                      {m.famille && (
+                        <span className="obs-prop-badge clusters-badge-famille">{m.famille}</span>
+                      )}
+                      {m.groupe_proprietaire && (
+                        <span className="obs-prop-badge clusters-badge-groupe">{m.groupe_proprietaire}</span>
+                      )}
                       {m.nb_sources > 0
                         ? `${m.nb_sources} source${m.nb_sources > 1 ? 's' : ''}`
                         : 'Aucune source'}
